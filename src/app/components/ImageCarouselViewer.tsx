@@ -1,8 +1,9 @@
 import { useEffect, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { cn } from './ui/utils';
+import { cn } from "@/lib/utils";
 import type { MessageAttachment } from '../data/mockData';
+import { Badge, Button } from "@/components/ui";
 
 interface ImageCarouselViewerProps {
   images: MessageAttachment[];
@@ -54,9 +55,12 @@ export function ImageCarouselViewer({
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center gap-3 min-w-0">
-          <div className="px-2.5 py-1 rounded-md bg-white/10 text-white/70 text-xs font-medium tabular-nums">
+          <Badge
+            variant="secondary"
+            className="px-2.5 py-1 rounded-md bg-white/10 text-white/70 text-xs font-medium tabular-nums border-white/10"
+          >
             {currentIndex + 1} / {images.length}
-          </div>
+          </Badge>
           <div className="min-w-0">
             <p className="text-sm text-white truncate">{current?.name}</p>
             {current?.size && (
@@ -66,21 +70,26 @@ export function ImageCarouselViewer({
         </div>
         <div className="flex items-center gap-1">
           {current?.url && (
-            <a
-              href={current.url}
-              download
-              className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+            <Button
+              asChild
+              variant="ghost"
+              size="icon"
+              className="text-white/60 hover:text-white hover:bg-white/10"
               title="Download"
             >
-              <Download size={18} />
-            </a>
+              <a href={current.url} download>
+                <Download size={18} />
+              </a>
+            </Button>
           )}
-          <button
+          <Button
             onClick={onClose}
-            className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+            variant="ghost"
+            size="icon"
+            className="text-white/60 hover:text-white hover:bg-white/10"
           >
             <X size={20} />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -91,28 +100,40 @@ export function ImageCarouselViewer({
       >
         {/* Prev button */}
         {hasPrev && (
-          <motion.button
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -8 }}
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            className="absolute left-3 top-1/2 -translate-y-1/2 z-10 h-11 w-11 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white backdrop-blur-sm transition-all border border-white/10 hover:border-white/20 shadow-lg"
             onClick={handlePrev}
-            className="absolute left-3 top-1/2 -translate-y-1/2 z-10 p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white backdrop-blur-sm transition-all border border-white/10 hover:border-white/20 shadow-lg"
           >
-            <ChevronLeft size={24} />
-          </motion.button>
+            <motion.button
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -8 }}
+            >
+              <ChevronLeft size={24} />
+            </motion.button>
+          </Button>
         )}
 
         {/* Next button */}
         {hasNext && (
-          <motion.button
-            initial={{ opacity: 0, x: 8 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 8 }}
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            className="absolute right-3 top-1/2 -translate-y-1/2 z-10 h-11 w-11 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white backdrop-blur-sm transition-all border border-white/10 hover:border-white/20 shadow-lg"
             onClick={handleNext}
-            className="absolute right-3 top-1/2 -translate-y-1/2 z-10 p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white backdrop-blur-sm transition-all border border-white/10 hover:border-white/20 shadow-lg"
           >
-            <ChevronRight size={24} />
-          </motion.button>
+            <motion.button
+              initial={{ opacity: 0, x: 8 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 8 }}
+            >
+              <ChevronRight size={24} />
+            </motion.button>
+          </Button>
         )}
 
         {/* Image */}
@@ -138,32 +159,38 @@ export function ImageCarouselViewer({
           onClick={e => e.stopPropagation()}
         >
           {images.map((img, idx) => (
-            <motion.button
+            <Button
               key={img.id}
-              whileHover={{ scale: 1.08 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => onChangeIndex(idx)}
+              asChild
+              variant="ghost"
+              size="icon"
               className={cn(
-                'w-14 h-14 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 relative',
+                'w-14 h-14 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 relative p-0',
                 idx === currentIndex
                   ? 'border-[#5b5fc7] ring-2 ring-[#5b5fc7]/30 shadow-lg shadow-[#5b5fc7]/20'
                   : 'border-white/10 hover:border-white/30 opacity-50 hover:opacity-80',
               )}
+              onClick={() => onChangeIndex(idx)}
             >
-              <img
-                src={img.thumbnailUrl || img.url}
-                alt={img.name}
-                className="w-full h-full object-cover"
-                draggable={false}
-              />
-              {idx === currentIndex && (
-                <motion.div
-                  layoutId="carousel-indicator"
-                  className="absolute inset-0 border-2 border-[#5b5fc7] rounded-lg"
-                  transition={{ duration: 0.2, ease: 'easeOut' }}
+              <motion.button
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <img
+                  src={img.thumbnailUrl || img.url}
+                  alt={img.name}
+                  className="w-full h-full object-cover"
+                  draggable={false}
                 />
-              )}
-            </motion.button>
+                {idx === currentIndex && (
+                  <motion.div
+                    layoutId="carousel-indicator"
+                    className="absolute inset-0 border-2 border-[#5b5fc7] rounded-lg"
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                  />
+                )}
+              </motion.button>
+            </Button>
           ))}
         </div>
       )}

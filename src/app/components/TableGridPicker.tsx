@@ -1,10 +1,7 @@
 import { useState } from 'react';
 import { Table } from 'lucide-react';
-import { Button } from './ui/button';
-import { Popover, PopoverTrigger, PopoverContent } from './ui/popover';
-import { Separator } from './ui/separator';
-import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
-import { cn } from './ui/utils';
+import { cn } from "@/lib/utils";
+import { Button, Popover, PopoverTrigger, PopoverContent, Separator, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui";
 
 const MAX_ROWS = 6;
 const MAX_COLS = 6;

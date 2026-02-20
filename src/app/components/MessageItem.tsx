@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { Button, Tooltip, TooltipTrigger, TooltipContent, Popover, PopoverTrigger, PopoverContent, Separator, Textarea, EmojiPickerPopover } from "@/components/ui";
 import {
   MessageSquare, Smile, Pin, PinOff, Eye, Pencil, Trash2, Check, X,
   FileText, FileSpreadsheet, FileArchive, File, Download,
@@ -8,19 +9,13 @@ import {
 import { Message, MessageAttachment, users, currentUser } from '../data/mockData';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'motion/react';
-import { Button } from './ui/button';
-import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
-import { Popover, PopoverTrigger, PopoverContent } from './ui/popover';
-import { Separator } from './ui/separator';
-import { cn } from './ui/utils';
+import { cn } from "@/lib/utils";
 import { MarkdownContent } from './MarkdownContent';
 import { ImageCarouselViewer } from './ImageCarouselViewer';
 import { VideoPlayerViewer } from './VideoPlayerViewer';
 import { TaskDetailDialog, DocumentDetailDialog } from './AttachmentDetailDialogs';
 import { mockTranslate, TRANSLATION_LANGUAGES, type TranslationLanguage } from '../data/translations';
 
-// ─── Quick-pick emojis ───
-const QUICK_EMOJIS = ['👍', '❤️', '😂', '🎉', '🚀', '👀', '💯', '🔥', '👋', '🤔', '😮', '✅'];
 
 interface MessageItemProps {
   message: Message;
@@ -172,7 +167,7 @@ export function MessageItem({
               animate={{ opacity: 1, scale: 1 }}
               className="mt-1"
             >
-              <textarea
+              <Textarea
                 ref={editRef}
                 value={editText}
                 onChange={e => setEditText(e.target.value)}
@@ -180,7 +175,7 @@ export function MessageItem({
                   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSaveEdit(); }
                   if (e.key === 'Escape') { setIsEditing(false); setEditText(message.content); }
                 }}
-                className="w-full px-3 py-2 bg-white dark:bg-[#1e1f22] border border-[#5b5fc7] rounded-lg text-[14px] text-[#2e3338] dark:text-[#dbdee1] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/40 resize-none"
+                className="w-full px-3 py-2 bg-white dark:bg-[#1e1f22] border border-[#5b5fc7] rounded-lg text-[14px] text-[#2e3338] dark:text-[#dbdee1] focus-visible:ring-2 focus-visible:ring-[#5b5fc7]/40 resize-none"
                 rows={Math.min(editText.split('\n').length + 1, 6)}
                 autoFocus
               />
@@ -227,12 +222,14 @@ export function MessageItem({
                         {translationLang ? `${translationLang.flag} Translated to ${translationLang.name}` : 'Translating...'}
                       </span>
                     </div>
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={handleDismissTranslation}
-                      className="p-0.5 rounded hover:bg-[#5b5fc7]/10 dark:hover:bg-[#5b5fc7]/20 transition-colors"
+                      className="h-6 w-6 rounded hover:bg-[#5b5fc7]/10 dark:hover:bg-[#5b5fc7]/20"
                     >
                       <X size={12} className="text-[#8a8a8a] dark:text-[#6d6f78]" />
-                    </button>
+                    </Button>
                   </div>
                   {/* Translation Content */}
                   {isTranslating ? (
@@ -252,12 +249,14 @@ export function MessageItem({
                         Detected: English (auto)
                       </span>
                       <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78]">·</span>
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={handleDismissTranslation}
-                        className="text-[10px] font-medium text-[#5b5fc7] dark:text-[#a6a9dc] hover:underline"
+                        className="h-auto px-1 py-0 text-[10px] font-medium text-[#5b5fc7] dark:text-[#a6a9dc] hover:underline"
                       >
                         Show original
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -276,51 +275,63 @@ export function MessageItem({
               {reactions.map((reaction, idx) => {
                 const isMine = reaction.users.includes(currentUser.id);
                 return (
-                  <motion.button
+                  <Button
                     key={`${reaction.emoji}-${idx}`}
-                    whileHover={{ scale: 1.08, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
+                    asChild
+                    variant="ghost"
+                    size="sm"
                     onClick={() => handleAddReaction(reaction.emoji)}
                     className={cn(
-                      'flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs transition-colors shadow-sm border',
+                      'h-auto rounded-full px-2.5 py-1 text-xs transition-colors shadow-sm border',
                       isMine
                         ? 'bg-[#5b5fc7]/10 dark:bg-[#5b5fc7]/20 border-[#5b5fc7]/40 dark:border-[#5b5fc7]/50'
                         : 'bg-gradient-to-br from-white to-[#f8f8f8] dark:from-[#2e3035] dark:to-[#32353b] border-[#e1dfdd] dark:border-[#3d3d3d] hover:border-[#6264a7] dark:hover:border-[#5865f2]',
                     )}
                   >
-                    <span className="text-base">{reaction.emoji}</span>
-                    <span className={cn(
-                      'font-bold',
-                      isMine ? 'text-[#5b5fc7] dark:text-[#a6a9dc]' : 'text-[#242424] dark:text-[#f2f3f5]',
-                    )}>
-                      {reaction.users.length}
-                    </span>
-                  </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.08, y: -2 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="flex items-center gap-1.5"
+                    >
+                      <span className="text-base">{reaction.emoji}</span>
+                      <span className={cn(
+                        'font-bold',
+                        isMine ? 'text-[#5b5fc7] dark:text-[#a6a9dc]' : 'text-[#242424] dark:text-[#f2f3f5]',
+                      )}>
+                        {reaction.users.length}
+                      </span>
+                    </motion.button>
+                  </Button>
                 );
               })}
               {/* Add reaction button in reaction row */}
-              <Popover open={showEmojiPicker && reactions.length > 0} onOpenChange={setShowEmojiPicker}>
-                <PopoverTrigger asChild>
-                  <motion.button
-                    whileHover={{ scale: 1.08, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="flex items-center gap-1 bg-gradient-to-br from-white to-[#f8f8f8] dark:from-[#2e3035] dark:to-[#32353b] border border-[#e1dfdd] dark:border-[#3d3d3d] hover:border-[#6264a7] dark:hover:border-[#5865f2] rounded-full px-2.5 py-1 text-xs transition-colors opacity-0 group-hover:opacity-100"
+              <EmojiPickerPopover
+                onSelect={handleAddReaction}
+                open={showEmojiPicker && reactions.length > 0}
+                onOpenChange={setShowEmojiPicker}
+                trigger={(
+                  <Button
+                    asChild
+                    variant="ghost"
+                    size="sm"
+                    className="h-auto rounded-full px-2.5 py-1 text-xs opacity-0 group-hover:opacity-100 bg-gradient-to-br from-white to-[#f8f8f8] dark:from-[#2e3035] dark:to-[#32353b] border border-[#e1dfdd] dark:border-[#3d3d3d] hover:border-[#6264a7] dark:hover:border-[#5865f2]"
                   >
-                    <Smile size={14} className="text-[#616161] dark:text-[#b9bbbe]" />
-                  </motion.button>
-                </PopoverTrigger>
-                <PopoverContent side="top" align="start" className="w-auto p-2">
-                  <EmojiGrid onSelect={handleAddReaction} />
-                </PopoverContent>
-              </Popover>
+                    <motion.button whileHover={{ scale: 1.08, y: -2 }} whileTap={{ scale: 0.95 }}>
+                      <Smile size={14} className="text-[#616161] dark:text-[#b9bbbe]" />
+                    </motion.button>
+                  </Button>
+                )}
+              />
             </div>
           )}
 
           {/* Thread Preview */}
           {message.threadCount && message.threadCount > 0 && !isParent && (
-            <button
+            <Button
               onClick={onThreadClick}
-              className="flex items-center gap-2 mt-2 text-xs text-[#6264a7] dark:text-[#949cf7] hover:text-[#5865f2] dark:hover:text-[#a5abf7] transition-all font-bold group/thread"
+              variant="ghost"
+              size="sm"
+              className="mt-2 h-auto px-0 text-xs text-[#6264a7] dark:text-[#949cf7] hover:text-[#5865f2] dark:hover:text-[#a5abf7] transition-all font-bold group/thread"
             >
               <MessageSquare size={14} className="group-hover/thread:scale-110 transition-transform" />
               <span>{message.threadCount} {message.threadCount === 1 ? 'reply' : 'replies'}</span>
@@ -332,7 +343,7 @@ export function MessageItem({
                   </span>
                 </>
               )}
-            </button>
+            </Button>
           )}
         </div>
 
@@ -346,10 +357,13 @@ export function MessageItem({
               className="flex items-center gap-0.5 bg-white dark:bg-[#2b2d31] border border-[#e1dfdd] dark:border-[#404249] rounded-lg shadow-lg px-1 py-0.5"
             >
               {/* Emoji reaction */}
-              <Popover open={showToolbarEmoji} onOpenChange={setShowToolbarEmoji}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <PopoverTrigger asChild>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <EmojiPickerPopover
+                    onSelect={handleAddReaction}
+                    open={showToolbarEmoji}
+                    onOpenChange={setShowToolbarEmoji}
+                    trigger={(
                       <Button
                         variant="ghost"
                         size="icon"
@@ -357,14 +371,11 @@ export function MessageItem({
                       >
                         <Smile size={15} />
                       </Button>
-                    </PopoverTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" sideOffset={4}>Add reaction</TooltipContent>
-                </Tooltip>
-                <PopoverContent side="top" align="start" className="w-auto p-2">
-                  <EmojiGrid onSelect={handleAddReaction} />
-                </PopoverContent>
-              </Popover>
+                    )}
+                  />
+                </TooltipTrigger>
+                <TooltipContent side="top" sideOffset={4}>Add reaction</TooltipContent>
+              </Tooltip>
 
               <Separator orientation="vertical" className="h-4 mx-0.5 bg-[#e1dfdd] dark:bg-[#404249]" />
 
@@ -537,28 +548,6 @@ export function MessageItem({
         )}
       </AnimatePresence>
     </motion.div>
-  );
-}
-
-// ─── Emoji Grid Subcomponent ───
-function EmojiGrid({ onSelect }: { onSelect: (emoji: string) => void }) {
-  return (
-    <div>
-      <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5 px-1">Quick reactions</p>
-      <div className="grid grid-cols-6 gap-1">
-        {QUICK_EMOJIS.map(emoji => (
-          <motion.button
-            key={emoji}
-            whileHover={{ scale: 1.2 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => onSelect(emoji)}
-            className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-[#e8e8f8] dark:hover:bg-[#383a40] transition-colors text-lg"
-          >
-            {emoji}
-          </motion.button>
-        ))}
-      </div>
-    </div>
   );
 }
 
@@ -908,32 +897,37 @@ function TranslateLanguagePicker({
       <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5 px-1">Translate to</p>
       <div className="grid grid-cols-2 gap-1">
         {TRANSLATION_LANGUAGES.map(lang => (
-          <motion.button
+          <Button
             key={lang.code}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
+            asChild
+            variant="ghost"
+            size="sm"
             onClick={() => onSelect(lang)}
             className={cn(
-              'flex items-center gap-2 px-2 py-1.5 rounded-md text-left transition-colors',
+              'h-auto px-2 py-1.5 justify-start rounded-md text-left',
               activeLangCode === lang.code
                 ? 'bg-[#5b5fc7]/10 dark:bg-[#5b5fc7]/20 text-[#5b5fc7] dark:text-[#a6a9dc]'
                 : 'hover:bg-[#f5f5f5] dark:hover:bg-[#383a40]',
             )}
           >
-            <span className="text-sm">{lang.flag}</span>
-            <span className="text-[11px] font-medium text-[#242424] dark:text-[#f2f3f5]">{lang.name}</span>
-          </motion.button>
+            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} className="flex items-center gap-2">
+              <span className="text-sm">{lang.flag}</span>
+              <span className="text-[11px] font-medium text-[#242424] dark:text-[#f2f3f5]">{lang.name}</span>
+            </motion.button>
+          </Button>
         ))}
       </div>
       {hasTranslation && (
         <div className="mt-2 pt-2 border-t border-[#e1dfdd] dark:border-[#404249]">
-          <button
+          <Button
             onClick={onDismiss}
-            className="flex items-center gap-1.5 w-full px-2 py-1.5 rounded-md text-[11px] font-medium text-[#c4314b] hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            variant="ghost"
+            size="sm"
+            className="h-auto w-full px-2 py-1.5 justify-start text-[11px] font-medium text-[#c4314b] hover:bg-red-50 dark:hover:bg-red-900/20"
           >
             <X size={12} />
             Remove translation
-          </button>
+          </Button>
         </div>
       )}
     </div>

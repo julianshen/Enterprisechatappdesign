@@ -6,7 +6,7 @@ import {
   ArrowUp, ArrowDown,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { cn } from './ui/utils';
+import { cn } from "@/lib/utils";
 
 // ─── Types ───
 

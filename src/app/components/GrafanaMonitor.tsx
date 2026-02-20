@@ -12,7 +12,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
   ResponsiveContainer, BarChart, Bar,
 } from 'recharts';
-import { cn } from './ui/utils';
+import { cn } from "@/lib/utils";
 
 // ─── Mock time-series data ───
 

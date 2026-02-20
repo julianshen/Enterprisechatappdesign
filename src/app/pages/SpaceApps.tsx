@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router';
-import {
-  Puzzle, CheckCircle2, Star, Settings, ToggleLeft, ToggleRight,
+import { Button, Tooltip, TooltipTrigger, TooltipContent, Separator, Toggle } from "@/components/ui";
+import {  Puzzle, CheckCircle2, Star, Settings, ToggleLeft, ToggleRight,
   ChevronRight, Download, Clock, User, Search,
   LayoutGrid, Bot, Send, Sparkles, Activity, ExternalLink,
   Shield, Info, Trash2, RefreshCw, Zap, ArrowRight,
@@ -16,11 +16,7 @@ import { format } from 'date-fns';
 import { AdaptiveCard, type AdaptiveCardData } from '../components/AdaptiveCard';
 import { MarkdownContent } from '../components/MarkdownContent';
 import { motion, AnimatePresence } from 'motion/react';
-import { Button } from '../components/ui/button';
-import { Tooltip, TooltipTrigger, TooltipContent } from '../components/ui/tooltip';
-import { Separator } from '../components/ui/separator';
-import { Toggle } from '../components/ui/toggle';
-import { cn } from '../components/ui/utils';
+import { cn } from "@/lib/utils";
 import { MiroBoard } from '../components/MiroBoard';
 import { FigmaDesignApp } from '../components/FigmaDesignApp';
 import { GitLabApp } from '../components/GitLabApp';

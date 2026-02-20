@@ -1,11 +1,9 @@
 import { X, MessageSquare } from 'lucide-react';
 import { Message, Thread, users, currentUser } from '../data/mockData';
 import { MessageItem } from './MessageItem';
-import { RichMessageInput } from './RichMessageInput';
 import { motion } from 'motion/react';
-import { Button } from './ui/button';
-import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
 import { useState, useRef, useEffect } from 'react';
+import { RichMessageInput, Button, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui";
 
 interface MessageThreadProps {
   parentMessage: Message;
@@ -55,7 +53,7 @@ export function MessageThread({ parentMessage, thread, onClose, onMessageUpdate,
   // Auto-scroll to bottom when thread opens
   useEffect(() => {
     setTimeout(() => {
-      scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+      scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
     }, 100);
   }, [thread.id]);
 

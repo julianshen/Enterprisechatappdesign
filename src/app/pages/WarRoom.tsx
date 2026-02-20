@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
-import { cn } from '../components/ui/utils';
+import { cn } from "@/lib/utils";
 import { MarkdownContent } from '../components/MarkdownContent';
 
 // ─── Types ───

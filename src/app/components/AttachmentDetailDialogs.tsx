@@ -1,17 +1,13 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router';
-import {
-  CircleDot, Bug, Zap, BookOpen, CheckCircle2, Clock, Eye,
+import { Button, Separator } from "@/components/ui";
+import {  CircleDot, Bug, Zap, BookOpen, CheckCircle2, Clock, Eye,
   AlertTriangle, Calendar, User, Tag, Layers,
   Hash, ExternalLink, CheckSquare, Square, FileText,
 } from 'lucide-react';
 import { format } from 'date-fns';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from './ui/dialog';
-import { Button } from './ui/button';
-import { Separator } from './ui/separator';
-import { cn } from './ui/utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui";
+import { cn } from "@/lib/utils";
 import { MessageAttachment, documents, tasks as allTasks, users } from '../data/mockData';
 
 // ─── Status & Priority configs ───

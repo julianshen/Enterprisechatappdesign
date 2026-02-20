@@ -7,7 +7,7 @@ import {
   Edit, Copy, Repeat,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { cn } from './ui/utils';
+import { cn } from "@/lib/utils";
 
 const { useState, useMemo, useCallback } = React;
 

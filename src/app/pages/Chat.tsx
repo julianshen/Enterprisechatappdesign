@@ -5,10 +5,7 @@ import { MessageItem } from '../components/MessageItem';
 import { MessageThread } from '../components/MessageThread';
 import { useState, useRef, useCallback } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { RichMessageInput } from '../components/RichMessageInput';
-import { Button } from '../components/ui/button';
-import { Tooltip, TooltipTrigger, TooltipContent } from '../components/ui/tooltip';
-import { Separator } from '../components/ui/separator';
+import { RichMessageInput, Button, Tooltip, TooltipTrigger, TooltipContent, Separator } from "@/components/ui";
 
 export function Chat() {
   const { chatType, chatId } = useParams();
@@ -119,7 +116,7 @@ export function Chat() {
     };
     setChatMessages(prev => [...prev, newMsg]);
     setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 50);
   }, []);
 
@@ -249,8 +246,6 @@ export function Chat() {
                 <>
                   {[
                     { icon: <Paperclip size={15} />, label: 'Attach file' },
-                    { icon: <ImageIcon size={15} />, label: 'Insert image' },
-                    { icon: <Smile size={15} />, label: 'Emoji' },
                   ].map(btn => (
                     <Tooltip key={btn.label}>
                       <TooltipTrigger asChild>

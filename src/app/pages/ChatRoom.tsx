@@ -1,6 +1,6 @@
 import { useParams } from 'react-router';
-import {
-  Hash, Pin, Users, Search, Phone, Video, MoreHorizontal, Smile, Paperclip,
+import { Button, Tooltip, TooltipTrigger, TooltipContent, Separator, RichMessageInput } from "@/components/ui";
+import {  Hash, Pin, Users, Search, Phone, Video, MoreHorizontal, Smile, Paperclip,
   Image as ImageIcon, Activity, MessageSquare, CheckSquare, Rocket, GitPullRequest,
   Shield, Target, AlertTriangle, ArrowUp, ArrowDown, Minus,
   type LucideIcon,
@@ -10,13 +10,7 @@ import { MessageItem } from '../components/MessageItem';
 import { MessageThread } from '../components/MessageThread';
 import { useState, useMemo, useRef, useCallback } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { RichMessageInput } from '../components/RichMessageInput';
-import { Button } from '../components/ui/button';
-import { Tooltip, TooltipTrigger, TooltipContent } from '../components/ui/tooltip';
-import { Separator } from '../components/ui/separator';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from '../components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui";
 
 // ─── Widget icon / color maps (shared with SpaceHome) ───
 const widgetIconMap: Record<string, LucideIcon> = {
@@ -37,7 +31,7 @@ const widgetColorMap: Record<string, { bg: string; text: string; darkBg: string;
   blue: { bg: 'bg-[#2196f3]/10', text: 'text-[#2196f3]', darkBg: 'dark:bg-[#2196f3]/20', darkText: 'dark:text-[#64b5f6]', accent: '#2196f3' },
   green: { bg: 'bg-[#4caf50]/10', text: 'text-[#4caf50]', darkBg: 'dark:bg-[#4caf50]/20', darkText: 'dark:text-[#81c784]', accent: '#4caf50' },
   orange: { bg: 'bg-[#ff9800]/10', text: 'text-[#ff9800]', darkBg: 'dark:bg-[#ff9800]/20', darkText: 'dark:text-[#ffb74d]', accent: '#ff9800' },
-  red: { bg: 'bg-[#f44336]/10', text: 'text-[#f44336]', darkBg: 'dark:bg-[#f44336]/20', darkText: 'dark:text-[#ef5350]', accent: '#f44336' },
+  red: { bg: 'bg-[#f44336]/10', text: 'text-[#f44336]', darkBg: 'dark:bg-[#f44336]/20', darkText: 'dark:text-[#ef5350]', accent: "#f44336" },
 };
 
 // ─── Mini sparkline for dialog ───
@@ -409,8 +403,6 @@ export function ChatRoom() {
                 <>
                   {[
                     { icon: <Paperclip size={15} />, label: 'Attach file' },
-                    { icon: <ImageIcon size={15} />, label: 'Insert image' },
-                    { icon: <Smile size={15} />, label: 'Emoji' },
                   ].map(btn => (
                     <Tooltip key={btn.label}>
                       <TooltipTrigger asChild>

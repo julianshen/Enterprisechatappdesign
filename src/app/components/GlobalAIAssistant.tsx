@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useLocation } from 'react-router';
-import {
-  X, Send, Sparkles, Bot, User, Trash2,
+import { Button, Tooltip, TooltipTrigger, TooltipContent, Separator, Toggle } from "@/components/ui";
+import {  X, Send, Sparkles, Bot, User, Trash2,
   ChevronDown, Slash, AtSign, Hash, Globe,
   Lightbulb, Zap, FileText, Search, MessageSquare,
   Code2, Palette, Megaphone, Building2, LayoutDashboard,
@@ -13,11 +13,7 @@ import { AdaptiveCard, type AdaptiveCardData } from './AdaptiveCard';
 import { spaces } from '../data/mockData';
 import { MarkdownContent } from './MarkdownContent';
 import { motion, AnimatePresence } from 'motion/react';
-import { Button } from './ui/button';
-import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
-import { Separator } from './ui/separator';
-import { Toggle } from './ui/toggle';
-import { cn } from './ui/utils';
+import { cn } from "@/lib/utils";
 import { HelpDesk } from './HelpDesk';
 
 // ─── Types ───

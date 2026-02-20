@@ -1,10 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import {
-  X, Play, Pause, Volume2, VolumeX, Maximize, Minimize,
+import { Button, Slider } from "@/components/ui";
+import {  X, Play, Pause, Volume2, VolumeX, Maximize, Minimize,
   SkipBack, SkipForward, Film, Download,
 } from 'lucide-react';
-import { cn } from './ui/utils';
+import { cn } from "@/lib/utils";
 
 interface VideoPlayerViewerProps {
   posterUrl?: string;
@@ -136,15 +136,21 @@ export function VideoPlayerViewer({
       }}
     >
       {/* Close button */}
-      <motion.button
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: showControls ? 1 : 0, y: 0 }}
-        transition={{ duration: 0.2 }}
+      <Button
+        asChild
+        variant="ghost"
+        size="icon"
         onClick={onClose}
-        className="absolute top-4 right-4 z-20 p-2.5 rounded-full bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors"
+        className="absolute top-4 right-4 z-20 h-11 w-11 rounded-full bg-white/10 backdrop-blur-sm text-white hover:bg-white/20"
       >
-        <X size={20} />
-      </motion.button>
+        <motion.button
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: showControls ? 1 : 0, y: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <X size={20} />
+        </motion.button>
+      </Button>
 
       {/* Video name + info bar */}
       <motion.div
@@ -264,26 +270,32 @@ export function VideoPlayerViewer({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {/* Play/Pause */}
-              <button
+              <Button
                 onClick={togglePlay}
-                className="p-1.5 rounded-md hover:bg-white/10 transition-colors text-white"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-white hover:bg-white/10"
               >
                 {isPlaying ? <Pause size={18} /> : <Play size={18} />}
-              </button>
+              </Button>
 
               {/* Skip buttons */}
-              <button
+              <Button
                 onClick={() => setCurrentTime(t => Math.max(t - 10, 0))}
-                className="p-1.5 rounded-md hover:bg-white/10 transition-colors text-white/70 hover:text-white"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10"
               >
                 <SkipBack size={16} />
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => setCurrentTime(t => Math.min(t + 10, totalDuration))}
-                className="p-1.5 rounded-md hover:bg-white/10 transition-colors text-white/70 hover:text-white"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10"
               >
                 <SkipForward size={16} />
-              </button>
+              </Button>
 
               {/* Time */}
               <span className="text-[12px] text-white/80 font-mono tabular-nums ml-1">
@@ -294,41 +306,47 @@ export function VideoPlayerViewer({
             <div className="flex items-center gap-2">
               {/* Volume */}
               <div className="flex items-center gap-1.5 group/vol">
-                <button
+                <Button
                   onClick={() => setIsMuted(m => !m)}
-                  className="p-1.5 rounded-md hover:bg-white/10 transition-colors text-white/70 hover:text-white"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10"
                 >
                   {isMuted || volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
-                </button>
+                </Button>
                 <div className="w-0 group-hover/vol:w-20 overflow-hidden transition-all duration-200">
-                  <input
-                    type="range"
+                  <Slider
                     min={0}
                     max={1}
                     step={0.05}
-                    value={isMuted ? 0 : volume}
-                    onChange={e => {
-                      const v = parseFloat(e.target.value);
+                    value={[isMuted ? 0 : volume]}
+                    onValueChange={([v]) => {
                       setVolume(v);
                       if (v > 0) setIsMuted(false);
                     }}
-                    className="w-full h-1 accent-[#5b5fc7] cursor-pointer"
+                    className="w-full [&_[data-slot=slider-track]]:h-1 [&_[data-slot=slider-track]]:bg-white/20 [&_[data-slot=slider-range]]:bg-[#5b5fc7] [&_[data-slot=slider-thumb]]:bg-white [&_[data-slot=slider-thumb]]:border-white/60 [&_[data-slot=slider-thumb]]:size-3.5"
                   />
                 </div>
               </div>
 
               {/* Download */}
-              <button className="p-1.5 rounded-md hover:bg-white/10 transition-colors text-white/70 hover:text-white">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10"
+              >
                 <Download size={16} />
-              </button>
+              </Button>
 
               {/* Fullscreen */}
-              <button
+              <Button
                 onClick={() => setIsFullscreen(f => !f)}
-                className="p-1.5 rounded-md hover:bg-white/10 transition-colors text-white/70 hover:text-white"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10"
               >
                 {isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
-              </button>
+              </Button>
             </div>
           </div>
         </motion.div>

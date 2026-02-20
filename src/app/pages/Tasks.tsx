@@ -15,7 +15,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '../components/ui/tooltip';
+} from "@/components/ui";
 
 // Sprint configuration
 const CURRENT_SPRINT = {
@@ -47,7 +47,7 @@ const EPIC_COLORS: Record<string, { bg: string; text: string; border: string }> 
 
 function TypeIcon({ type, size = 14 }: { type: Task['type']; size?: number }) {
   switch (type) {
-    case 'story': return <BookOpen size={size} className="text-[#237b4b] dark:text-[#6fcf97]" />;
+    case "story": return <BookOpen size={size} className="text-[#237b4b] dark:text-[#6fcf97]" />;
     case 'bug': return <Bug size={size} className="text-[#c4314b] dark:text-[#f47067]" />;
     case 'task': return <CheckCircle2 size={size} className="text-[#0078d4] dark:text-[#4dabf5]" />;
     case 'spike': return <Zap size={size} className="text-[#d4820c] dark:text-[#f0b850]" />;

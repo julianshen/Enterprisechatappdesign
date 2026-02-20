@@ -1,16 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import {
-  AlertTriangle, CheckCircle2, Clock, Send, ChevronDown,
+import { Button, Badge, Tooltip, TooltipTrigger, TooltipContent, Separator } from "@/components/ui";
+import {  AlertTriangle, CheckCircle2, Clock, Send, ChevronDown,
   Plus, Search, MessageCircle, FileText, Bug, Settings, HelpCircle,
   Loader2, CircleDot, XCircle, ArrowUpCircle, ArrowRight,
   Headphones, BookOpen, LifeBuoy, Filter,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { Tooltip, TooltipTrigger, TooltipContent } from './ui/tooltip';
-import { Separator } from './ui/separator';
-import { cn } from './ui/utils';
+import { cn } from "@/lib/utils";
 
 // ─── Types ───
 
