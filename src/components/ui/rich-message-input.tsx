@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
 import { Button, Tooltip, TooltipTrigger, TooltipContent, Separator, Toggle, Textarea, EmojiPickerPopover } from "@/components/ui";
+import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   Bold,
   Italic,
@@ -16,8 +16,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from "@/lib/utils";
-import { MarkdownContent } from '@/app/components/MarkdownContent';
-import { TableGridPicker } from '@/app/components/TableGridPicker';
+import { MarkdownContent } from '@/components/ui';
+import { TableGridPicker } from '@/components/ui';
 import TurndownService from 'turndown';
 import { gfm } from 'turndown-plugin-gfm';
 

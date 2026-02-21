@@ -1,7 +1,7 @@
+import { Popover, PopoverTrigger, PopoverContent, Button, Input } from "@/components/ui";
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { cn } from "@/lib/utils";
 import data from '@emoji-mart/data';
-import { Popover, PopoverTrigger, PopoverContent, Button, Input } from "@/components/ui";
 
 const EMOJI_DATA = data as any;
 const EMOJI_CATEGORIES = EMOJI_DATA?.categories ?? [];

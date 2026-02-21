@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router';
-import { Button, Tooltip, TooltipTrigger, TooltipContent, Separator, Toggle } from "@/components/ui";
-import {  Puzzle, CheckCircle2, Star, Settings, ToggleLeft, ToggleRight,
+import {
+  Puzzle, CheckCircle2, Star, Settings, ToggleLeft, ToggleRight,
   ChevronRight, Download, Clock, User, Search,
   LayoutGrid, Bot, Send, Sparkles, Activity, ExternalLink,
   Shield, Info, Trash2, RefreshCw, Zap, ArrowRight,
   Bold, Italic, Strikethrough, Code, List, ListOrdered, Link2, Quote, Eye,
 } from 'lucide-react';
+import { Button, Tooltip, TooltipTrigger, TooltipContent, Separator, Toggle } from "@/components/ui";
 import { spaces } from '../data/mockData';
 import {
   getAppsForSpace, appCatalog,
@@ -14,7 +15,7 @@ import {
 } from '../data/appData';
 import { format } from 'date-fns';
 import { AdaptiveCard, type AdaptiveCardData } from '../components/AdaptiveCard';
-import { MarkdownContent } from '../components/MarkdownContent';
+import { MarkdownContent } from '@/components/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from "@/lib/utils";
 import { MiroBoard } from '../components/MiroBoard';

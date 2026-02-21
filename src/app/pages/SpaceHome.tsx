@@ -11,7 +11,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { spaces, users, currentUser, spacePosts, documents, type SpacePost, type SpacePostComment, type PostAttachment } from '../data/mockData';
-import { MarkdownContent } from '../components/MarkdownContent';
+import { MarkdownContent } from '@/components/ui';
 import { VideoPlayerViewer } from '../components/VideoPlayerViewer';
 
 const widgetIconMap: Record<string, LucideIcon> = {

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui";
 import { useParams } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -10,12 +11,6 @@ import {
 } from 'lucide-react';
 import { spaces, tasks as allTasks, users, type Task } from '../data/mockData';
 import { format, differenceInDays } from 'date-fns';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui";
 
 // Sprint configuration
 const CURRENT_SPRINT = {

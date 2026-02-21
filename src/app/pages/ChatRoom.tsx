@@ -1,6 +1,7 @@
-import { useParams } from 'react-router';
 import { Button, Tooltip, TooltipTrigger, TooltipContent, Separator, RichMessageInput } from "@/components/ui";
-import {  Hash, Pin, Users, Search, Phone, Video, MoreHorizontal, Smile, Paperclip,
+import { useParams } from 'react-router';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui";
+import { Hash, Pin, Users, Search, Phone, Video, MoreHorizontal, Smile, Paperclip,
   Image as ImageIcon, Activity, MessageSquare, CheckSquare, Rocket, GitPullRequest,
   Shield, Target, AlertTriangle, ArrowUp, ArrowDown, Minus,
   type LucideIcon,
@@ -10,7 +11,6 @@ import { MessageItem } from '../components/MessageItem';
 import { MessageThread } from '../components/MessageThread';
 import { useState, useMemo, useRef, useCallback } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui";
 
 // ─── Widget icon / color maps (shared with SpaceHome) ───
 const widgetIconMap: Record<string, LucideIcon> = {

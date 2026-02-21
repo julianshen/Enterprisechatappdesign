@@ -1,12 +1,12 @@
 import React from 'react';
-import { useNavigate, useParams } from 'react-router';
 import { Button, Separator } from "@/components/ui";
-import {  CircleDot, Bug, Zap, BookOpen, CheckCircle2, Clock, Eye,
+import { useNavigate, useParams } from 'react-router';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui";
+import { CircleDot, Bug, Zap, BookOpen, CheckCircle2, Clock, Eye,
   AlertTriangle, Calendar, User, Tag, Layers,
   Hash, ExternalLink, CheckSquare, Square, FileText,
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { MessageAttachment, documents, tasks as allTasks, users } from '../data/mockData';
 

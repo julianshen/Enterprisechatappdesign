@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Button, Tooltip, TooltipTrigger, TooltipContent, Popover, PopoverTrigger, PopoverContent, Separator, Textarea, EmojiPickerPopover } from "@/components/ui";
+import { Button, Tooltip, TooltipTrigger, TooltipContent, Popover, PopoverTrigger, PopoverContent, Separator, Textarea, EmojiPickerPopover, MarkdownContent } from "@/components/ui";
 import {
   MessageSquare, Smile, Pin, PinOff, Eye, Pencil, Trash2, Check, X,
   FileText, FileSpreadsheet, FileArchive, File, Download,
@@ -10,7 +10,6 @@ import { Message, MessageAttachment, users, currentUser } from '../data/mockData
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from "@/lib/utils";
-import { MarkdownContent } from './MarkdownContent';
 import { ImageCarouselViewer } from './ImageCarouselViewer';
 import { VideoPlayerViewer } from './VideoPlayerViewer';
 import { TaskDetailDialog, DocumentDetailDialog } from './AttachmentDetailDialogs';

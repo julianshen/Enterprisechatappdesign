@@ -1,9 +1,9 @@
+import { Badge, Button } from "@/components/ui";
 import { useEffect, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from "@/lib/utils";
 import type { MessageAttachment } from '../data/mockData';
-import { Badge, Button } from "@/components/ui";
 
 interface ImageCarouselViewerProps {
   images: MessageAttachment[];

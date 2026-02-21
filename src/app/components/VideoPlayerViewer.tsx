@@ -1,6 +1,6 @@
+import { Button, Slider } from "@/components/ui";
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Button, Slider } from "@/components/ui";
 import {  X, Play, Pause, Volume2, VolumeX, Maximize, Minimize,
   SkipBack, SkipForward, Film, Download,
 } from 'lucide-react';

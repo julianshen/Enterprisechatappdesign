@@ -1,17 +1,18 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useLocation } from 'react-router';
-import { Button, Tooltip, TooltipTrigger, TooltipContent, Separator, Toggle } from "@/components/ui";
-import {  X, Send, Sparkles, Bot, User, Trash2,
+import {
+  X, Send, Sparkles, Bot, User, Trash2,
   ChevronDown, Slash, AtSign, Hash, Globe,
   Lightbulb, Zap, FileText, Search, MessageSquare,
   Code2, Palette, Megaphone, Building2, LayoutDashboard,
   Bold, Italic, Strikethrough, Code, List, ListOrdered, Link2, Quote, Eye,
   LifeBuoy,
 } from 'lucide-react';
+import { Button, Tooltip, TooltipTrigger, TooltipContent, Separator, Toggle } from "@/components/ui";
 import { useAIAssistant } from '../context/AIAssistantContext';
 import { AdaptiveCard, type AdaptiveCardData } from './AdaptiveCard';
 import { spaces } from '../data/mockData';
-import { MarkdownContent } from './MarkdownContent';
+import { MarkdownContent } from '@/components/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from "@/lib/utils";
 import { HelpDesk } from './HelpDesk';

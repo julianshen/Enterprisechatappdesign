@@ -1,9 +1,9 @@
+import { RichMessageInput, Button, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui";
 import { X, MessageSquare } from 'lucide-react';
 import { Message, Thread, users, currentUser } from '../data/mockData';
 import { MessageItem } from './MessageItem';
 import { motion } from 'motion/react';
 import { useState, useRef, useEffect } from 'react';
-import { RichMessageInput, Button, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui";
 
 interface MessageThreadProps {
   parentMessage: Message;

@@ -1,3 +1,4 @@
+import { RichMessageInput, Button, Tooltip, TooltipTrigger, TooltipContent, Separator } from "@/components/ui";
 import { useParams } from 'react-router';
 import { Phone, Video, MoreHorizontal, Smile, Paperclip, Image as ImageIcon, Info } from 'lucide-react';
 import { messages as mockMessages, threads as mockThreads, users, groupChats, Message, Thread, currentUser } from '../data/mockData';
@@ -5,7 +6,6 @@ import { MessageItem } from '../components/MessageItem';
 import { MessageThread } from '../components/MessageThread';
 import { useState, useRef, useCallback } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { RichMessageInput, Button, Tooltip, TooltipTrigger, TooltipContent, Separator } from "@/components/ui";
 
 export function Chat() {
   const { chatType, chatId } = useParams();

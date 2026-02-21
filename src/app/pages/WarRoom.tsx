@@ -10,7 +10,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import { cn } from "@/lib/utils";
-import { MarkdownContent } from '../components/MarkdownContent';
+import { MarkdownContent } from '@/components/ui';
 
 // ─── Types ───
 
