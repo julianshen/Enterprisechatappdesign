@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite"
+    "dev": "vite",
+    "deploy": "wrangler deploy",
+    "preview:cf": "wrangler dev --assets ./dist"
   },
   "dependencies": {
     "@emoji-mart/data": "^1.2.1",
@@ -66,7 +68,8 @@
     "@tailwindcss/vite": "4.1.12",
     "@vitejs/plugin-react": "4.7.0",
     "tailwindcss": "4.1.12",
-    "vite": "6.3.5"
+    "vite": "6.3.5",
+    "wrangler": "4.67.0"
   },
   "peerDependencies": {
     "react": "18.3.1",
