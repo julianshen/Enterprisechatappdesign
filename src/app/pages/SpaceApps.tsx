@@ -13,11 +13,11 @@ import {
   getAppsForSpace, appCatalog,
   type AppIntegration, type InstalledApp,
 } from '../data/appData';
-import { format } from 'date-fns';
 import { AdaptiveCard, type AdaptiveCardData } from '../components/AdaptiveCard';
 import { MarkdownContent } from '@/components/ui';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from "@/lib/utils";
+import { type LanguageCode, useI18n } from '../context/I18nContext';
 import { MiroBoard } from '../components/MiroBoard';
 import { FigmaDesignApp } from '../components/FigmaDesignApp';
 import { GitLabApp } from '../components/GitLabApp';
@@ -48,6 +48,22 @@ interface AssistantMessage {
   content: string;
   time: string;
   card?: AdaptiveCardData;
+}
+
+const LOCALE_MAP: Record<LanguageCode, string> = {
+  en: 'en-US',
+  'zh-Hant': 'zh-TW',
+  'zh-Hans': 'zh-CN',
+  ja: 'ja-JP',
+  de: 'de-DE',
+  es: 'es-ES',
+  fr: 'fr-FR',
+  hi: 'hi-IN',
+  pl: 'pl-PL',
+};
+
+function getLocaleForLanguage(language: LanguageCode) {
+  return LOCALE_MAP[language] || 'en-US';
 }
 
 function generateActivity(app: AppIntegration): ActivityEvent[] {
@@ -971,6 +987,7 @@ function generateDynamicCard(app: AppIntegration, query: string): AdaptiveCardDa
 // ─────────────────────────────────────────
 
 function AppScreenTab({ app, config }: { app: AppIntegration; config: Record<string, string | boolean> }) {
+  const { t } = useI18n();
   // Custom embedded app experiences
   if (app.id === 'miro') return <MiroBoard />;
   if (app.id === 'figma') return <FigmaDesignApp />;
@@ -1004,30 +1021,30 @@ function AppScreenTab({ app, config }: { app: AppIntegration; config: Record<str
           <div className="px-4 py-3 border-b border-[#f0f0f0] dark:border-[#333] bg-[#faf9f8] dark:bg-[#1e1f22]">
             <h3 className="font-semibold text-[13px] text-[#242424] dark:text-[#f0f0f0] flex items-center gap-2">
               <Activity size={14} className="text-[#5b5fc7]" />
-              Connection Status
+              {t('spaceApps.connectionStatus')}
             </h3>
           </div>
           <div className="p-4 space-y-3">
             <div className="flex items-center gap-3">
               <div className="w-2.5 h-2.5 rounded-full bg-[#237b4b] shadow-sm shadow-[#237b4b]/50 animate-pulse" />
-              <span className="text-sm font-medium text-[#237b4b] dark:text-[#57ab5a]">Connected & Active</span>
+              <span className="text-sm font-medium text-[#237b4b] dark:text-[#57ab5a]">{t('spaceApps.connectedActive')}</span>
             </div>
             <div className="grid grid-cols-2 gap-3 text-xs text-[#616161] dark:text-[#8a8a8a]">
               <div className="flex items-center gap-1.5">
                 <RefreshCw size={11} />
-                <span>Last sync: 2 min ago</span>
+                <span>{t('spaceApps.lastSync', { time: t('time.minutesAgo', { count: 2 }) })}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Zap size={11} />
-                <span>Webhook: Healthy</span>
+                <span>{t('spaceApps.webhookHealthy')}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Clock size={11} />
-                <span>Uptime: 99.9%</span>
+                <span>{t('spaceApps.uptime', { value: '99.9%' })}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Activity size={11} />
-                <span>{activity.length} events today</span>
+                <span>{t('spaceApps.eventsToday', { count: activity.length })}</span>
               </div>
             </div>
           </div>
@@ -1038,7 +1055,7 @@ function AppScreenTab({ app, config }: { app: AppIntegration; config: Record<str
           <div className="px-4 py-3 border-b border-[#f0f0f0] dark:border-[#333] bg-[#faf9f8] dark:bg-[#1e1f22]">
             <h3 className="font-semibold text-[13px] text-[#242424] dark:text-[#f0f0f0] flex items-center gap-2">
               <Zap size={14} className="text-[#d4820c]" />
-              Quick Actions
+              {t('spaceApps.quickActions')}
             </h3>
           </div>
           <div className="divide-y divide-[#f0f0f0] dark:divide-[#333]">
@@ -1061,8 +1078,8 @@ function AppScreenTab({ app, config }: { app: AppIntegration; config: Record<str
       {/* Activity Feed */}
       <div className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] overflow-hidden">
         <div className="px-4 py-3 border-b border-[#f0f0f0] dark:border-[#333] bg-[#faf9f8] dark:bg-[#1e1f22] flex items-center justify-between">
-          <h3 className="font-semibold text-[13px] text-[#242424] dark:text-[#f0f0f0]">Recent Activity</h3>
-          <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">Today</span>
+          <h3 className="font-semibold text-[13px] text-[#242424] dark:text-[#f0f0f0]">{t('spaceApps.recentActivity')}</h3>
+          <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">{t('common.today')}</span>
         </div>
         <div className="divide-y divide-[#f0f0f0] dark:divide-[#333]">
           {activity.map(ev => (
@@ -1088,6 +1105,7 @@ function AppScreenTab({ app, config }: { app: AppIntegration; config: Record<str
 // ─────────────────────────────────────────
 
 function AssistantTab({ app, config }: { app: AppIntegration; config: Record<string, string | boolean> }) {
+  const { t } = useI18n();
   const botName = (config.bot_name as string) || `${app.name} Assistant`;
   const initialMessages = useMemo(() => generateConversation(app, botName), [app, botName]);
   const [messages, setMessages] = useState<AssistantMessage[]>(initialMessages);
@@ -1185,11 +1203,11 @@ function AssistantTab({ app, config }: { app: AppIntegration; config: Record<str
         </div>
         <div>
           <p className="text-sm font-medium text-[#242424] dark:text-[#f0f0f0]">{botName}</p>
-          <p className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">Powered by {app.name} · Always online</p>
+          <p className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">{t('spaceApps.poweredBy', { name: app.name })}</p>
         </div>
         <div className="ml-auto flex items-center gap-1.5">
           <div className="w-2 h-2 rounded-full bg-[#237b4b] animate-pulse" />
-          <span className="text-[11px] text-[#237b4b] dark:text-[#57ab5a] font-medium">Online</span>
+          <span className="text-[11px] text-[#237b4b] dark:text-[#57ab5a] font-medium">{t('common.online')}</span>
         </div>
       </div>
 
@@ -1261,10 +1279,10 @@ function AssistantTab({ app, config }: { app: AppIntegration; config: Record<str
           transition={{ duration: 0.2, ease: 'easeOut' }}
         >
           {([
-            { icon: <Bold size={14} />, action: () => wrapSelection('**', '**'), tip: 'Bold' },
-            { icon: <Italic size={14} />, action: () => wrapSelection('_', '_'), tip: 'Italic' },
-            { icon: <Strikethrough size={14} />, action: () => wrapSelection('~~', '~~'), tip: 'Strikethrough' },
-            { icon: <Code size={14} />, action: () => wrapSelection('`', '`'), tip: 'Inline code' },
+            { icon: <Bold size={14} />, action: () => wrapSelection('**', '**'), tip: t('spaceApps.format.bold') },
+            { icon: <Italic size={14} />, action: () => wrapSelection('_', '_'), tip: t('spaceApps.format.italic') },
+            { icon: <Strikethrough size={14} />, action: () => wrapSelection('~~', '~~'), tip: t('spaceApps.format.strikethrough') },
+            { icon: <Code size={14} />, action: () => wrapSelection('`', '`'), tip: t('spaceApps.format.inlineCode') },
           ] as Array<{ icon: React.ReactNode; action: () => void; tip: string }>).map(item => (
             <Tooltip key={item.tip}>
               <TooltipTrigger asChild>
@@ -1279,10 +1297,10 @@ function AssistantTab({ app, config }: { app: AppIntegration; config: Record<str
           <Separator orientation="vertical" className="mx-1 h-4 bg-[#e1dfdd] dark:bg-[#3d3d3d]" />
 
           {([
-            { icon: <List size={14} />, action: () => insertLinePrefix('- '), tip: 'Bullet list' },
-            { icon: <ListOrdered size={14} />, action: () => insertLinePrefix('1. '), tip: 'Numbered list' },
-            { icon: <Quote size={14} />, action: () => insertLinePrefix('> '), tip: 'Blockquote' },
-            { icon: <Link2 size={14} />, action: () => wrapSelection('[', '](url)'), tip: 'Link' },
+            { icon: <List size={14} />, action: () => insertLinePrefix('- '), tip: t('spaceApps.format.bulletList') },
+            { icon: <ListOrdered size={14} />, action: () => insertLinePrefix('1. '), tip: t('spaceApps.format.numberedList') },
+            { icon: <Quote size={14} />, action: () => insertLinePrefix('> '), tip: t('spaceApps.format.blockquote') },
+            { icon: <Link2 size={14} />, action: () => wrapSelection('[', '](url)'), tip: t('spaceApps.format.link') },
           ] as Array<{ icon: React.ReactNode; action: () => void; tip: string }>).map(item => (
             <Tooltip key={item.tip}>
               <TooltipTrigger asChild>
@@ -1302,7 +1320,7 @@ function AssistantTab({ app, config }: { app: AppIntegration; config: Record<str
                 className="h-8 w-8 text-[#616161] dark:text-[#9e9e9e] hover:bg-[#e8e8f8] dark:hover:bg-[#333] hover:text-[#5b5fc7] dark:hover:text-[#a6a9dc]"
               ><span className="text-[11px] font-mono font-semibold">{'{}'}</span></Button>
             </TooltipTrigger>
-            <TooltipContent side="top" sideOffset={4}>Code block</TooltipContent>
+            <TooltipContent side="top" sideOffset={4}>{t('spaceApps.format.codeBlock')}</TooltipContent>
           </Tooltip>
 
           <div className="ml-auto">
@@ -1318,10 +1336,10 @@ function AssistantTab({ app, config }: { app: AppIntegration; config: Record<str
                   )}
                 >
                   <Eye size={13} />
-                  Preview
+                  {t('common.preview')}
                 </Toggle>
               </TooltipTrigger>
-              <TooltipContent side="top" sideOffset={4}>Toggle preview</TooltipContent>
+              <TooltipContent side="top" sideOffset={4}>{t('spaceApps.togglePreview')}</TooltipContent>
             </Tooltip>
           </div>
         </motion.div>
@@ -1337,7 +1355,7 @@ function AssistantTab({ app, config }: { app: AppIntegration; config: Record<str
               className="overflow-hidden"
             >
               <div className="mb-2 px-4 py-2.5 bg-white dark:bg-[#252525] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-xl text-sm text-[#242424] dark:text-[#e0e0e0]">
-                <p className="text-[10px] text-[#8a8a8a] mb-1.5 uppercase tracking-wider">Preview</p>
+                <p className="text-[10px] text-[#8a8a8a] mb-1.5 uppercase tracking-wider">{t('common.preview')}</p>
                 <MarkdownContent content={input} animate />
               </div>
             </motion.div>
@@ -1356,7 +1374,7 @@ function AssistantTab({ app, config }: { app: AppIntegration; config: Record<str
                 handleSend();
               }
             }}
-            placeholder={`Ask ${botName}... (Markdown supported · Shift+Enter for new line)`}
+            placeholder={t('spaceApps.askPlaceholder', { name: botName })}
             rows={1}
             className="flex-1 px-4 py-2.5 bg-white dark:bg-[#252525] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-xl text-sm text-[#242424] dark:text-[#e0e0e0] placeholder-[#b9bbbe] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/50 transition-all resize-none overflow-y-auto"
             style={{ maxHeight: 160 }}
@@ -1379,7 +1397,7 @@ function AssistantTab({ app, config }: { app: AppIntegration; config: Record<str
                 </Button>
               </motion.div>
             </TooltipTrigger>
-            <TooltipContent side="top" sideOffset={4}>Send message</TooltipContent>
+            <TooltipContent side="top" sideOffset={4}>{t('spaceApps.sendMessage')}</TooltipContent>
           </Tooltip>
         </div>
         <motion.p
@@ -1388,7 +1406,7 @@ function AssistantTab({ app, config }: { app: AppIntegration; config: Record<str
           transition={{ delay: 0.3, duration: 0.3 }}
           className="text-[10px] text-muted-foreground mt-1.5 ml-1"
         >
-          Markdown supported · Shift+Enter for new line
+          {t('spaceApps.markdownHelp')}
         </motion.p>
       </div>
     </div>
@@ -1400,6 +1418,8 @@ function AssistantTab({ app, config }: { app: AppIntegration; config: Record<str
 // ─────────────────────────────────────────
 
 function SettingsTab({ app, ia }: { app: AppIntegration; ia: InstalledApp }) {
+  const { t, language } = useI18n();
+  const locale = getLocaleForLanguage(language);
   const [formValues, setFormValues] = useState<Record<string, string | boolean>>(ia.config);
   const [isEnabled, setIsEnabled] = useState(ia.enabled);
   const [saved, setSaved] = useState(false);
@@ -1415,8 +1435,8 @@ function SettingsTab({ app, ia }: { app: AppIntegration; ia: InstalledApp }) {
       <div className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-semibold text-sm text-[#242424] dark:text-[#f0f0f0]">Integration Status</h3>
-            <p className="text-xs text-[#8a8a8a] dark:text-[#6d6f78] mt-0.5">Enable or disable this integration for the space</p>
+            <h3 className="font-semibold text-sm text-[#242424] dark:text-[#f0f0f0]">{t('spaceApps.integrationStatus')}</h3>
+            <p className="text-xs text-[#8a8a8a] dark:text-[#6d6f78] mt-0.5">{t('spaceApps.integrationStatusDesc')}</p>
           </div>
           <button onClick={() => setIsEnabled(!isEnabled)} className="flex items-center gap-2">
             {isEnabled ? (
@@ -1425,7 +1445,7 @@ function SettingsTab({ app, ia }: { app: AppIntegration; ia: InstalledApp }) {
               <ToggleLeft size={32} className="text-[#b9bbbe] dark:text-[#5a5a5a]" />
             )}
             <span className={`text-sm font-medium ${isEnabled ? 'text-[#237b4b] dark:text-[#57ab5a]' : 'text-[#8a8a8a]'}`}>
-              {isEnabled ? 'Enabled' : 'Disabled'}
+              {isEnabled ? t('common.enabled') : t('common.disabled')}
             </span>
           </button>
         </div>
@@ -1437,7 +1457,7 @@ function SettingsTab({ app, ia }: { app: AppIntegration; ia: InstalledApp }) {
           <div className="px-4 py-3 border-b border-[#f0f0f0] dark:border-[#333] bg-[#faf9f8] dark:bg-[#1e1f22]">
             <h3 className="font-semibold text-[13px] text-[#242424] dark:text-[#f0f0f0] flex items-center gap-2">
               <Settings size={14} className="text-[#5b5fc7]" />
-              Configuration
+              {t('spaceApps.configuration')}
             </h3>
           </div>
           <div className="p-4 space-y-4">
@@ -1480,7 +1500,7 @@ function SettingsTab({ app, ia }: { app: AppIntegration; ia: InstalledApp }) {
                       <ToggleLeft size={24} className="text-[#b9bbbe] dark:text-[#5a5a5a]" />
                     )}
                     <span className="text-sm text-[#424242] dark:text-[#c8c8c8]">
-                      {formValues[field.id] === 'true' || (formValues[field.id] === undefined && field.default === true) ? 'Enabled' : 'Disabled'}
+                      {formValues[field.id] === 'true' || (formValues[field.id] === undefined && field.default === true) ? t('common.enabled') : t('common.disabled')}
                     </span>
                   </button>
                 ) : null}
@@ -1496,7 +1516,7 @@ function SettingsTab({ app, ia }: { app: AppIntegration; ia: InstalledApp }) {
                   : 'bg-[#5b5fc7] hover:bg-[#4f52b5] text-white shadow-sm'
               }`}
             >
-              {saved ? '✓ Saved' : 'Save Changes'}
+              {saved ? t('spaceApps.saved') : t('spaceApps.saveChanges')}
             </button>
           </div>
         </div>
@@ -1507,7 +1527,7 @@ function SettingsTab({ app, ia }: { app: AppIntegration; ia: InstalledApp }) {
         <div className="px-4 py-3 border-b border-[#f0f0f0] dark:border-[#333] bg-[#faf9f8] dark:bg-[#1e1f22]">
           <h3 className="font-semibold text-[13px] text-[#242424] dark:text-[#f0f0f0] flex items-center gap-2">
             <Shield size={14} className="text-[#d4820c]" />
-            Permissions
+            {t('spaceApps.permissions')}
           </h3>
         </div>
         <div className="p-4">
@@ -1526,37 +1546,37 @@ function SettingsTab({ app, ia }: { app: AppIntegration; ia: InstalledApp }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] overflow-hidden">
           <div className="px-4 py-3 border-b border-[#f0f0f0] dark:border-[#333] bg-[#faf9f8] dark:bg-[#1e1f22]">
-            <h3 className="font-semibold text-[13px] text-[#242424] dark:text-[#f0f0f0] flex items-center gap-2">
-              <Info size={14} className="text-[#0078d4]" />
-              Information
-            </h3>
+          <h3 className="font-semibold text-[13px] text-[#242424] dark:text-[#f0f0f0] flex items-center gap-2">
+            <Info size={14} className="text-[#0078d4]" />
+            {t('spaceApps.information')}
+          </h3>
+        </div>
+        <div className="p-4 space-y-2 text-sm text-[#424242] dark:text-[#c8c8c8]">
+          <div className="flex justify-between">
+            <span className="text-[#8a8a8a] dark:text-[#6d6f78]">{t('spaceApps.developer')}</span>
+            <span>{app.developer}</span>
           </div>
-          <div className="p-4 space-y-2 text-sm text-[#424242] dark:text-[#c8c8c8]">
-            <div className="flex justify-between">
-              <span className="text-[#8a8a8a] dark:text-[#6d6f78]">Developer</span>
-              <span>{app.developer}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[#8a8a8a] dark:text-[#6d6f78]">Version</span>
-              <span>v{app.version}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[#8a8a8a] dark:text-[#6d6f78]">Category</span>
-              <span>{app.category}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[#8a8a8a] dark:text-[#6d6f78]">Installed by</span>
-              <span>{ia.installedBy}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[#8a8a8a] dark:text-[#6d6f78]">Installed on</span>
-              <span>{format(ia.installedAt, 'MMM d, yyyy')}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[#8a8a8a] dark:text-[#6d6f78]">Rating</span>
-              <span className="flex items-center gap-1">
-                <Star size={12} className="text-[#d4820c] fill-[#d4820c]" />
-                {app.rating}
+          <div className="flex justify-between">
+            <span className="text-[#8a8a8a] dark:text-[#6d6f78]">{t('spaceApps.version')}</span>
+            <span>v{app.version}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#8a8a8a] dark:text-[#6d6f78]">{t('spaceApps.category')}</span>
+            <span>{app.category}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#8a8a8a] dark:text-[#6d6f78]">{t('spaceApps.installedBy')}</span>
+            <span>{ia.installedBy}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#8a8a8a] dark:text-[#6d6f78]">{t('spaceApps.installedOn')}</span>
+            <span>{new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', year: 'numeric' }).format(ia.installedAt)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#8a8a8a] dark:text-[#6d6f78]">{t('spaceApps.rating')}</span>
+            <span className="flex items-center gap-1">
+              <Star size={12} className="text-[#d4820c] fill-[#d4820c]" />
+              {app.rating}
               </span>
             </div>
           </div>
@@ -1566,15 +1586,15 @@ function SettingsTab({ app, ia }: { app: AppIntegration; ia: InstalledApp }) {
           <div className="px-4 py-3 border-b border-[#c4314b]/10 bg-[#fdf0f2] dark:bg-[#c4314b]/5">
             <h3 className="font-semibold text-[13px] text-[#c4314b] dark:text-[#f47067] flex items-center gap-2">
               <Trash2 size={14} />
-              Danger Zone
+              {t('spaceApps.dangerZone')}
             </h3>
           </div>
           <div className="p-4 space-y-3">
             <p className="text-sm text-[#424242] dark:text-[#c8c8c8]">
-              Removing this app will disconnect all webhooks, stop notifications, and delete app-specific data for this space.
+              {t('spaceApps.dangerZoneDesc')}
             </p>
             <button className="px-4 py-2 rounded-lg text-sm font-medium border border-[#c4314b]/30 text-[#c4314b] dark:text-[#f47067] hover:bg-[#c4314b]/10 transition-colors">
-              Uninstall {app.name}
+              {t('spaceApps.uninstall', { name: app.name })}
             </button>
           </div>
         </div>
@@ -1602,6 +1622,9 @@ function InstalledAppRow({
   spaceId: string;
   onSelect: () => void;
 }) {
+  const { t, language } = useI18n();
+  const locale = getLocaleForLanguage(language);
+
   return (
     <Link
       to={`/space/${spaceId}/apps/${app.id}`}
@@ -1622,7 +1645,7 @@ function InstalledAppRow({
         <div className="flex items-center gap-3 shrink-0">
           <span className={`flex items-center gap-1.5 text-[11px] font-medium ${enabled ? 'text-[#237b4b] dark:text-[#57ab5a]' : 'text-[#c4314b] dark:text-[#f47067]'}`}>
             <div className={`w-2 h-2 rounded-full ${enabled ? 'bg-[#237b4b] dark:bg-[#57ab5a]' : 'bg-[#c4314b] dark:bg-[#f47067]'}`} />
-            {enabled ? 'Active' : 'Disabled'}
+            {enabled ? t('common.active') : t('common.disabled')}
           </span>
           <ChevronRight size={16} className="text-[#d1d1d1] dark:text-[#3d3d3d] group-hover:text-[#5b5fc7] transition-colors" />
         </div>
@@ -1634,7 +1657,7 @@ function InstalledAppRow({
         </span>
         <span className="flex items-center gap-1">
           <Clock size={11} />
-          {format(installedAt, 'MMM d, yyyy')}
+          {new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', year: 'numeric' }).format(installedAt)}
         </span>
         <span className="flex items-center gap-1">
           <Star size={11} className="text-[#d4820c] fill-[#d4820c]" />
@@ -1662,12 +1685,13 @@ function AppDetailView({
   spaceId: string;
   space: { name: string; channels: { id: string }[] };
 }) {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<AppTab>('app');
 
   const tabs: { id: AppTab; label: string; icon: React.ReactNode }[] = [
-    { id: 'app', label: 'App', icon: <LayoutGrid size={15} /> },
-    { id: 'assistant', label: 'Assistant', icon: <Bot size={15} /> },
-    { id: 'settings', label: 'Settings', icon: <Settings size={15} /> },
+    { id: 'app', label: t('common.app'), icon: <LayoutGrid size={15} /> },
+    { id: 'assistant', label: t('common.assistant'), icon: <Bot size={15} /> },
+    { id: 'settings', label: t('common.settings'), icon: <Settings size={15} /> },
   ];
 
   return (
@@ -1688,7 +1712,7 @@ function AppDetailView({
               to={`/space/${spaceId}/apps`}
               className="hover:text-[#5b5fc7] dark:hover:text-[#a6a9dc] transition-colors"
             >
-              Apps
+              {t('common.apps')}
             </Link>
             <span className="text-[#d1d1d1] dark:text-[#3d3d3d]">/</span>
             <span className="text-[#424242] dark:text-[#c8c8c8]">{app.name}</span>
@@ -1704,12 +1728,12 @@ function AppDetailView({
                 <h1 className="text-[18px] font-bold text-[#242424] dark:text-[#f0f0f0]">{app.name}</h1>
                 {app.verified && (
                   <span className="flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[#ecf5fe] dark:bg-[#0078d4]/15 text-[#0078d4] dark:text-[#6cb8f6]">
-                    <CheckCircle2 size={10} /> Verified
+                    <CheckCircle2 size={10} /> {t('spaceApps.verified')}
                   </span>
                 )}
                 <span className={`flex items-center gap-1.5 text-[11px] font-medium ${ia.enabled ? 'text-[#237b4b] dark:text-[#57ab5a]' : 'text-[#c4314b] dark:text-[#f47067]'}`}>
                   <div className={`w-1.5 h-1.5 rounded-full ${ia.enabled ? 'bg-[#237b4b] animate-pulse' : 'bg-[#c4314b]'}`} />
-                  {ia.enabled ? 'Active' : 'Disabled'}
+                  {ia.enabled ? t('common.active') : t('common.disabled')}
                 </span>
               </div>
               <p className="text-xs text-[#8a8a8a] dark:text-[#6d6f78]">{app.developer} · v{app.version}</p>
@@ -1753,6 +1777,7 @@ function AppDetailView({
 // ─────────────────────────────────────────
 
 export function SpaceApps() {
+  const { t } = useI18n();
   const { spaceId, appId: routeAppId } = useParams();
   const navigate = useNavigate();
 
@@ -1762,7 +1787,7 @@ export function SpaceApps() {
   if (!space) {
     return (
       <div className="flex-1 flex items-center justify-center bg-white dark:bg-[#1f1f1f]">
-        <p className="text-[#616161]">Space not found</p>
+        <p className="text-[#616161]">{t('spaceApps.spaceNotFound')}</p>
       </div>
     );
   }
@@ -1776,13 +1801,13 @@ export function SpaceApps() {
           <div className="w-14 h-14 bg-[#f0f0f0] dark:bg-[#292929] rounded-2xl flex items-center justify-center mb-4">
             <Puzzle size={24} className="text-[#b9bbbe]" />
           </div>
-          <p className="text-[#242424] dark:text-[#f0f0f0] font-medium mb-1">App not found</p>
-          <p className="text-sm text-[#616161] dark:text-[#8a8a8a] mb-4">This app isn't installed in this space.</p>
+          <p className="text-[#242424] dark:text-[#f0f0f0] font-medium mb-1">{t('spaceApps.appNotFound')}</p>
+          <p className="text-sm text-[#616161] dark:text-[#8a8a8a] mb-4">{t('spaceApps.appNotInstalledDesc')}</p>
           <Link
             to={`/space/${spaceId}/apps`}
             className="text-sm text-[#5b5fc7] hover:underline"
           >
-            Back to installed apps
+            {t('spaceApps.backToInstalledApps')}
           </Link>
         </div>
       );
@@ -1811,7 +1836,7 @@ export function SpaceApps() {
             {space.name}
           </Link>
           <span className="text-[#d1d1d1] dark:text-[#3d3d3d]">/</span>
-          <span className="text-[#424242] dark:text-[#c8c8c8]">Apps</span>
+          <span className="text-[#424242] dark:text-[#c8c8c8]">{t('common.apps')}</span>
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -1819,9 +1844,13 @@ export function SpaceApps() {
               <Puzzle size={20} className="text-white" />
             </div>
             <div>
-              <h1 className="text-[20px] font-bold text-[#242424] dark:text-[#f0f0f0]">Installed Apps</h1>
+              <h1 className="text-[20px] font-bold text-[#242424] dark:text-[#f0f0f0]">{t('spaceApps.installedApps')}</h1>
               <p className="text-sm text-[#616161] dark:text-[#8a8a8a]">
-                {installedApps.length} app{installedApps.length !== 1 ? 's' : ''} installed in {space.name}
+                {t('spaceApps.installedAppsCount', {
+                  count: installedApps.length,
+                  label: installedApps.length === 1 ? t('spaceApps.appSingle') : t('spaceApps.appPlural'),
+                  name: space.name,
+                })}
               </p>
             </div>
           </div>
@@ -1830,7 +1859,7 @@ export function SpaceApps() {
             className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-[#5b5fc7] text-white hover:bg-[#4f52b5] transition-colors shadow-sm"
           >
             <Search size={14} />
-            Browse App Store
+            {t('spaceApps.browseAppStore')}
           </Link>
         </div>
       </div>
@@ -1843,13 +1872,13 @@ export function SpaceApps() {
               <div className="w-14 h-14 bg-[#f0f0f0] dark:bg-[#292929] rounded-2xl flex items-center justify-center mb-4">
                 <Puzzle size={24} className="text-[#b9bbbe] dark:text-[#5a5a5a]" />
               </div>
-              <p className="text-[#242424] dark:text-[#f0f0f0] font-medium mb-1">No apps installed</p>
-              <p className="text-sm text-[#616161] dark:text-[#8a8a8a] mb-4">Browse the App Store to find integrations for this space.</p>
+              <p className="text-[#242424] dark:text-[#f0f0f0] font-medium mb-1">{t('spaceApps.noAppsInstalled')}</p>
+              <p className="text-sm text-[#616161] dark:text-[#8a8a8a] mb-4">{t('spaceApps.noAppsInstalledDesc')}</p>
               <Link
                 to="/apps"
                 className="px-4 py-2 rounded-lg bg-[#5b5fc7] text-white text-sm font-medium hover:bg-[#4f52b5] transition-colors"
               >
-                Browse App Store
+                {t('spaceApps.browseAppStore')}
               </Link>
             </div>
           ) : (
@@ -1869,7 +1898,7 @@ export function SpaceApps() {
           {/* Suggested apps */}
           {installedApps.length > 0 && (
             <div className="mt-8">
-              <h3 className="font-semibold text-sm text-[#242424] dark:text-[#f0f0f0] mb-3">Suggested for {space.name}</h3>
+              <h3 className="font-semibold text-sm text-[#242424] dark:text-[#f0f0f0] mb-3">{t('spaceApps.suggestedFor', { name: space.name })}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {appCatalog
                   .filter(a => !installedApps.find(ia => ia.appId === a.id))

@@ -10,7 +10,8 @@ import {
   CalendarDays, Target, TrendingUp,
 } from 'lucide-react';
 import { spaces, tasks as allTasks, users, type Task } from '../data/mockData';
-import { format, differenceInDays } from 'date-fns';
+import { differenceInDays } from 'date-fns';
+import { type LanguageCode, useI18n } from '../context/I18nContext';
 
 // Sprint configuration
 const CURRENT_SPRINT = {
@@ -22,14 +23,30 @@ const CURRENT_SPRINT = {
 
 const NOW = new Date('2026-02-18T16:00:00');
 
+const LOCALE_MAP: Record<LanguageCode, string> = {
+  en: 'en-US',
+  'zh-Hant': 'zh-TW',
+  'zh-Hans': 'zh-CN',
+  ja: 'ja-JP',
+  de: 'de-DE',
+  es: 'es-ES',
+  fr: 'fr-FR',
+  hi: 'hi-IN',
+  pl: 'pl-PL',
+};
+
+function getLocaleForLanguage(language: LanguageCode) {
+  return LOCALE_MAP[language] || 'en-US';
+}
+
 type ColumnStatus = 'todo' | 'in-progress' | 'in-review' | 'done';
 type ViewMode = 'board' | 'backlog';
 
-const BOARD_COLUMNS: { id: ColumnStatus; label: string; icon: React.ReactNode; color: string; dotColor: string }[] = [
-  { id: 'todo', label: 'To Do', icon: <Circle size={14} />, color: 'text-[#616161] dark:text-[#999]', dotColor: 'bg-[#8a8a8a]' },
-  { id: 'in-progress', label: 'In Progress', icon: <Clock size={14} />, color: 'text-[#0078d4] dark:text-[#4dabf5]', dotColor: 'bg-[#0078d4]' },
-  { id: 'in-review', label: 'In Review', icon: <Eye size={14} />, color: 'text-[#d4820c] dark:text-[#f0b850]', dotColor: 'bg-[#d4820c]' },
-  { id: 'done', label: 'Done', icon: <CheckCircle2 size={14} />, color: 'text-[#237b4b] dark:text-[#6fcf97]', dotColor: 'bg-[#237b4b]' },
+const BOARD_COLUMNS: { id: ColumnStatus; labelKey: string; icon: React.ReactNode; color: string; dotColor: string }[] = [
+  { id: 'todo', labelKey: 'tasks.status.todo', icon: <Circle size={14} />, color: 'text-[#616161] dark:text-[#999]', dotColor: 'bg-[#8a8a8a]' },
+  { id: 'in-progress', labelKey: 'tasks.status.inProgress', icon: <Clock size={14} />, color: 'text-[#0078d4] dark:text-[#4dabf5]', dotColor: 'bg-[#0078d4]' },
+  { id: 'in-review', labelKey: 'tasks.status.inReview', icon: <Eye size={14} />, color: 'text-[#d4820c] dark:text-[#f0b850]', dotColor: 'bg-[#d4820c]' },
+  { id: 'done', labelKey: 'tasks.status.done', icon: <CheckCircle2 size={14} />, color: 'text-[#237b4b] dark:text-[#6fcf97]', dotColor: 'bg-[#237b4b]' },
 ];
 
 const EPIC_COLORS: Record<string, { bg: string; text: string; border: string }> = {
@@ -50,11 +67,12 @@ function TypeIcon({ type, size = 14 }: { type: Task['type']; size?: number }) {
 }
 
 function PriorityBadge({ priority }: { priority: Task['priority'] }) {
+  const { t } = useI18n();
   const config = {
-    critical: { label: 'Critical', bg: 'bg-[#c4314b]/10 dark:bg-[#c4314b]/20', text: 'text-[#c4314b] dark:text-[#f47067]', icon: <Flame size={10} /> },
-    high: { label: 'High', bg: 'bg-[#d4820c]/10 dark:bg-[#d4820c]/20', text: 'text-[#d4820c] dark:text-[#f0b850]', icon: <AlertTriangle size={10} /> },
-    medium: { label: 'Med', bg: 'bg-[#0078d4]/10 dark:bg-[#0078d4]/20', text: 'text-[#0078d4] dark:text-[#4dabf5]', icon: null },
-    low: { label: 'Low', bg: 'bg-[#8a8a8a]/10 dark:bg-[#8a8a8a]/20', text: 'text-[#8a8a8a] dark:text-[#999]', icon: null },
+    critical: { label: t('tasks.priority.critical'), bg: 'bg-[#c4314b]/10 dark:bg-[#c4314b]/20', text: 'text-[#c4314b] dark:text-[#f47067]', icon: <Flame size={10} /> },
+    high: { label: t('tasks.priority.high'), bg: 'bg-[#d4820c]/10 dark:bg-[#d4820c]/20', text: 'text-[#d4820c] dark:text-[#f0b850]', icon: <AlertTriangle size={10} /> },
+    medium: { label: t('tasks.priority.mediumShort'), bg: 'bg-[#0078d4]/10 dark:bg-[#0078d4]/20', text: 'text-[#0078d4] dark:text-[#4dabf5]', icon: null },
+    low: { label: t('tasks.priority.low'), bg: 'bg-[#8a8a8a]/10 dark:bg-[#8a8a8a]/20', text: 'text-[#8a8a8a] dark:text-[#999]', icon: null },
   }[priority];
 
   return (
@@ -96,6 +114,7 @@ function SubtaskProgress({ subtasks }: { subtasks?: Task['subtasks'] }) {
 
 const TaskCard = React.forwardRef<HTMLDivElement, { task: Task; onOpenDetail: (task: Task) => void }>(
   function TaskCard({ task, onOpenDetail }, ref) {
+  const { t } = useI18n();
   const user = users.find(u => u.id === task.assigneeId);
   const epicStyle = EPIC_COLORS[task.epicColor || 'purple'];
   const isOverdue = task.dueDate < NOW && task.status !== 'done';
@@ -161,7 +180,7 @@ const TaskCard = React.forwardRef<HTMLDivElement, { task: Task; onOpenDetail: (t
             <GitPullRequest size={12} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
           )}
           {isOverdue && (
-            <span className="text-[10px] text-[#c4314b] dark:text-[#f47067] font-medium">Overdue</span>
+            <span className="text-[10px] text-[#c4314b] dark:text-[#f47067] font-medium">{t('tasks.overdue')}</span>
           )}
           <StoryPointsBadge points={task.storyPoints} />
         </div>
@@ -172,10 +191,12 @@ const TaskCard = React.forwardRef<HTMLDivElement, { task: Task; onOpenDetail: (t
 TaskCard.displayName = 'TaskCard';
 
 function TaskDetailPanel({ task, onClose }: { task: Task; onClose: () => void }) {
+  const { t, language } = useI18n();
+  const locale = getLocaleForLanguage(language);
   const user = users.find(u => u.id === task.assigneeId);
   const epicStyle = EPIC_COLORS[task.epicColor || 'purple'];
   const col = BOARD_COLUMNS.find(c => c.id === task.status) ||
-    { label: 'Backlog', color: 'text-[#8a8a8a]', dotColor: 'bg-[#8a8a8a]' };
+    { labelKey: 'tasks.status.backlog', color: 'text-[#8a8a8a]', dotColor: 'bg-[#8a8a8a]' };
 
   return (
     <motion.div
@@ -211,52 +232,52 @@ function TaskDetailPanel({ task, onClose }: { task: Task; onClose: () => void })
 
         {/* Meta grid */}
         <div className="grid grid-cols-2 gap-3">
-          <DetailField label="Status">
+          <DetailField label={t('tasks.field.status')}>
             <span className={`flex items-center gap-1.5 text-[13px] font-medium ${col.color}`}>
               <div className={`w-2 h-2 rounded-full ${col.dotColor}`} />
-              {col.label}
+              {t(col.labelKey)}
             </span>
           </DetailField>
-          <DetailField label="Priority">
+          <DetailField label={t('tasks.field.priority')}>
             <PriorityBadge priority={task.priority} />
           </DetailField>
-          <DetailField label="Assignee">
+          <DetailField label={t('tasks.field.assignee')}>
             {user ? (
               <div className="flex items-center gap-2">
                 <img src={user.avatar} alt={user.name} className="w-5 h-5 rounded-full" />
                 <span className="text-[13px] text-[#242424] dark:text-[#f0f0f0]">{user.name}</span>
               </div>
             ) : (
-              <span className="text-[13px] text-[#8a8a8a]">Unassigned</span>
+              <span className="text-[13px] text-[#8a8a8a]">{t('tasks.unassigned')}</span>
             )}
           </DetailField>
-          <DetailField label="Story Points">
+          <DetailField label={t('tasks.field.storyPoints')}>
             <StoryPointsBadge points={task.storyPoints} />
           </DetailField>
-          <DetailField label="Sprint">
+          <DetailField label={t('tasks.field.sprint')}>
             <span className="text-[13px] text-[#242424] dark:text-[#f0f0f0] flex items-center gap-1.5">
               <Rocket size={12} className="text-[#5b5fc7]" />
-              {task.sprint || 'Backlog'}
+              {task.sprint || t('tasks.backlog')}
             </span>
           </DetailField>
-          <DetailField label="Due Date">
+          <DetailField label={t('tasks.field.dueDate')}>
             <span className={`text-[13px] flex items-center gap-1.5 ${
               task.dueDate < NOW && task.status !== 'done'
                 ? 'text-[#c4314b] dark:text-[#f47067]'
                 : 'text-[#242424] dark:text-[#f0f0f0]'
             }`}>
               <CalendarDays size={12} />
-              {format(task.dueDate, 'MMM d, yyyy')}
+              {new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', year: 'numeric' }).format(task.dueDate)}
             </span>
           </DetailField>
-          <DetailField label="Type">
+          <DetailField label={t('tasks.field.type')}>
             <div className="flex items-center gap-1.5">
               <TypeIcon type={task.type} size={13} />
-              <span className="text-[13px] text-[#242424] dark:text-[#f0f0f0] capitalize">{task.type}</span>
+              <span className="text-[13px] text-[#242424] dark:text-[#f0f0f0]">{t(`tasks.type.${task.type}`)}</span>
             </div>
           </DetailField>
           {task.epic && (
-            <DetailField label="Epic">
+            <DetailField label={t('tasks.field.epic')}>
               <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium ${epicStyle.bg} ${epicStyle.text}`}>
                 <Tag size={9} />
                 {task.epic}
@@ -268,7 +289,7 @@ function TaskDetailPanel({ task, onClose }: { task: Task; onClose: () => void })
         {/* Labels */}
         {task.labels && task.labels.length > 0 && (
           <div>
-            <p className="text-[11px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wide mb-2">Labels</p>
+            <p className="text-[11px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wide mb-2">{t('tasks.labels')}</p>
             <div className="flex flex-wrap gap-1.5">
               {task.labels.map(label => (
                 <span
@@ -286,7 +307,7 @@ function TaskDetailPanel({ task, onClose }: { task: Task; onClose: () => void })
         {task.subtasks && task.subtasks.length > 0 && (
           <div>
             <p className="text-[11px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wide mb-2">
-              Subtasks ({task.subtasks.filter(s => s.done).length}/{task.subtasks.length})
+              {t('tasks.subtasks', { done: task.subtasks.filter(s => s.done).length, total: task.subtasks.length })}
             </p>
             <div className="space-y-1.5">
               {task.subtasks.map(st => (
@@ -309,7 +330,7 @@ function TaskDetailPanel({ task, onClose }: { task: Task; onClose: () => void })
         {task.pullRequestUrl && (
           <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-[#5b5fc7]/5 dark:bg-[#5b5fc7]/10 border border-[#5b5fc7]/15 dark:border-[#5b5fc7]/20">
             <GitPullRequest size={14} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
-            <span className="text-[12px] font-medium text-[#5b5fc7] dark:text-[#a6a9dc]">Pull Request {task.pullRequestUrl}</span>
+            <span className="text-[12px] font-medium text-[#5b5fc7] dark:text-[#a6a9dc]">{t('tasks.pullRequest', { id: task.pullRequestUrl })}</span>
           </div>
         )}
       </div>
@@ -327,6 +348,8 @@ function DetailField({ label, children }: { label: string; children: React.React
 }
 
 export function Tasks() {
+  const { t, language } = useI18n();
+  const locale = getLocaleForLanguage(language);
   const { spaceId } = useParams();
   const currentSpace = spaces.find(s => s.id === spaceId);
 
@@ -341,6 +364,9 @@ export function Tasks() {
   const [taskState, setTaskState] = useState<Task[]>(allTasks);
 
   if (!currentSpace) return null;
+
+  const dateShort = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' });
+  const dateLong = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', year: 'numeric' });
 
   const daysRemaining = differenceInDays(CURRENT_SPRINT.endDate, NOW);
   const totalDays = differenceInDays(CURRENT_SPRINT.endDate, CURRENT_SPRINT.startDate);
@@ -420,7 +446,7 @@ export function Tasks() {
                 <div>
                   <h2 className="text-[15px] font-semibold text-[#242424] dark:text-[#f0f0f0] leading-tight">{CURRENT_SPRINT.name}</h2>
                   <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">
-                    {format(CURRENT_SPRINT.startDate, 'MMM d')} – {format(CURRENT_SPRINT.endDate, 'MMM d, yyyy')}
+                    {dateShort.format(CURRENT_SPRINT.startDate)} – {dateLong.format(CURRENT_SPRINT.endDate)}
                   </span>
                 </div>
               </div>
@@ -429,17 +455,17 @@ export function Tasks() {
               <div className="hidden md:flex items-center gap-2 ml-4">
                 <SprintStatPill
                   icon={<CalendarDays size={12} />}
-                  label={`${daysRemaining}d left`}
+                  label={t('tasks.daysLeft', { count: daysRemaining })}
                   color={daysRemaining <= 2 ? 'text-[#c4314b] dark:text-[#f47067]' : 'text-[#616161] dark:text-[#b9bbbe]'}
                 />
                 <SprintStatPill
                   icon={<Target size={12} />}
-                  label={`${donePoints}/${totalPoints} pts`}
+                  label={t('tasks.pointsRatio', { done: donePoints, total: totalPoints })}
                   color="text-[#5b5fc7] dark:text-[#a6a9dc]"
                 />
                 <SprintStatPill
                   icon={<TrendingUp size={12} />}
-                  label={`${pointsBurnPct}% burned`}
+                  label={t('tasks.burned', { percent: pointsBurnPct })}
                   color={pointsBurnPct >= 70 ? 'text-[#237b4b] dark:text-[#6fcf97]' : 'text-[#d4820c] dark:text-[#f0b850]'}
                 />
               </div>
@@ -457,7 +483,7 @@ export function Tasks() {
                   }`}
                 >
                   <LayoutGrid size={13} />
-                  Board
+                  {t('tasks.view.board')}
                 </button>
                 <button
                   onClick={() => setViewMode('backlog')}
@@ -468,13 +494,13 @@ export function Tasks() {
                   }`}
                 >
                   <List size={13} />
-                  Backlog
+                  {t('tasks.view.backlog')}
                 </button>
               </div>
 
               <button className="flex items-center gap-1.5 bg-gradient-to-r from-[#5b5fc7] to-[#7b4db8] text-white px-3.5 py-1.5 rounded-lg text-[12px] font-semibold hover:opacity-90 transition-opacity shadow-sm">
                 <Plus size={14} />
-                New Item
+                {t('tasks.newItem')}
               </button>
             </div>
           </div>
@@ -494,7 +520,7 @@ export function Tasks() {
           {/* Sprint goal */}
           <div className="px-5 pb-3">
             <p className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">
-              <span className="font-medium text-[#616161] dark:text-[#999]">Goal:</span> {CURRENT_SPRINT.goal}
+              <span className="font-medium text-[#616161] dark:text-[#999]">{t('tasks.goal')}:</span> {CURRENT_SPRINT.goal}
             </p>
           </div>
 
@@ -505,7 +531,7 @@ export function Tasks() {
               <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#8a8a8a] dark:text-[#6d6f78]" />
               <input
                 type="text"
-                placeholder="Search tasks..."
+                placeholder={t('tasks.searchPlaceholder')}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="w-full pl-8 pr-3 py-1.5 text-[12px] bg-[#f5f5f5] dark:bg-[#1e1f22] text-[#242424] dark:text-[#f0f0f0] placeholder-[#8a8a8a] dark:placeholder-[#6d6f78] rounded-lg border border-[#e1dfdd] dark:border-[#3d3d3d] outline-none focus:border-[#5b5fc7]/40 dark:focus:border-[#5b5fc7]/30 transition-colors"
@@ -514,40 +540,40 @@ export function Tasks() {
 
             {/* Filter chips */}
             <FilterChipSelect
-              label="Epic"
+              label={t('tasks.filter.epic')}
               icon={<Layers size={12} />}
               value={filterEpic}
               options={allEpics.map(([name, color]) => ({ value: name, label: name, color }))}
               onChange={setFilterEpic}
             />
             <FilterChipSelect
-              label="Assignee"
+              label={t('tasks.filter.assignee')}
               icon={<Users size={12} />}
               value={filterAssignee}
               options={allAssignees.map(u => ({ value: u.id, label: u.name }))}
               onChange={setFilterAssignee}
             />
             <FilterChipSelect
-              label="Type"
+              label={t('tasks.filter.type')}
               icon={<BookOpen size={12} />}
               value={filterType}
               options={[
-                { value: 'story', label: 'Story' },
-                { value: 'bug', label: 'Bug' },
-                { value: 'task', label: 'Task' },
-                { value: 'spike', label: 'Spike' },
+                { value: 'story', label: t('tasks.type.story') },
+                { value: 'bug', label: t('tasks.type.bug') },
+                { value: 'task', label: t('tasks.type.task') },
+                { value: 'spike', label: t('tasks.type.spike') },
               ]}
               onChange={setFilterType}
             />
             <FilterChipSelect
-              label="Priority"
+              label={t('tasks.filter.priority')}
               icon={<Flame size={12} />}
               value={filterPriority}
               options={[
-                { value: 'critical', label: 'Critical' },
-                { value: 'high', label: 'High' },
-                { value: 'medium', label: 'Medium' },
-                { value: 'low', label: 'Low' },
+                { value: 'critical', label: t('tasks.priority.critical') },
+                { value: 'high', label: t('tasks.priority.high') },
+                { value: 'medium', label: t('tasks.priority.medium') },
+                { value: 'low', label: t('tasks.priority.low') },
               ]}
               onChange={setFilterPriority}
             />
@@ -557,7 +583,7 @@ export function Tasks() {
                 className="flex items-center gap-1 px-2 py-1 text-[11px] text-[#c4314b] dark:text-[#f47067] hover:bg-[#c4314b]/5 rounded-md transition-colors"
               >
                 <X size={12} />
-                Clear ({activeFilterCount})
+                {t('tasks.clearFilters', { count: activeFilterCount })}
               </button>
             )}
           </div>
@@ -579,13 +605,13 @@ export function Tasks() {
                       <div className="flex items-center justify-between mb-3 px-2">
                         <div className="flex items-center gap-2">
                           <span className={col.color}>{col.icon}</span>
-                          <h3 className="text-[13px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{col.label}</h3>
+                          <h3 className="text-[13px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t(col.labelKey)}</h3>
                           <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] bg-[#f0f0f0] dark:bg-[#333] px-1.5 py-0.5 rounded-full">
                             {colTasks.length}
                           </span>
                         </div>
                         <span className="text-[11px] font-medium text-[#5b5fc7] dark:text-[#a6a9dc] bg-[#5b5fc7]/8 dark:bg-[#5b5fc7]/15 px-1.5 py-0.5 rounded-full">
-                          {colPoints} pts
+                          {t('tasks.points', { count: colPoints })}
                         </span>
                       </div>
 
@@ -606,7 +632,7 @@ export function Tasks() {
                             <div className="w-10 h-10 rounded-full bg-[#f5f5f5] dark:bg-[#333] flex items-center justify-center mb-2">
                               <CheckCircle2 size={18} className="text-[#8a8a8a] dark:text-[#6d6f78]" />
                             </div>
-                            <p className="text-[12px] text-[#8a8a8a] dark:text-[#6d6f78]">No items</p>
+                            <p className="text-[12px] text-[#8a8a8a] dark:text-[#6d6f78]">{t('tasks.noItems')}</p>
                           </div>
                         )}
                       </div>
@@ -620,7 +646,7 @@ export function Tasks() {
                 {/* Sprint tasks section */}
                 <BacklogSection
                   title={CURRENT_SPRINT.name}
-                  subtitle={`${format(CURRENT_SPRINT.startDate, 'MMM d')} – ${format(CURRENT_SPRINT.endDate, 'MMM d')} · ${donePoints}/${totalPoints} pts`}
+                  subtitle={`${dateShort.format(CURRENT_SPRINT.startDate)} – ${dateShort.format(CURRENT_SPRINT.endDate)} · ${t('tasks.pointsRatio', { done: donePoints, total: totalPoints })}`}
                   tasks={filteredSprintTasks}
                   defaultOpen={true}
                   onOpenDetail={setSelectedTask}
@@ -629,8 +655,8 @@ export function Tasks() {
 
                 {/* Backlog section */}
                 <BacklogSection
-                  title="Product Backlog"
-                  subtitle={`${filteredBacklogTasks.length} items · ${filteredBacklogTasks.reduce((s, t) => s + (t.storyPoints || 0), 0)} pts`}
+                  title={t('tasks.productBacklog')}
+                  subtitle={`${t('tasks.itemsCount', { count: filteredBacklogTasks.length })} · ${t('tasks.points', { count: filteredBacklogTasks.reduce((s, t) => s + (t.storyPoints || 0), 0) })}`}
                   tasks={filteredBacklogTasks}
                   defaultOpen={showBacklog}
                   onOpenDetail={setSelectedTask}
@@ -677,6 +703,7 @@ function FilterChipSelect({
   options: { value: string; label: string; color?: string }[];
   onChange: (v: string | null) => void;
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -720,7 +747,7 @@ function FilterChipSelect({
                 onClick={() => { onChange(null); setOpen(false); }}
                 className="w-full text-left px-3 py-1.5 text-[12px] text-[#8a8a8a] dark:text-[#6d6f78] hover:bg-[#f5f5f5] dark:hover:bg-[#333] transition-colors"
               >
-                Clear filter
+                {t('tasks.clearFilter')}
               </button>
             )}
             {options.map(opt => (
@@ -756,6 +783,7 @@ function BacklogSection({
   onOpenDetail: (task: Task) => void;
   accentColor: string;
 }) {
+  const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   // Group by status
@@ -777,7 +805,7 @@ function BacklogSection({
           <span className="text-[12px] text-[#8a8a8a] dark:text-[#6d6f78]">{subtitle}</span>
         </div>
         <span className="text-[12px] text-[#8a8a8a] dark:text-[#6d6f78] bg-[#f0f0f0] dark:bg-[#333] px-2 py-0.5 rounded-full">
-          {tasks.length} items
+          {t('tasks.itemsCount', { count: tasks.length })}
         </span>
       </button>
 
@@ -793,11 +821,11 @@ function BacklogSection({
             <div className="border-t border-[#e1dfdd] dark:border-[#3d3d3d]">
               {/* Column headers */}
               <div className="grid grid-cols-[1fr_100px_80px_100px_80px] px-4 py-2 text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wide border-b border-[#f0f0f0] dark:border-[#333]">
-                <span>Task</span>
-                <span>Status</span>
-                <span>Priority</span>
-                <span>Assignee</span>
-                <span className="text-right">Points</span>
+                <span>{t('tasks.header.task')}</span>
+                <span>{t('tasks.field.status')}</span>
+                <span>{t('tasks.field.priority')}</span>
+                <span>{t('tasks.field.assignee')}</span>
+                <span className="text-right">{t('tasks.header.points')}</span>
               </div>
 
               {tasks.map(task => {
@@ -829,10 +857,10 @@ function BacklogSection({
                       {statusCol ? (
                         <span className={`flex items-center gap-1 text-[11px] font-medium ${statusCol.color}`}>
                           <div className={`w-1.5 h-1.5 rounded-full ${statusCol.dotColor}`} />
-                          {statusCol.label}
+                          {t(statusCol.labelKey)}
                         </span>
                       ) : (
-                        <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">Backlog</span>
+                        <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">{t('tasks.backlog')}</span>
                       )}
                     </div>
                     <PriorityBadge priority={task.priority} />
@@ -849,7 +877,7 @@ function BacklogSection({
 
               {tasks.length === 0 && (
                 <div className="px-4 py-6 text-center text-[13px] text-[#8a8a8a] dark:text-[#6d6f78]">
-                  No items match your filters
+                  {t('tasks.noItemsMatch')}
                 </div>
               )}
             </div>

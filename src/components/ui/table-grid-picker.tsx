@@ -2,6 +2,7 @@ import { Button, Popover, PopoverTrigger, PopoverContent, Separator, Tooltip, To
 import { useState } from 'react';
 import { Table } from 'lucide-react';
 import { cn } from "@/lib/utils";
+import { useI18n } from '@/app/context/I18nContext';
 
 const MAX_ROWS = 6;
 const MAX_COLS = 6;
@@ -13,6 +14,7 @@ interface TableGridPickerProps {
 }
 
 export function TableGridPicker({ compact, iconSize, onInsert }: TableGridPickerProps) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [hoverRow, setHoverRow] = useState(0);
   const [hoverCol, setHoverCol] = useState(0);
@@ -47,7 +49,7 @@ export function TableGridPicker({ compact, iconSize, onInsert }: TableGridPicker
           </TooltipTrigger>
           {!open && (
             <TooltipContent side="top" sideOffset={4}>
-              Insert table
+              {t('tableGrid.insertTable')}
             </TooltipContent>
           )}
         </Tooltip>
@@ -60,7 +62,7 @@ export function TableGridPicker({ compact, iconSize, onInsert }: TableGridPicker
           onMouseLeave={() => { setHoverRow(0); setHoverCol(0); }}
         >
           <p className="text-[11px] font-semibold text-[#616161] dark:text-[#999] mb-2">
-            Insert Table
+            {t('tableGrid.insertTableTitle')}
           </p>
 
           {/* Grid selector */}
@@ -90,7 +92,7 @@ export function TableGridPicker({ compact, iconSize, onInsert }: TableGridPicker
           <p className="text-[11px] text-center mt-2 text-[#8a8a8a] dark:text-[#666] tabular-nums">
             {hoverRow > 0 && hoverCol > 0
               ? <span className="text-[#5b5fc7] dark:text-[#a6a9dc] font-medium">{hoverRow} x {hoverCol}</span>
-              : 'Select size'
+              : t('tableGrid.selectSize')
             }
           </p>
         </PopoverContent>

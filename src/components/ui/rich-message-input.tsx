@@ -20,6 +20,7 @@ import { MarkdownContent } from '@/components/ui';
 import { TableGridPicker } from '@/components/ui';
 import TurndownService from 'turndown';
 import { gfm } from 'turndown-plugin-gfm';
+import { useI18n } from '@/app/context/I18nContext';
 
 interface RichMessageInputProps {
   placeholder?: string;
@@ -47,7 +48,7 @@ interface ToolbarAction {
 
 
 export function RichMessageInput({
-  placeholder = 'Type a message... (Markdown supported)',
+  placeholder,
   onSend,
   compact = false,
   extraButtons,
@@ -56,10 +57,12 @@ export function RichMessageInput({
   onUploadImage,
   className = '',
 }: RichMessageInputProps) {
+  const { t } = useI18n();
   const [input, setInput] = useState('');
   const [showPreview, setShowPreview] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const resolvedPlaceholder = placeholder ?? t('richInput.placeholder');
 
   useEffect(() => {
     if (autoFocus) textareaRef.current?.focus();
@@ -94,7 +97,7 @@ export function RichMessageInput({
     const end = el.selectionEnd;
     const text = el.value;
     const selected = text.slice(start, end);
-    const replacement = before + (selected || 'text') + after;
+    const replacement = before + (selected || t('richInput.defaultText')) + after;
     const newVal = text.slice(0, start) + replacement + text.slice(end);
     setInput(newVal);
     requestAnimationFrame(() => {
@@ -128,10 +131,10 @@ export function RichMessageInput({
     const text = el.value;
 
     // Build header
-    const header = '| ' + Array.from({ length: cols }, (_, c) => `Header ${c + 1}`).join(' | ') + ' |';
+    const header = '| ' + Array.from({ length: cols }, (_, c) => t('richInput.table.header', { index: c + 1 })).join(' | ') + ' |';
     const separator = '| ' + Array.from({ length: cols }, () => '---').join(' | ') + ' |';
     const dataRows = Array.from({ length: rows }, (_, r) =>
-      '| ' + Array.from({ length: cols }, (_, c) => `Cell ${r + 1}-${c + 1}`).join(' | ') + ' |'
+      '| ' + Array.from({ length: cols }, (_, c) => t('richInput.table.cell', { row: r + 1, col: c + 1 })).join(' | ') + ' |'
     );
     const tableStr = '\n' + [header, separator, ...dataRows].join('\n') + '\n';
 
@@ -151,10 +154,10 @@ export function RichMessageInput({
       const reader = new FileReader();
       reader.onload = () => {
         const url = typeof reader.result === 'string' ? reader.result : '';
-        if (!url) reject(new Error('Failed to read image'));
+        if (!url) reject(new Error(t('richInput.error.readImage')));
         else resolve(url);
       };
-      reader.onerror = () => reject(new Error('Failed to read image'));
+      reader.onerror = () => reject(new Error(t('richInput.error.readImage')));
       reader.readAsDataURL(file);
     });
   }, []);
@@ -168,7 +171,7 @@ export function RichMessageInput({
       upload(file)
         .then(url => {
           if (!url) return;
-          const alt = file.name || 'image';
+          const alt = file.name || t('richInput.imageAlt');
           const markdown = `![${alt}](${url})`;
           insertAtCursor(markdown + '\n');
         })
@@ -244,19 +247,19 @@ export function RichMessageInput({
 
   const toolbarGroups: (ToolbarAction | 'sep')[][] = [
     [
-      { icon: <Bold size={iconSize} />, action: () => wrapSelection('**', '**'), tip: 'Bold' },
-      { icon: <Italic size={iconSize} />, action: () => wrapSelection('_', '_'), tip: 'Italic' },
-      { icon: <Strikethrough size={iconSize} />, action: () => wrapSelection('~~', '~~'), tip: 'Strikethrough' },
-      { icon: <Code size={iconSize} />, action: () => wrapSelection('`', '`'), tip: 'Inline code' },
+      { icon: <Bold size={iconSize} />, action: () => wrapSelection('**', '**'), tip: t('richInput.format.bold') },
+      { icon: <Italic size={iconSize} />, action: () => wrapSelection('_', '_'), tip: t('richInput.format.italic') },
+      { icon: <Strikethrough size={iconSize} />, action: () => wrapSelection('~~', '~~'), tip: t('richInput.format.strikethrough') },
+      { icon: <Code size={iconSize} />, action: () => wrapSelection('`', '`'), tip: t('richInput.format.inlineCode') },
     ],
     [
-      { icon: <List size={iconSize} />, action: () => insertLinePrefix('- '), tip: 'Bullet list' },
-      { icon: <ListOrdered size={iconSize} />, action: () => insertLinePrefix('1. '), tip: 'Numbered list' },
-      { icon: <Quote size={iconSize} />, action: () => insertLinePrefix('> '), tip: 'Blockquote' },
-      { icon: <Link2 size={iconSize} />, action: () => wrapSelection('[', '](url)'), tip: 'Link' },
+      { icon: <List size={iconSize} />, action: () => insertLinePrefix('- '), tip: t('richInput.format.bulletList') },
+      { icon: <ListOrdered size={iconSize} />, action: () => insertLinePrefix('1. '), tip: t('richInput.format.numberedList') },
+      { icon: <Quote size={iconSize} />, action: () => insertLinePrefix('> '), tip: t('richInput.format.blockquote') },
+      { icon: <Link2 size={iconSize} />, action: () => wrapSelection('[', '](url)'), tip: t('richInput.format.link') },
     ],
     [
-      { icon: <Code size={iconSize} />, action: () => wrapSelection('\n```\n', '\n```\n'), tip: 'Code block', label: '{}' },
+      { icon: <Code size={iconSize} />, action: () => wrapSelection('\n```\n', '\n```\n'), tip: t('richInput.format.codeBlock'), label: '{}' },
     ],
   ];
 
@@ -322,7 +325,7 @@ export function RichMessageInput({
             </Button>
           </TooltipTrigger>
           <TooltipContent side="top" sideOffset={4}>
-            Insert image
+            {t('richInput.insertImage')}
           </TooltipContent>
         </Tooltip>
 
@@ -346,7 +349,7 @@ export function RichMessageInput({
             />
           </TooltipTrigger>
           <TooltipContent side="top" sideOffset={4}>
-            Emoji
+            {t('richInput.emoji')}
           </TooltipContent>
         </Tooltip>
 
@@ -374,11 +377,11 @@ export function RichMessageInput({
                 )}
               >
                 <Eye size={compact ? 12 : 13} />
-                Preview
+                {t('common.preview')}
               </Toggle>
             </TooltipTrigger>
             <TooltipContent side="top" sideOffset={4}>
-              Toggle markdown preview
+              {t('richInput.togglePreview')}
             </TooltipContent>
           </Tooltip>
         </div>
@@ -400,7 +403,7 @@ export function RichMessageInput({
                 compact ? 'mb-1.5' : 'mb-2',
               )}
             >
-              <p className="text-[10px] text-[#8a8a8a] mb-1 uppercase tracking-wider">Preview</p>
+              <p className="text-[10px] text-[#8a8a8a] mb-1 uppercase tracking-wider">{t('common.preview')}</p>
               <MarkdownContent content={input} animate />
             </div>
           </motion.div>
@@ -486,7 +489,7 @@ export function RichMessageInput({
               handleSend();
             }
           }}
-          placeholder={placeholder}
+          placeholder={resolvedPlaceholder}
           rows={1}
           className={cn(
             'flex-1 px-4 bg-white dark:bg-[#252525] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-xl text-sm text-[#242424] dark:text-[#e0e0e0] placeholder-[#b9bbbe] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/50 transition-all resize-none overflow-y-auto',
@@ -525,7 +528,7 @@ export function RichMessageInput({
             </motion.div>
           </TooltipTrigger>
           <TooltipContent side="top" sideOffset={4}>
-            Send message
+            {t('richInput.sendMessage')}
           </TooltipContent>
         </Tooltip>
       </div>
@@ -538,7 +541,7 @@ export function RichMessageInput({
           transition={{ delay: 0.3, duration: 0.3 }}
           className="text-[10px] text-muted-foreground mt-1.5 ml-1"
         >
-          Markdown supported · Shift+Enter for new line
+          {t('richInput.markdownHelp')}
         </motion.p>
       )}
     </div>

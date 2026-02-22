@@ -7,6 +7,7 @@ import {  AlertTriangle, CheckCircle2, Clock, Send, ChevronDown,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from "@/lib/utils";
+import { useI18n } from '../context/I18nContext';
 
 // ─── Types ───
 
@@ -137,21 +138,6 @@ const agentResponses = [
 
 type ActiveWidget = 'overview' | 'report' | 'status' | 'faq' | 'chat';
 
-const priorityConfig = {
-  low: { color: 'bg-[#3b82f6]/10 text-[#3b82f6] border-[#3b82f6]/20', icon: <ArrowRight size={10} />, label: 'Low' },
-  medium: { color: 'bg-[#f59e0b]/10 text-[#f59e0b] border-[#f59e0b]/20', icon: <ArrowUpCircle size={10} />, label: 'Medium' },
-  high: { color: 'bg-[#ef4444]/10 text-[#ef4444] border-[#ef4444]/20', icon: <AlertTriangle size={10} />, label: 'High' },
-  critical: { color: 'bg-[#dc2626]/10 text-[#dc2626] border-[#dc2626]/20', icon: <XCircle size={10} />, label: 'Critical' },
-};
-
-const statusConfig = {
-  'open': { color: 'bg-[#3b82f6]', icon: <CircleDot size={10} />, label: 'Open' },
-  'in-progress': { color: 'bg-[#f59e0b]', icon: <Loader2 size={10} className="animate-spin" />, label: 'In Progress' },
-  'waiting': { color: 'bg-[#8b5cf6]', icon: <Clock size={10} />, label: 'Waiting' },
-  'resolved': { color: 'bg-[#22c55e]', icon: <CheckCircle2 size={10} />, label: 'Resolved' },
-  'closed': { color: 'bg-[#6b7280]', icon: <CheckCircle2 size={10} />, label: 'Closed' },
-};
-
 const categoryIcons = {
   bug: <Bug size={12} />,
   feature: <Settings size={12} />,
@@ -163,6 +149,32 @@ const categoryIcons = {
 // ─── Main Component ───
 
 export function HelpDesk() {
+  const { t, language } = useI18n();
+  const localeMap: Record<string, string> = {
+    en: 'en-US',
+    'zh-Hant': 'zh-TW',
+    'zh-Hans': 'zh-CN',
+    ja: 'ja-JP',
+    de: 'de-DE',
+    es: 'es-ES',
+    fr: 'fr-FR',
+    hi: 'hi-IN',
+    pl: 'pl-PL',
+  };
+  const locale = localeMap[language] ?? 'en-US';
+  const priorityConfig = {
+    low: { color: 'bg-[#3b82f6]/10 text-[#3b82f6] border-[#3b82f6]/20', icon: <ArrowRight size={10} />, label: t('helpDesk.priority.low') },
+    medium: { color: 'bg-[#f59e0b]/10 text-[#f59e0b] border-[#f59e0b]/20', icon: <ArrowUpCircle size={10} />, label: t('helpDesk.priority.medium') },
+    high: { color: 'bg-[#ef4444]/10 text-[#ef4444] border-[#ef4444]/20', icon: <AlertTriangle size={10} />, label: t('helpDesk.priority.high') },
+    critical: { color: 'bg-[#dc2626]/10 text-[#dc2626] border-[#dc2626]/20', icon: <XCircle size={10} />, label: t('helpDesk.priority.critical') },
+  };
+  const statusConfig = {
+    'open': { color: 'bg-[#3b82f6]', icon: <CircleDot size={10} />, label: t('helpDesk.status.open') },
+    'in-progress': { color: 'bg-[#f59e0b]', icon: <Loader2 size={10} className="animate-spin" />, label: t('helpDesk.status.inProgress') },
+    'waiting': { color: 'bg-[#8b5cf6]', icon: <Clock size={10} />, label: t('helpDesk.status.waiting') },
+    'resolved': { color: 'bg-[#22c55e]', icon: <CheckCircle2 size={10} />, label: t('helpDesk.status.resolved') },
+    'closed': { color: 'bg-[#6b7280]', icon: <CheckCircle2 size={10} />, label: t('helpDesk.status.closed') },
+  };
   const [activeWidget, setActiveWidget] = useState<ActiveWidget>('overview');
   const [tickets, setTickets] = useState<HelpTicket[]>(initialTickets);
   const [faqSearch, setFaqSearch] = useState('');
@@ -181,7 +193,7 @@ export function HelpDesk() {
     {
       id: 'agent-welcome',
       role: 'agent',
-      content: 'Hi! I\'m an IT support agent. How can I help you today? You can describe your issue and I\'ll assist you or create a ticket if needed.',
+      content: t('helpDesk.chat.welcome'),
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
@@ -267,9 +279,9 @@ export function HelpDesk() {
       {/* Stats Row */}
       <div className="grid grid-cols-3 gap-2">
         {[
-          { label: 'Open', count: openCount, color: 'from-[#3b82f6] to-[#2563eb]', bg: 'bg-[#3b82f6]/5 dark:bg-[#3b82f6]/10' },
-          { label: 'Active', count: inProgressCount, color: 'from-[#f59e0b] to-[#d97706]', bg: 'bg-[#f59e0b]/5 dark:bg-[#f59e0b]/10' },
-          { label: 'Resolved', count: resolvedCount, color: 'from-[#22c55e] to-[#16a34a]', bg: 'bg-[#22c55e]/5 dark:bg-[#22c55e]/10' },
+          { label: t('helpDesk.stats.open'), count: openCount, color: 'from-[#3b82f6] to-[#2563eb]', bg: 'bg-[#3b82f6]/5 dark:bg-[#3b82f6]/10' },
+          { label: t('helpDesk.stats.active'), count: inProgressCount, color: 'from-[#f59e0b] to-[#d97706]', bg: 'bg-[#f59e0b]/5 dark:bg-[#f59e0b]/10' },
+          { label: t('helpDesk.stats.resolved'), count: resolvedCount, color: 'from-[#22c55e] to-[#16a34a]', bg: 'bg-[#22c55e]/5 dark:bg-[#22c55e]/10' },
         ].map(stat => (
           <div key={stat.label} className={cn('rounded-xl p-3 text-center border border-transparent', stat.bg)}>
             <p className={cn('text-[20px] font-bold bg-gradient-to-r bg-clip-text text-transparent', stat.color)}>{stat.count}</p>
@@ -280,12 +292,12 @@ export function HelpDesk() {
 
       {/* Quick Action Cards */}
       <div className="space-y-1.5">
-        <p className="text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider px-1">Quick Actions</p>
+        <p className="text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider px-1">{t('helpDesk.quickActions.title')}</p>
         {[
-          { widget: 'report' as ActiveWidget, icon: <Plus size={16} />, title: 'Report an Issue', desc: 'Submit a new support ticket', gradient: 'from-[#5b5fc7] to-[#7b4db8]' },
-          { widget: 'status' as ActiveWidget, icon: <CircleDot size={16} />, title: 'Check Issue Status', desc: `${tickets.length} tickets · ${openCount} open`, gradient: 'from-[#0ea5e9] to-[#3b82f6]' },
-          { widget: 'faq' as ActiveWidget, icon: <BookOpen size={16} />, title: 'Browse FAQ', desc: `${faqItems.length} articles available`, gradient: 'from-[#22c55e] to-[#16a34a]' },
-          { widget: 'chat' as ActiveWidget, icon: <Headphones size={16} />, title: 'Live Chat Support', desc: 'Chat with an IT agent now', gradient: 'from-[#f59e0b] to-[#ef4444]' },
+          { widget: 'report' as ActiveWidget, icon: <Plus size={16} />, title: t('helpDesk.quickActions.report.title'), desc: t('helpDesk.quickActions.report.desc'), gradient: 'from-[#5b5fc7] to-[#7b4db8]' },
+          { widget: 'status' as ActiveWidget, icon: <CircleDot size={16} />, title: t('helpDesk.quickActions.status.title'), desc: t('helpDesk.quickActions.status.desc', { tickets: tickets.length, open: openCount }), gradient: 'from-[#0ea5e9] to-[#3b82f6]' },
+          { widget: 'faq' as ActiveWidget, icon: <BookOpen size={16} />, title: t('helpDesk.quickActions.faq.title'), desc: t('helpDesk.quickActions.faq.desc', { count: faqItems.length }), gradient: 'from-[#22c55e] to-[#16a34a]' },
+          { widget: 'chat' as ActiveWidget, icon: <Headphones size={16} />, title: t('helpDesk.quickActions.chat.title'), desc: t('helpDesk.quickActions.chat.desc'), gradient: 'from-[#f59e0b] to-[#ef4444]' },
         ].map(item => (
           <button
             key={item.widget}
@@ -306,7 +318,7 @@ export function HelpDesk() {
 
       {/* Recent Activity */}
       <div className="space-y-1.5">
-        <p className="text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider px-1">Recent Activity</p>
+        <p className="text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider px-1">{t('helpDesk.recentActivity')}</p>
         <div className="space-y-1">
           {tickets.slice(0, 3).map(ticket => (
             <div key={ticket.id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-[#f5f5f5] dark:hover:bg-[#252525] transition-colors cursor-pointer" onClick={() => setActiveWidget('status')}>
@@ -323,9 +335,9 @@ export function HelpDesk() {
       <Separator className="bg-[#e1dfdd] dark:bg-[#3d3d3d]" />
       <div className="flex items-center gap-2">
         {[
-          { icon: <BookOpen size={12} />, label: 'Docs' },
-          { icon: <LifeBuoy size={12} />, label: 'Portal' },
-          { icon: <Headphones size={12} />, label: 'Call IT' },
+          { icon: <BookOpen size={12} />, label: t('helpDesk.links.docs') },
+          { icon: <LifeBuoy size={12} />, label: t('helpDesk.links.portal') },
+          { icon: <Headphones size={12} />, label: t('helpDesk.links.call') },
         ].map(link => (
           <button key={link.label} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[10px] font-medium text-[#616161] dark:text-[#9e9e9e] hover:bg-[#eeeef8] dark:hover:bg-[#5b5fc7]/5 hover:text-[#5b5fc7] dark:hover:text-[#a6a9dc] transition-colors">
             {link.icon}
@@ -356,18 +368,18 @@ export function HelpDesk() {
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#22c55e] to-[#16a34a] flex items-center justify-center mb-3 shadow-lg shadow-[#22c55e]/20">
               <CheckCircle2 size={28} className="text-white" />
             </div>
-            <p className="text-[14px] font-semibold text-[#242424] dark:text-[#e0e0e0]">Ticket Submitted!</p>
-            <p className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] mt-1">Your issue has been reported. Redirecting to status...</p>
+            <p className="text-[14px] font-semibold text-[#242424] dark:text-[#e0e0e0]">{t('helpDesk.report.submittedTitle')}</p>
+            <p className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] mt-1">{t('helpDesk.report.submittedSubtitle')}</p>
           </motion.div>
         ) : (
           <motion.div key="form" className="space-y-3">
             {/* Title */}
             <div>
-              <label className="text-[11px] font-medium text-[#424242] dark:text-[#c8c8c8] mb-1 block">Issue Title *</label>
+              <label className="text-[11px] font-medium text-[#424242] dark:text-[#c8c8c8] mb-1 block">{t('helpDesk.report.issueTitle')}</label>
               <input
                 value={reportTitle}
                 onChange={e => setReportTitle(e.target.value)}
-                placeholder="Brief description of the issue..."
+                placeholder={t('helpDesk.report.issueTitlePlaceholder')}
                 className="w-full px-3 py-2 bg-white dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg text-[12px] text-[#242424] dark:text-[#e0e0e0] placeholder-[#b9bbbe] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/40 transition-all"
               />
             </div>
@@ -375,41 +387,41 @@ export function HelpDesk() {
             {/* Category & Priority */}
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-[11px] font-medium text-[#424242] dark:text-[#c8c8c8] mb-1 block">Category</label>
+                <label className="text-[11px] font-medium text-[#424242] dark:text-[#c8c8c8] mb-1 block">{t('helpDesk.report.category')}</label>
                 <select
                   value={reportCategory}
                   onChange={e => setReportCategory(e.target.value as HelpTicket['category'])}
                   className="w-full px-2.5 py-2 bg-white dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg text-[12px] text-[#242424] dark:text-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/40 transition-all appearance-none"
                 >
-                  <option value="bug">Bug / Error</option>
-                  <option value="access">Access Request</option>
-                  <option value="hardware">Hardware</option>
-                  <option value="feature">Feature Request</option>
-                  <option value="general">General</option>
+                  <option value="bug">{t('helpDesk.report.categoryOption.bug')}</option>
+                  <option value="access">{t('helpDesk.report.categoryOption.access')}</option>
+                  <option value="hardware">{t('helpDesk.report.categoryOption.hardware')}</option>
+                  <option value="feature">{t('helpDesk.report.categoryOption.feature')}</option>
+                  <option value="general">{t('helpDesk.report.categoryOption.general')}</option>
                 </select>
               </div>
               <div>
-                <label className="text-[11px] font-medium text-[#424242] dark:text-[#c8c8c8] mb-1 block">Priority</label>
+                <label className="text-[11px] font-medium text-[#424242] dark:text-[#c8c8c8] mb-1 block">{t('helpDesk.report.priority')}</label>
                 <select
                   value={reportPriority}
                   onChange={e => setReportPriority(e.target.value as HelpTicket['priority'])}
                   className="w-full px-2.5 py-2 bg-white dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg text-[12px] text-[#242424] dark:text-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/40 transition-all appearance-none"
                 >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="critical">Critical</option>
+                  <option value="low">{t('helpDesk.priority.low')}</option>
+                  <option value="medium">{t('helpDesk.priority.medium')}</option>
+                  <option value="high">{t('helpDesk.priority.high')}</option>
+                  <option value="critical">{t('helpDesk.priority.critical')}</option>
                 </select>
               </div>
             </div>
 
             {/* Description */}
             <div>
-              <label className="text-[11px] font-medium text-[#424242] dark:text-[#c8c8c8] mb-1 block">Description *</label>
+              <label className="text-[11px] font-medium text-[#424242] dark:text-[#c8c8c8] mb-1 block">{t('helpDesk.report.description')}</label>
               <textarea
                 value={reportDesc}
                 onChange={e => setReportDesc(e.target.value)}
-                placeholder="Describe the issue in detail... Include steps to reproduce, expected behavior, and any error messages."
+                placeholder={t('helpDesk.report.descriptionPlaceholder')}
                 className="w-full px-3 py-2 bg-white dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg text-[12px] text-[#242424] dark:text-[#e0e0e0] placeholder-[#b9bbbe] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/40 transition-all resize-none"
                 rows={4}
               />
@@ -422,7 +434,7 @@ export function HelpDesk() {
                 animate={{ opacity: 1, height: 'auto' }}
                 className="p-2.5 rounded-lg bg-[#faf9f8] dark:bg-[#1a1a1a] border border-[#e1dfdd] dark:border-[#3d3d3d]"
               >
-                <p className="text-[9px] text-[#8a8a8a] uppercase tracking-wider mb-1.5">Preview</p>
+                <p className="text-[9px] text-[#8a8a8a] uppercase tracking-wider mb-1.5">{t('common.preview')}</p>
                 <div className="flex items-center gap-2">
                   <div className="text-[#5b5fc7]">{categoryIcons[reportCategory]}</div>
                   <span className="text-[11px] font-medium text-[#242424] dark:text-[#e0e0e0] flex-1 truncate">{reportTitle}</span>
@@ -440,7 +452,7 @@ export function HelpDesk() {
               className="w-full bg-gradient-to-r from-[#5b5fc7] to-[#7b4db8] text-white hover:opacity-90 disabled:opacity-50 rounded-xl h-9 text-[12px]"
             >
               <Send size={13} className="mr-1.5" />
-              Submit Ticket
+              {t('helpDesk.report.submit')}
             </Button>
           </motion.div>
         )}
@@ -470,7 +482,11 @@ export function HelpDesk() {
                 : 'bg-[#f5f5f5] dark:bg-[#252525] text-[#616161] dark:text-[#9e9e9e] border-transparent hover:border-[#e1dfdd] dark:hover:border-[#3d3d3d]'
             )}
           >
-            {filter === 'all' ? 'All' : filter === 'in-progress' ? 'In Progress' : filter.charAt(0).toUpperCase() + filter.slice(1)}
+            {filter === 'all'
+              ? t('common.all')
+              : filter === 'in-progress'
+              ? t('helpDesk.status.inProgress')
+              : t(`helpDesk.status.${filter}`)}
           </button>
         ))}
       </div>
@@ -480,11 +496,11 @@ export function HelpDesk() {
         {filteredTickets.length === 0 ? (
           <div className="flex flex-col items-center py-8 text-center">
             <CheckCircle2 size={32} className="text-[#22c55e] mb-2" />
-            <p className="text-[12px] text-[#8a8a8a]">No tickets in this category</p>
+            <p className="text-[12px] text-[#8a8a8a]">{t('helpDesk.status.empty')}</p>
           </div>
         ) : (
           filteredTickets.map(ticket => (
-            <TicketCard key={ticket.id} ticket={ticket} />
+            <TicketCard key={ticket.id} ticket={ticket} statusConfig={statusConfig} priorityConfig={priorityConfig} t={t} locale={locale} />
           ))
         )}
       </div>
@@ -506,7 +522,7 @@ export function HelpDesk() {
           <input
             value={faqSearch}
             onChange={e => setFaqSearch(e.target.value)}
-            placeholder="Search FAQ..."
+            placeholder={t('helpDesk.faq.searchPlaceholder')}
             className="w-full pl-8 pr-3 py-2 bg-[#f5f5f5] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg text-[12px] text-[#242424] dark:text-[#e0e0e0] placeholder-[#b9bbbe] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/40 transition-all"
           />
         </div>
@@ -517,7 +533,7 @@ export function HelpDesk() {
         {filteredFaq.length === 0 ? (
           <div className="flex flex-col items-center py-8 text-center">
             <HelpCircle size={32} className="text-[#8a8a8a] mb-2" />
-            <p className="text-[12px] text-[#8a8a8a]">No matching FAQ found</p>
+            <p className="text-[12px] text-[#8a8a8a]">{t('helpDesk.faq.empty')}</p>
           </div>
         ) : (
           filteredFaq.map(item => (
@@ -550,9 +566,9 @@ export function HelpDesk() {
                         {item.answer}
                       </div>
                       <div className="flex items-center gap-2 mt-2">
-                        <span className="text-[10px] text-[#8a8a8a]">Was this helpful?</span>
-                        <button className="text-[10px] px-2 py-0.5 rounded-full bg-[#22c55e]/10 text-[#22c55e] hover:bg-[#22c55e]/20 transition-colors">Yes</button>
-                        <button className="text-[10px] px-2 py-0.5 rounded-full bg-[#ef4444]/10 text-[#ef4444] hover:bg-[#ef4444]/20 transition-colors">No</button>
+                        <span className="text-[10px] text-[#8a8a8a]">{t('helpDesk.faq.helpful')}</span>
+                        <button className="text-[10px] px-2 py-0.5 rounded-full bg-[#22c55e]/10 text-[#22c55e] hover:bg-[#22c55e]/20 transition-colors">{t('common.yes')}</button>
+                        <button className="text-[10px] px-2 py-0.5 rounded-full bg-[#ef4444]/10 text-[#ef4444] hover:bg-[#ef4444]/20 transition-colors">{t('common.no')}</button>
                       </div>
                     </div>
                   </motion.div>
@@ -579,11 +595,11 @@ export function HelpDesk() {
           <Headphones size={14} className="text-white" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[12px] font-medium text-[#242424] dark:text-[#e0e0e0]">IT Support Agent</p>
+          <p className="text-[12px] font-medium text-[#242424] dark:text-[#e0e0e0]">{t('helpDesk.chat.agentTitle')}</p>
           <div className="flex items-center gap-1">
             <div className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
-            <span className="text-[10px] text-[#22c55e]">Online</span>
-            <span className="text-[10px] text-[#8a8a8a] ml-1">· Avg. response: &lt;2 min</span>
+            <span className="text-[10px] text-[#22c55e]">{t('helpDesk.chat.online')}</span>
+            <span className="text-[10px] text-[#8a8a8a] ml-1">{t('helpDesk.chat.avgResponse')}</span>
           </div>
         </div>
       </div>
@@ -635,7 +651,7 @@ export function HelpDesk() {
       {/* Quick suggestions */}
       {chatMessages.length <= 2 && (
         <div className="shrink-0 px-4 pb-2 flex items-center gap-1.5 overflow-x-auto">
-          {['I need help with VPN', 'Reset my password', 'Software install request'].map((q, i) => (
+          {[t('helpDesk.chat.suggestion.vpn'), t('helpDesk.chat.suggestion.resetPassword'), t('helpDesk.chat.suggestion.softwareInstall')].map((q, i) => (
             <button
               key={i}
               onClick={() => handleChatSend(q)}
@@ -660,7 +676,7 @@ export function HelpDesk() {
                 handleChatSend();
               }
             }}
-            placeholder="Describe your issue..."
+            placeholder={t('helpDesk.chat.placeholder')}
             className="flex-1 px-3 py-2 bg-white dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-xl text-[12px] text-[#242424] dark:text-[#e0e0e0] placeholder-[#b9bbbe] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/40 transition-all resize-none"
             rows={1}
           />
@@ -682,7 +698,7 @@ export function HelpDesk() {
                 </Button>
               </motion.div>
             </TooltipTrigger>
-            <TooltipContent side="top" sideOffset={4}>Send</TooltipContent>
+            <TooltipContent side="top" sideOffset={4}>{t('helpDesk.chat.send')}</TooltipContent>
           </Tooltip>
         </div>
       </div>
@@ -699,14 +715,14 @@ export function HelpDesk() {
             className="flex items-center gap-1 text-[11px] font-medium text-[#5b5fc7] dark:text-[#a6a9dc] hover:underline"
           >
             <ChevronDown size={12} className="rotate-90" />
-            Dashboard
+            {t('helpDesk.nav.dashboard')}
           </button>
           <span className="text-[#e1dfdd] dark:text-[#3d3d3d]">/</span>
           <span className="text-[11px] font-medium text-[#424242] dark:text-[#c8c8c8]">
-            {activeWidget === 'report' && 'Report Issue'}
-            {activeWidget === 'status' && 'Issue Status'}
-            {activeWidget === 'faq' && 'FAQ'}
-            {activeWidget === 'chat' && 'Live Chat'}
+            {activeWidget === 'report' && t('helpDesk.nav.report')}
+            {activeWidget === 'status' && t('helpDesk.nav.status')}
+            {activeWidget === 'faq' && t('helpDesk.nav.faq')}
+            {activeWidget === 'chat' && t('helpDesk.nav.chat')}
           </span>
         </div>
       )}
@@ -725,11 +741,23 @@ export function HelpDesk() {
 
 // ─── Ticket Card ───
 
-function TicketCard({ ticket }: { ticket: HelpTicket }) {
+function TicketCard({
+  ticket,
+  statusConfig,
+  priorityConfig,
+  t,
+  locale,
+}: {
+  ticket: HelpTicket;
+  statusConfig: Record<string, { color: string; icon: React.ReactNode; label: string }>;
+  priorityConfig: Record<string, { color: string; icon: React.ReactNode; label: string }>;
+  t: (key: string, vars?: Record<string, string | number>) => string;
+  locale: string;
+}) {
   const [expanded, setExpanded] = useState(false);
   const status = statusConfig[ticket.status];
   const priority = priorityConfig[ticket.priority];
-  const timeAgo = getTimeAgo(ticket.updatedAt);
+  const timeAgo = getTimeAgo(ticket.updatedAt, t, locale);
 
   return (
     <div className="border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-xl overflow-hidden hover:border-[#5b5fc7]/20 dark:hover:border-[#5b5fc7]/20 transition-all">
@@ -753,7 +781,7 @@ function TicketCard({ ticket }: { ticket: HelpTicket }) {
                 {status.icon}
                 {status.label}
               </span>
-              <span className="text-[9px] text-[#8a8a8a]">Updated {timeAgo}</span>
+              <span className="text-[9px] text-[#8a8a8a]">{t('helpDesk.ticket.updated', { time: timeAgo })}</span>
             </div>
           </div>
           <ChevronDown size={14} className={cn('text-[#b9bbbe] shrink-0 transition-transform', expanded && 'rotate-180')} />
@@ -773,13 +801,13 @@ function TicketCard({ ticket }: { ticket: HelpTicket }) {
               <Separator className="bg-[#e1dfdd] dark:bg-[#3d3d3d]" />
               <p className="text-[11px] text-[#616161] dark:text-[#9e9e9e] leading-relaxed">{ticket.description}</p>
               <div className="flex items-center gap-3 text-[10px]">
-                <span className="text-[#8a8a8a]">Category: <span className="text-[#424242] dark:text-[#c8c8c8] capitalize">{ticket.category}</span></span>
+                <span className="text-[#8a8a8a]">{t('helpDesk.ticket.category')}: <span className="text-[#424242] dark:text-[#c8c8c8] capitalize">{ticket.category}</span></span>
                 {ticket.assignee && (
-                  <span className="text-[#8a8a8a]">Assignee: <span className="text-[#5b5fc7] dark:text-[#a6a9dc]">{ticket.assignee}</span></span>
+                  <span className="text-[#8a8a8a]">{t('helpDesk.ticket.assignee')}: <span className="text-[#5b5fc7] dark:text-[#a6a9dc]">{ticket.assignee}</span></span>
                 )}
               </div>
               <div className="text-[9px] text-[#8a8a8a]">
-                Created: {new Date(ticket.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                {t('helpDesk.ticket.created')}: {new Date(ticket.createdAt).toLocaleDateString(locale, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
               </div>
             </div>
           </motion.div>
@@ -789,14 +817,14 @@ function TicketCard({ ticket }: { ticket: HelpTicket }) {
   );
 }
 
-function getTimeAgo(dateStr: string): string {
+function getTimeAgo(dateStr: string, t: (key: string, vars?: Record<string, string | number>) => string, locale: string): string {
   const date = new Date(dateStr);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
-  if (diffHrs < 1) return 'just now';
-  if (diffHrs < 24) return `${diffHrs}h ago`;
+  if (diffHrs < 1) return t('time.justNow');
+  if (diffHrs < 24) return t('time.hoursAgo', { count: diffHrs });
   const diffDays = Math.floor(diffHrs / 24);
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  if (diffDays < 7) return t('time.daysAgo', { count: diffDays });
+  return date.toLocaleDateString(locale, { month: 'short', day: 'numeric' });
 }

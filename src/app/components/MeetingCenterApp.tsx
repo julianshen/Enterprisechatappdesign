@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from "@/lib/utils";
+import { useI18n } from '../context/I18nContext';
 
 const { useState, useMemo, useCallback } = React;
 
@@ -160,18 +161,18 @@ const AMENITY_ICONS: Record<string, typeof Monitor> = {
   Projector: Projector,
 };
 
-const ROOM_STATUS_STYLES: Record<RoomStatus, { bg: string; text: string; label: string }> = {
-  available: { bg: 'bg-emerald-500/10 dark:bg-emerald-500/15', text: 'text-emerald-600 dark:text-emerald-400', label: 'Available' },
-  occupied: { bg: 'bg-red-500/10 dark:bg-red-500/15', text: 'text-red-600 dark:text-red-400', label: 'Occupied' },
-  reserved: { bg: 'bg-amber-500/10 dark:bg-amber-500/15', text: 'text-amber-600 dark:text-amber-400', label: 'Reserved' },
-  maintenance: { bg: 'bg-gray-500/10 dark:bg-gray-500/15', text: 'text-gray-500 dark:text-gray-400', label: 'Maintenance' },
+const ROOM_STATUS_STYLES: Record<RoomStatus, { bg: string; text: string; labelKey: string }> = {
+  available: { bg: 'bg-emerald-500/10 dark:bg-emerald-500/15', text: 'text-emerald-600 dark:text-emerald-400', labelKey: 'meetingCenter.roomStatus.available' },
+  occupied: { bg: 'bg-red-500/10 dark:bg-red-500/15', text: 'text-red-600 dark:text-red-400', labelKey: 'meetingCenter.roomStatus.occupied' },
+  reserved: { bg: 'bg-amber-500/10 dark:bg-amber-500/15', text: 'text-amber-600 dark:text-amber-400', labelKey: 'meetingCenter.roomStatus.reserved' },
+  maintenance: { bg: 'bg-gray-500/10 dark:bg-gray-500/15', text: 'text-gray-500 dark:text-gray-400', labelKey: 'meetingCenter.roomStatus.maintenance' },
 };
 
-const MEETING_STATUS_STYLES: Record<MeetingStatus, { dot: string; label: string }> = {
-  'in-progress': { dot: 'bg-emerald-500 animate-pulse', label: 'In Progress' },
-  upcoming: { dot: 'bg-blue-500', label: 'Upcoming' },
-  completed: { dot: 'bg-gray-400', label: 'Completed' },
-  cancelled: { dot: 'bg-red-500', label: 'Cancelled' },
+const MEETING_STATUS_STYLES: Record<MeetingStatus, { dot: string; labelKey: string }> = {
+  'in-progress': { dot: 'bg-emerald-500 animate-pulse', labelKey: 'meetingCenter.meetingStatus.inProgress' },
+  upcoming: { dot: 'bg-blue-500', labelKey: 'meetingCenter.meetingStatus.upcoming' },
+  completed: { dot: 'bg-gray-400', labelKey: 'meetingCenter.meetingStatus.completed' },
+  cancelled: { dot: 'bg-red-500', labelKey: 'meetingCenter.meetingStatus.cancelled' },
 };
 
 const TYPE_ICONS: Record<string, typeof Video> = {
@@ -192,6 +193,7 @@ const TIME_SLOTS = [
 // ─── Meeting Detail Panel ───
 
 function MeetingDetail({ meeting, onClose }: { meeting: Meeting; onClose: () => void }) {
+  const { t } = useI18n();
   const TypeIcon = TYPE_ICONS[meeting.type];
   const statusStyle = MEETING_STATUS_STYLES[meeting.status];
   const acceptedCount = meeting.attendees.filter(a => a.accepted).length;
@@ -208,14 +210,14 @@ function MeetingDetail({ meeting, onClose }: { meeting: Meeting; onClose: () => 
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
             <span className={cn('w-2 h-2 rounded-full', statusStyle.dot)} />
-            <span className="text-[10px] text-[#8a8a8a]">{statusStyle.label}</span>
+            <span className="text-[10px] text-[#8a8a8a]">{t(statusStyle.labelKey)}</span>
             {meeting.recurring && (
               <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full bg-[#5b5fc7]/10 text-[#5b5fc7] dark:text-[#a6a9dc]">
                 <Repeat size={8} /> {meeting.recurring}
               </span>
             )}
           </div>
-          <button onClick={onClose} className="text-[11px] text-[#8a8a8a] hover:text-[#5b5fc7] transition-colors">Close</button>
+          <button onClick={onClose} className="text-[11px] text-[#8a8a8a] hover:text-[#5b5fc7] transition-colors">{t('common.close')}</button>
         </div>
 
         <h3 className="text-[16px] font-semibold text-[#242424] dark:text-[#f0f0f0] mb-1">{meeting.title}</h3>
@@ -229,21 +231,21 @@ function MeetingDetail({ meeting, onClose }: { meeting: Meeting; onClose: () => 
         <div className="flex items-center gap-2 mt-4">
           {meeting.status === 'in-progress' && (
             <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium bg-[#5b5fc7] text-white hover:opacity-90 transition-colors">
-              <Video size={12} /> Join Now
+              <Video size={12} /> {t('meetingCenter.action.joinNow')}
             </button>
           )}
           {meeting.status === 'upcoming' && (
             <>
               <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium bg-[#5b5fc7] text-white hover:opacity-90 transition-colors">
-                <CheckCircle2 size={12} /> Accept
+                <CheckCircle2 size={12} /> {t('meetingCenter.action.accept')}
               </button>
               <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium bg-[#5b5fc7]/10 text-[#5b5fc7] dark:text-[#a6a9dc] hover:opacity-80 transition-colors">
-                <Edit size={12} /> Edit
+                <Edit size={12} /> {t('meetingCenter.action.edit')}
               </button>
             </>
           )}
           <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium bg-[#5b5fc7]/10 text-[#5b5fc7] dark:text-[#a6a9dc] hover:opacity-80 transition-colors">
-            <Copy size={12} /> Copy Link
+            <Copy size={12} /> {t('meetingCenter.action.copyLink')}
           </button>
         </div>
       </div>
@@ -257,7 +259,7 @@ function MeetingDetail({ meeting, onClose }: { meeting: Meeting; onClose: () => 
           </div>
           <div>
             <p className="text-[12px] font-medium text-[#242424] dark:text-[#f0f0f0]">{meeting.room}</p>
-            <p className="text-[10px] text-[#8a8a8a]">{ROOMS.find(r => r.id === meeting.roomId)?.floor || ''} · {ROOMS.find(r => r.id === meeting.roomId)?.capacity || 0} seats</p>
+            <p className="text-[10px] text-[#8a8a8a]">{ROOMS.find(r => r.id === meeting.roomId)?.floor || ''} · {t('meetingCenter.seats', { count: ROOMS.find(r => r.id === meeting.roomId)?.capacity || 0 })}</p>
           </div>
         </div>
 
@@ -267,8 +269,8 @@ function MeetingDetail({ meeting, onClose }: { meeting: Meeting; onClose: () => 
             <TypeIcon size={14} className="text-[#5b5fc7]" />
           </div>
           <div>
-            <p className="text-[12px] font-medium text-[#242424] dark:text-[#f0f0f0] capitalize">{meeting.type} Meeting</p>
-            <p className="text-[10px] text-[#8a8a8a]">{meeting.type === 'video' ? 'Online only' : meeting.type === 'hybrid' ? 'In-person + virtual link' : 'In-person only'}</p>
+            <p className="text-[12px] font-medium text-[#242424] dark:text-[#f0f0f0]">{t('meetingCenter.meetingTypeLabel', { type: t(`meetingCenter.meetingType.${meeting.type}`) })}</p>
+            <p className="text-[10px] text-[#8a8a8a]">{meeting.type === 'video' ? t('meetingCenter.meetingTypeDesc.video') : meeting.type === 'hybrid' ? t('meetingCenter.meetingTypeDesc.hybrid') : t('meetingCenter.meetingTypeDesc.inPerson')}</p>
           </div>
         </div>
 
@@ -282,7 +284,7 @@ function MeetingDetail({ meeting, onClose }: { meeting: Meeting; onClose: () => 
           </div>
           <div>
             <p className="text-[12px] font-medium text-[#242424] dark:text-[#f0f0f0]">{meeting.organizer}</p>
-            <p className="text-[10px] text-[#8a8a8a]">Organizer</p>
+            <p className="text-[10px] text-[#8a8a8a]">{t('meetingCenter.organizer')}</p>
           </div>
         </div>
       </div>
@@ -290,7 +292,7 @@ function MeetingDetail({ meeting, onClose }: { meeting: Meeting; onClose: () => 
       {/* Description */}
       {meeting.description && (
         <div className="border-t border-[#e1dfdd]/50 dark:border-[#3d3d3d]/50 px-5 py-3">
-          <p className="text-[9px] text-[#8a8a8a] uppercase tracking-wider mb-1.5">Description</p>
+          <p className="text-[9px] text-[#8a8a8a] uppercase tracking-wider mb-1.5">{t('meetingCenter.description')}</p>
           <p className="text-[11px] text-[#616161] dark:text-[#b9bbbe]">{meeting.description}</p>
         </div>
       )}
@@ -298,7 +300,7 @@ function MeetingDetail({ meeting, onClose }: { meeting: Meeting; onClose: () => 
       {/* Agenda */}
       {meeting.agenda && meeting.agenda.length > 0 && (
         <div className="border-t border-[#e1dfdd]/50 dark:border-[#3d3d3d]/50 px-5 py-3">
-          <p className="text-[9px] text-[#8a8a8a] uppercase tracking-wider mb-2">Agenda</p>
+          <p className="text-[9px] text-[#8a8a8a] uppercase tracking-wider mb-2">{t('meetingCenter.agenda')}</p>
           <div className="space-y-1.5">
             {meeting.agenda.map((item, i) => (
               <div key={i} className="flex items-start gap-2">
@@ -313,7 +315,7 @@ function MeetingDetail({ meeting, onClose }: { meeting: Meeting; onClose: () => 
       {/* Attendees */}
       <div className="border-t border-[#e1dfdd]/50 dark:border-[#3d3d3d]/50 px-5 py-3">
         <p className="text-[9px] text-[#8a8a8a] uppercase tracking-wider mb-2">
-          Attendees ({acceptedCount}/{meeting.attendees.length + 1} accepted)
+          {t('meetingCenter.attendees', { accepted: acceptedCount, total: meeting.attendees.length + 1 })}
         </p>
         <div className="space-y-1.5">
           {/* Organizer */}
@@ -325,7 +327,7 @@ function MeetingDetail({ meeting, onClose }: { meeting: Meeting; onClose: () => 
               {meeting.organizerAvatar}
             </div>
             <span className="text-[11px] text-[#242424] dark:text-[#f0f0f0] flex-1">{meeting.organizer}</span>
-            <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#5b5fc7]/10 text-[#5b5fc7] font-medium">Organizer</span>
+            <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#5b5fc7]/10 text-[#5b5fc7] font-medium">{t('meetingCenter.organizer')}</span>
           </div>
           {meeting.attendees.map(a => (
             <div key={a.name} className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-[#faf9f8] dark:hover:bg-[#1e1f22] transition-colors">
@@ -352,6 +354,7 @@ function MeetingDetail({ meeting, onClose }: { meeting: Meeting; onClose: () => 
 // ─── Room Card ───
 
 function RoomCard({ room, isSelected, onClick }: { room: Room; isSelected: boolean; onClick: () => void }) {
+  const { t } = useI18n();
   const statusStyle = ROOM_STATUS_STYLES[room.status];
 
   return (
@@ -374,11 +377,11 @@ function RoomCard({ room, isSelected, onClick }: { room: Room; isSelected: boole
           <span className="text-xl">{room.photo}</span>
           <div>
             <p className="text-[13px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{room.name}</p>
-            <p className="text-[10px] text-[#8a8a8a]">{room.floor} · {room.capacity} seats</p>
+            <p className="text-[10px] text-[#8a8a8a]">{room.floor} · {t('meetingCenter.seats', { count: room.capacity })}</p>
           </div>
         </div>
         <span className={cn('text-[9px] px-2 py-0.5 rounded-full font-medium', statusStyle.bg, statusStyle.text)}>
-          {statusStyle.label}
+          {t(statusStyle.labelKey)}
         </span>
       </div>
 
@@ -405,7 +408,7 @@ function RoomCard({ room, isSelected, onClick }: { room: Room; isSelected: boole
             <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
             <span>{room.currentMeeting}</span>
             <span>·</span>
-            <span>Free at {room.nextAvailable}</span>
+            <span>{t('meetingCenter.roomStatus.freeAt', { time: room.nextAvailable })}</span>
           </div>
         )}
         {room.status === 'reserved' && (
@@ -413,19 +416,19 @@ function RoomCard({ room, isSelected, onClick }: { room: Room; isSelected: boole
             <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
             <span>{room.currentMeeting}</span>
             <span>·</span>
-            <span>Until {room.nextAvailable}</span>
+            <span>{t('meetingCenter.roomStatus.until', { time: room.nextAvailable })}</span>
           </div>
         )}
         {room.status === 'available' && (
           <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 size={10} />
-            <span>Available now — Book instantly</span>
+            <span>{t('meetingCenter.roomStatus.availableNow')}</span>
           </div>
         )}
         {room.status === 'maintenance' && (
           <div className="flex items-center gap-1">
             <AlertCircle size={10} className="text-gray-400" />
-            <span>Under maintenance — Available {room.nextAvailable}</span>
+            <span>{t('meetingCenter.roomStatus.maintenanceNotice', { time: room.nextAvailable })}</span>
           </div>
         )}
       </div>
@@ -441,6 +444,7 @@ function RoomDetail({ room, meetings, onClose, onBookRoom }: {
   onClose: () => void;
   onBookRoom: () => void;
 }) {
+  const { t } = useI18n();
   const roomMeetings = meetings.filter(m => m.roomId === room.id && m.date === 'Today');
   const statusStyle = ROOM_STATUS_STYLES[room.status];
 
@@ -454,16 +458,16 @@ function RoomDetail({ room, meetings, onClose, onBookRoom }: {
       <div className="px-5 pt-5 pb-4">
         <div className="flex items-start justify-between mb-3">
           <span className={cn('text-[10px] px-2 py-0.5 rounded-full font-medium', statusStyle.bg, statusStyle.text)}>
-            {statusStyle.label}
+            {t(statusStyle.labelKey)}
           </span>
-          <button onClick={onClose} className="text-[11px] text-[#8a8a8a] hover:text-[#5b5fc7] transition-colors">Close</button>
+          <button onClick={onClose} className="text-[11px] text-[#8a8a8a] hover:text-[#5b5fc7] transition-colors">{t('common.close')}</button>
         </div>
 
         <div className="flex items-center gap-3 mb-3">
           <span className="text-3xl">{room.photo}</span>
           <div>
             <h3 className="text-[16px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{room.name}</h3>
-            <p className="text-[12px] text-[#8a8a8a]">{room.floor} · {room.capacity} seats</p>
+            <p className="text-[12px] text-[#8a8a8a]">{room.floor} · {t('meetingCenter.seats', { count: room.capacity })}</p>
           </div>
         </div>
 
@@ -472,14 +476,14 @@ function RoomDetail({ room, meetings, onClose, onBookRoom }: {
             onClick={onBookRoom}
             className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-medium bg-[#5b5fc7] text-white hover:opacity-90 transition-colors"
           >
-            <Calendar size={13} /> Book This Room
+            <Calendar size={13} /> {t('meetingCenter.bookThisRoom')}
           </button>
         )}
       </div>
 
       {/* Amenities */}
       <div className="border-t border-[#e1dfdd]/50 dark:border-[#3d3d3d]/50 px-5 py-3">
-        <p className="text-[9px] text-[#8a8a8a] uppercase tracking-wider mb-2">Amenities</p>
+        <p className="text-[9px] text-[#8a8a8a] uppercase tracking-wider mb-2">{t('meetingCenter.amenities')}</p>
         <div className="flex flex-wrap gap-2">
           {room.amenities.map(a => {
             const Icon = AMENITY_ICONS[a] || Monitor;
@@ -495,9 +499,9 @@ function RoomDetail({ room, meetings, onClose, onBookRoom }: {
 
       {/* Today's schedule for this room */}
       <div className="border-t border-[#e1dfdd]/50 dark:border-[#3d3d3d]/50 px-5 py-3">
-        <p className="text-[9px] text-[#8a8a8a] uppercase tracking-wider mb-2">Today's Schedule</p>
+        <p className="text-[9px] text-[#8a8a8a] uppercase tracking-wider mb-2">{t('meetingCenter.todaySchedule')}</p>
         {roomMeetings.length === 0 ? (
-          <p className="text-[11px] text-[#bbb] italic">No meetings booked today</p>
+          <p className="text-[11px] text-[#bbb] italic">{t('meetingCenter.noMeetingsToday')}</p>
         ) : (
           <div className="space-y-2">
             {roomMeetings.map(m => {
@@ -513,9 +517,9 @@ function RoomDetail({ room, meetings, onClose, onBookRoom }: {
                     <p className="text-[11px] font-medium text-[#242424] dark:text-[#f0f0f0] truncate">{m.title}</p>
                     <div className="flex items-center gap-1.5 text-[9px] text-[#8a8a8a]">
                       <span className={cn('w-1.5 h-1.5 rounded-full', mStatus.dot)} />
-                      <span>{mStatus.label}</span>
+                      <span>{t(mStatus.labelKey)}</span>
                       <span>·</span>
-                      <span>{m.attendees.length + 1} people</span>
+                      <span>{t('meetingCenter.attendeesCount', { count: m.attendees.length + 1 })}</span>
                     </div>
                   </div>
                 </div>
@@ -527,7 +531,7 @@ function RoomDetail({ room, meetings, onClose, onBookRoom }: {
 
       {/* Availability heatmap */}
       <div className="border-t border-[#e1dfdd]/50 dark:border-[#3d3d3d]/50 px-5 py-3">
-        <p className="text-[9px] text-[#8a8a8a] uppercase tracking-wider mb-2">Availability — Today</p>
+        <p className="text-[9px] text-[#8a8a8a] uppercase tracking-wider mb-2">{t('meetingCenter.availabilityToday')}</p>
         <div className="flex gap-0.5">
           {TIME_SLOTS.map((slot, i) => {
             const isOccupied = roomMeetings.some(m => {
@@ -550,9 +554,9 @@ function RoomDetail({ room, meetings, onClose, onBookRoom }: {
           })}
         </div>
         <div className="flex items-center gap-4 mt-1.5 text-[9px] text-[#bbb]">
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-emerald-400/20" /> Free</span>
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-red-400/30" /> Booked</span>
-          <span className="ml-auto">8 AM — 6 PM</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-emerald-400/20" /> {t('meetingCenter.free')}</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-red-400/30" /> {t('meetingCenter.booked')}</span>
+          <span className="ml-auto">{t('meetingCenter.availabilityHours', { start: '8 AM', end: '6 PM' })}</span>
         </div>
       </div>
     </motion.div>
@@ -562,10 +566,11 @@ function RoomDetail({ room, meetings, onClose, onBookRoom }: {
 // ─── New Meeting Form ───
 
 function NewMeetingForm({ rooms, onCancel }: { rooms: Room[]; onCancel: () => void }) {
+  const { t } = useI18n();
   const [title, setTitle] = useState('');
-  const [date, setDate] = useState('Today');
+  const [date, setDate] = useState('today');
   const [startTime, setStartTime] = useState('10:00 AM');
-  const [duration, setDuration] = useState('30 min');
+  const [duration, setDuration] = useState('30');
   const [selectedRoom, setSelectedRoom] = useState('');
   const [meetingType, setMeetingType] = useState<'video' | 'in-person' | 'hybrid'>('hybrid');
   const [isRecurring, setIsRecurring] = useState(false);
@@ -580,19 +585,19 @@ function NewMeetingForm({ rooms, onCancel }: { rooms: Room[]; onCancel: () => vo
     >
       <div className="px-5 py-4 border-b border-[#e1dfdd]/50 dark:border-[#3d3d3d]/50 flex items-center justify-between">
         <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0] flex items-center gap-2">
-          <Plus size={15} className="text-[#5b5fc7]" /> New Meeting
+          <Plus size={15} className="text-[#5b5fc7]" /> {t('meetingCenter.newMeeting')}
         </h3>
-        <button onClick={onCancel} className="text-[11px] text-[#8a8a8a] hover:text-[#5b5fc7] transition-colors">Cancel</button>
+        <button onClick={onCancel} className="text-[11px] text-[#8a8a8a] hover:text-[#5b5fc7] transition-colors">{t('common.cancel')}</button>
       </div>
 
       <div className="px-5 py-4 space-y-4">
         {/* Title */}
         <div>
-          <label className="text-[10px] text-[#8a8a8a] uppercase tracking-wider block mb-1">Meeting Title</label>
+          <label className="text-[10px] text-[#8a8a8a] uppercase tracking-wider block mb-1">{t('meetingCenter.meetingTitle')}</label>
           <input
             value={title}
             onChange={e => setTitle(e.target.value)}
-            placeholder="e.g. Sprint Planning, Design Review..."
+            placeholder={t('meetingCenter.meetingTitlePlaceholder')}
             className="w-full px-3 py-2 text-[12px] rounded-lg border border-[#e1dfdd] dark:border-[#3d3d3d] bg-[#faf9f8] dark:bg-[#1e1f22] text-[#242424] dark:text-[#f0f0f0] placeholder-[#bbb] focus:outline-none focus:ring-1 focus:ring-[#5b5fc7]/50"
           />
         </div>
@@ -600,21 +605,21 @@ function NewMeetingForm({ rooms, onCancel }: { rooms: Room[]; onCancel: () => vo
         {/* Date & Time */}
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <label className="text-[10px] text-[#8a8a8a] uppercase tracking-wider block mb-1">Date</label>
+            <label className="text-[10px] text-[#8a8a8a] uppercase tracking-wider block mb-1">{t('meetingCenter.date')}</label>
             <select
               value={date}
               onChange={e => setDate(e.target.value)}
               className="w-full px-2 py-2 text-[11px] rounded-lg border border-[#e1dfdd] dark:border-[#3d3d3d] bg-[#faf9f8] dark:bg-[#1e1f22] text-[#242424] dark:text-[#f0f0f0] focus:outline-none focus:ring-1 focus:ring-[#5b5fc7]/50"
             >
-              <option>Today</option>
-              <option>Tomorrow</option>
-              <option>Feb 20</option>
-              <option>Feb 21</option>
-              <option>Feb 24</option>
+              <option value="today">{t('common.today')}</option>
+              <option value="tomorrow">{t('meetingCenter.tomorrow')}</option>
+              <option value="feb20">{t('meetingCenter.date.feb20')}</option>
+              <option value="feb21">{t('meetingCenter.date.feb21')}</option>
+              <option value="feb24">{t('meetingCenter.date.feb24')}</option>
             </select>
           </div>
           <div>
-            <label className="text-[10px] text-[#8a8a8a] uppercase tracking-wider block mb-1">Start Time</label>
+            <label className="text-[10px] text-[#8a8a8a] uppercase tracking-wider block mb-1">{t('meetingCenter.startTime')}</label>
             <select
               value={startTime}
               onChange={e => setStartTime(e.target.value)}
@@ -624,25 +629,25 @@ function NewMeetingForm({ rooms, onCancel }: { rooms: Room[]; onCancel: () => vo
             </select>
           </div>
           <div>
-            <label className="text-[10px] text-[#8a8a8a] uppercase tracking-wider block mb-1">Duration</label>
+            <label className="text-[10px] text-[#8a8a8a] uppercase tracking-wider block mb-1">{t('meetingCenter.duration')}</label>
             <select
               value={duration}
               onChange={e => setDuration(e.target.value)}
               className="w-full px-2 py-2 text-[11px] rounded-lg border border-[#e1dfdd] dark:border-[#3d3d3d] bg-[#faf9f8] dark:bg-[#1e1f22] text-[#242424] dark:text-[#f0f0f0] focus:outline-none focus:ring-1 focus:ring-[#5b5fc7]/50"
             >
-              <option>15 min</option>
-              <option>30 min</option>
-              <option>45 min</option>
-              <option>1 hour</option>
-              <option>1.5 hours</option>
-              <option>2 hours</option>
+              <option value="15">{t('meetingCenter.duration.15min')}</option>
+              <option value="30">{t('meetingCenter.duration.30min')}</option>
+              <option value="45">{t('meetingCenter.duration.45min')}</option>
+              <option value="60">{t('meetingCenter.duration.1h')}</option>
+              <option value="90">{t('meetingCenter.duration.1_5h')}</option>
+              <option value="120">{t('meetingCenter.duration.2h')}</option>
             </select>
           </div>
         </div>
 
         {/* Meeting type */}
         <div>
-          <label className="text-[10px] text-[#8a8a8a] uppercase tracking-wider block mb-1.5">Meeting Type</label>
+          <label className="text-[10px] text-[#8a8a8a] uppercase tracking-wider block mb-1.5">{t('meetingCenter.meetingType')}</label>
           <div className="flex gap-2">
             {(['video', 'in-person', 'hybrid'] as const).map(t => {
               const Icon = TYPE_ICONS[t];
@@ -658,7 +663,7 @@ function NewMeetingForm({ rooms, onCancel }: { rooms: Room[]; onCancel: () => vo
                   )}
                 >
                   <Icon size={12} />
-                  <span className="capitalize">{t}</span>
+                  <span>{t(`meetingCenter.meetingType.${t}`)}</span>
                 </button>
               );
             })}
@@ -668,7 +673,7 @@ function NewMeetingForm({ rooms, onCancel }: { rooms: Room[]; onCancel: () => vo
         {/* Room */}
         {meetingType !== 'video' && (
           <div>
-            <label className="text-[10px] text-[#8a8a8a] uppercase tracking-wider block mb-1.5">Book a Room</label>
+            <label className="text-[10px] text-[#8a8a8a] uppercase tracking-wider block mb-1.5">{t('meetingCenter.bookRoom')}</label>
             <div className="space-y-1.5 max-h-[150px] overflow-y-auto scrollbar-on-hover">
               {availableRooms.map(r => (
                 <button
@@ -684,7 +689,7 @@ function NewMeetingForm({ rooms, onCancel }: { rooms: Room[]; onCancel: () => vo
                   <span className="text-lg">{r.photo}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-[11px] font-medium text-[#242424] dark:text-[#f0f0f0]">{r.name}</p>
-                    <p className="text-[9px] text-[#8a8a8a]">{r.floor} · {r.capacity} seats</p>
+                    <p className="text-[9px] text-[#8a8a8a]">{r.floor} · {t('meetingCenter.seats', { count: r.capacity })}</p>
                   </div>
                   {selectedRoom === r.id && <CheckCircle2 size={14} className="text-[#5b5fc7]" />}
                 </button>
@@ -697,7 +702,7 @@ function NewMeetingForm({ rooms, onCancel }: { rooms: Room[]; onCancel: () => vo
         <div className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-[#faf9f8] dark:bg-[#1e1f22]">
           <div className="flex items-center gap-2">
             <Repeat size={13} className="text-[#8a8a8a]" />
-            <span className="text-[11px] text-[#616161] dark:text-[#b9bbbe]">Recurring meeting</span>
+            <span className="text-[11px] text-[#616161] dark:text-[#b9bbbe]">{t('meetingCenter.recurring')}</span>
           </div>
           <button
             onClick={() => setIsRecurring(!isRecurring)}
@@ -718,13 +723,13 @@ function NewMeetingForm({ rooms, onCancel }: { rooms: Room[]; onCancel: () => vo
           <button
             className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-[12px] font-medium bg-[#5b5fc7] text-white hover:opacity-90 transition-colors"
           >
-            <Calendar size={13} /> Schedule Meeting
+            <Calendar size={13} /> {t('meetingCenter.scheduleMeeting')}
           </button>
           <button
             onClick={onCancel}
             className="px-4 py-2.5 rounded-lg text-[12px] font-medium text-[#8a8a8a] hover:bg-[#f0f0f0] dark:hover:bg-[#333] transition-colors"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
         </div>
       </div>
@@ -735,6 +740,7 @@ function NewMeetingForm({ rooms, onCancel }: { rooms: Room[]; onCancel: () => vo
 // ─── Main Component ───
 
 export function MeetingCenterApp() {
+  const { t } = useI18n();
   const [view, setView] = useState<ViewMode>('schedule');
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
@@ -789,18 +795,18 @@ export function MeetingCenterApp() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-[#242424] dark:text-[#f0f0f0]">Meeting Center</span>
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#5b5fc7]/10 text-[#5b5fc7] dark:bg-[#5b5fc7]/20 dark:text-[#a6a9dc] font-bold">Rooms & Scheduling</span>
+                <span className="text-sm font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('meetingCenter.title')}</span>
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#5b5fc7]/10 text-[#5b5fc7] dark:bg-[#5b5fc7]/20 dark:text-[#a6a9dc] font-bold">{t('meetingCenter.subtitle')}</span>
               </div>
               <div className="flex items-center gap-3 mt-0.5 text-[10px] text-[#8a8a8a] dark:text-[#6d6f78]">
-                <span className="flex items-center gap-1"><Calendar size={9} /> {stats.todayCount} meetings today</span>
+                <span className="flex items-center gap-1"><Calendar size={9} /> {t('meetingCenter.stats.meetingsToday', { count: stats.todayCount })}</span>
                 <span>·</span>
-                <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400"><CheckCircle2 size={9} /> {stats.availableRooms}/{stats.totalRooms} rooms free</span>
+                <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400"><CheckCircle2 size={9} /> {t('meetingCenter.stats.roomsFree', { available: stats.availableRooms, total: stats.totalRooms })}</span>
                 {stats.inProgress > 0 && (
                   <>
                     <span>·</span>
                     <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> {stats.inProgress} in progress
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> {t('meetingCenter.stats.inProgress', { count: stats.inProgress })}
                     </span>
                   </>
                 )}
@@ -814,7 +820,7 @@ export function MeetingCenterApp() {
               <input
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search meetings, rooms..."
+                placeholder={t('meetingCenter.searchPlaceholder')}
                 className="pl-8 pr-3 py-1.5 text-[12px] rounded-lg border border-[#e1dfdd] dark:border-[#3d3d3d] bg-[#faf9f8] dark:bg-[#1e1f22] text-[#242424] dark:text-[#f0f0f0] placeholder-[#b9bbbe] w-[200px] focus:outline-none focus:ring-1 focus:ring-[#5b5fc7]/50"
               />
             </div>
@@ -822,7 +828,7 @@ export function MeetingCenterApp() {
               onClick={() => setView('new-meeting')}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium bg-[#5b5fc7] text-white hover:opacity-90 transition-colors"
             >
-              <Plus size={13} /> New Meeting
+              <Plus size={13} /> {t('meetingCenter.newMeeting')}
             </button>
           </div>
         </div>
@@ -830,8 +836,8 @@ export function MeetingCenterApp() {
         {/* Tabs */}
         <div className="px-5 flex items-center gap-1 border-t border-[#e1dfdd]/50 dark:border-[#3d3d3d]/50">
           {([
-            { id: 'schedule' as ViewMode, label: 'Schedule', icon: Calendar },
-            { id: 'rooms' as ViewMode, label: 'Meeting Rooms', icon: MapPin },
+            { id: 'schedule' as ViewMode, label: t('meetingCenter.tab.schedule'), icon: Calendar },
+            { id: 'rooms' as ViewMode, label: t('meetingCenter.tab.rooms'), icon: MapPin },
           ]).map(t => (
             <button
               key={t.id}
@@ -866,7 +872,7 @@ export function MeetingCenterApp() {
                 <div className="px-4 py-2.5 border-b border-[#e1dfdd]/50 dark:border-[#3d3d3d]/50 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Calendar size={13} className="text-[#5b5fc7]" />
-                    <span className="text-[12px] font-medium text-[#242424] dark:text-[#f0f0f0]">Today's Meetings</span>
+                    <span className="text-[12px] font-medium text-[#242424] dark:text-[#f0f0f0]">{t('meetingCenter.todayMeetings')}</span>
                     <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#5b5fc7]/10 text-[#5b5fc7] font-medium">{todayMeetings.length}</span>
                   </div>
                   {/* Filter */}
@@ -882,7 +888,7 @@ export function MeetingCenterApp() {
                             : 'text-[#8a8a8a] hover:bg-[#f0f0f0] dark:hover:bg-[#333]',
                         )}
                       >
-                        {f}
+                        {t(`meetingCenter.filter.${f}`)}
                       </button>
                     ))}
                   </div>
@@ -931,13 +937,13 @@ export function MeetingCenterApp() {
                           <div className="flex items-center gap-2 text-[10px] text-[#8a8a8a]">
                             <span className="flex items-center gap-1"><MapPin size={9} /> {m.room}</span>
                             <span>·</span>
-                            <span className="flex items-center gap-1"><TypeIcon size={9} /> <span className="capitalize">{m.type}</span></span>
+                            <span className="flex items-center gap-1"><TypeIcon size={9} /> <span>{t(`meetingCenter.meetingType.${m.type}`)}</span></span>
                             <span>·</span>
                             <span className="flex items-center gap-1"><Users size={9} /> {m.attendees.length + 1}</span>
                           </div>
                           <div className="flex items-center gap-1 mt-1.5">
                             <span className={cn('w-1.5 h-1.5 rounded-full', statusStyle.dot)} />
-                            <span className="text-[9px] text-[#8a8a8a]">{statusStyle.label}</span>
+                            <span className="text-[9px] text-[#8a8a8a]">{t(statusStyle.labelKey)}</span>
                             {m.date !== 'Today' && (
                               <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#f0f0f0] dark:bg-[#333] text-[#8a8a8a] ml-1">{m.date}</span>
                             )}
@@ -971,7 +977,7 @@ export function MeetingCenterApp() {
                 <div className="px-4 py-2 border-t border-[#e1dfdd]/50 dark:border-[#3d3d3d]/50 flex items-center gap-2 bg-[#5b5fc7]/5 dark:bg-[#5b5fc7]/8">
                   <Clock size={12} className="text-[#5b5fc7] shrink-0" />
                   <p className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78]">
-                    Viewing as <span className="font-medium text-[#5b5fc7] dark:text-[#a6a9dc]">Bob Johnson</span> · Feb 18, 2026
+                    {t('meetingCenter.viewingAs', { name: 'Bob Johnson', date: 'Feb 18, 2026' })}
                   </p>
                 </div>
               </div>
@@ -993,8 +999,8 @@ export function MeetingCenterApp() {
                   >
                     <div className="text-center">
                       <Calendar size={32} className="text-[#ddd] dark:text-[#555] mx-auto mb-2" />
-                      <p className="text-[13px] text-[#8a8a8a]">Select a meeting to view details</p>
-                      <p className="text-[11px] text-[#bbb] mt-1">Or create a new meeting with the button above</p>
+                      <p className="text-[13px] text-[#8a8a8a]">{t('meetingCenter.emptyMeetingTitle')}</p>
+                      <p className="text-[11px] text-[#bbb] mt-1">{t('meetingCenter.emptyMeetingSubtitle')}</p>
                     </div>
                   </motion.div>
                 )}
@@ -1011,10 +1017,10 @@ export function MeetingCenterApp() {
                 {/* Quick stats */}
                 <div className="grid grid-cols-4 gap-2">
                   {[
-                    { label: 'Total Rooms', value: ROOMS.length, color: 'text-[#5b5fc7]', bg: 'bg-[#5b5fc7]/10' },
-                    { label: 'Available', value: ROOMS.filter(r => r.status === 'available').length, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10' },
-                    { label: 'Occupied', value: ROOMS.filter(r => r.status === 'occupied').length, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-500/10' },
-                    { label: 'Reserved', value: ROOMS.filter(r => r.status === 'reserved').length, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/10' },
+                    { label: t('meetingCenter.roomStats.total'), value: ROOMS.length, color: 'text-[#5b5fc7]', bg: 'bg-[#5b5fc7]/10' },
+                    { label: t('meetingCenter.roomStats.available'), value: ROOMS.filter(r => r.status === 'available').length, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10' },
+                    { label: t('meetingCenter.roomStats.occupied'), value: ROOMS.filter(r => r.status === 'occupied').length, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-500/10' },
+                    { label: t('meetingCenter.roomStats.reserved'), value: ROOMS.filter(r => r.status === 'reserved').length, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/10' },
                   ].map(s => (
                     <div key={s.label} className="px-3 py-2 rounded-lg bg-white dark:bg-[#252525] border border-[#e1dfdd] dark:border-[#3d3d3d]">
                       <p className={cn('text-[16px] font-bold', s.color)}>{s.value}</p>
@@ -1055,8 +1061,8 @@ export function MeetingCenterApp() {
                   >
                     <div className="text-center">
                       <MapPin size={32} className="text-[#ddd] dark:text-[#555] mx-auto mb-2" />
-                      <p className="text-[13px] text-[#8a8a8a]">Select a room to view details</p>
-                      <p className="text-[11px] text-[#bbb] mt-1">See availability, amenities, and book instantly</p>
+                      <p className="text-[13px] text-[#8a8a8a]">{t('meetingCenter.emptyRoomTitle')}</p>
+                      <p className="text-[11px] text-[#bbb] mt-1">{t('meetingCenter.emptyRoomSubtitle')}</p>
                     </div>
                   </motion.div>
                 )}

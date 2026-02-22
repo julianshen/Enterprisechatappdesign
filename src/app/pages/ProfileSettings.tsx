@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import { currentUser } from '../data/mockData';
 import { useTheme } from '../context/ThemeContext';
+import { LANGUAGES, useI18n } from '../context/I18nContext';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui";
 
 // ─── Types ───
 
@@ -31,6 +33,7 @@ interface ProfileData {
 export function ProfileSettings() {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const { t, lang, setLang } = useI18n();
   const [activeTab, setActiveTab] = useState<Tab>('profile');
   const [status, setStatus] = useState<UserStatus>(currentUser.status);
   const [statusMessage, setStatusMessage] = useState('');
@@ -75,18 +78,18 @@ export function ProfileSettings() {
   });
 
   const statusOptions: { value: UserStatus; label: string; color: string; dot: string }[] = [
-    { value: 'online', label: 'Available', color: 'text-[#237b4b] dark:text-[#57ab5a]', dot: 'bg-[#237b4b]' },
-    { value: 'busy', label: 'Busy', color: 'text-[#c4314b] dark:text-[#f47067]', dot: 'bg-[#c4314b]' },
-    { value: 'away', label: 'Away', color: 'text-[#d4820c] dark:text-[#f0b850]', dot: 'bg-[#d4820c]' },
-    { value: 'offline', label: 'Appear Offline', color: 'text-[#8a8a8a] dark:text-[#6d6f78]', dot: 'bg-[#8a8a8a]' },
+    { value: 'online', label: t('status.available'), color: 'text-[#237b4b] dark:text-[#57ab5a]', dot: 'bg-[#237b4b]' },
+    { value: 'busy', label: t('status.busy'), color: 'text-[#c4314b] dark:text-[#f47067]', dot: 'bg-[#c4314b]' },
+    { value: 'away', label: t('status.away'), color: 'text-[#d4820c] dark:text-[#f0b850]', dot: 'bg-[#d4820c]' },
+    { value: 'offline', label: t('status.offline'), color: 'text-[#8a8a8a] dark:text-[#6d6f78]', dot: 'bg-[#8a8a8a]' },
   ];
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: 'profile', label: 'Profile', icon: <User size={16} /> },
-    { id: 'account', label: 'Account', icon: <Settings size={16} /> },
-    { id: 'notifications', label: 'Notifications', icon: <Bell size={16} /> },
-    { id: 'appearance', label: 'Appearance', icon: <Palette size={16} /> },
-    { id: 'privacy', label: 'Privacy & Security', icon: <Shield size={16} /> },
+    { id: 'profile', label: t('tabs.profile'), icon: <User size={16} /> },
+    { id: 'account', label: t('tabs.account'), icon: <Settings size={16} /> },
+    { id: 'notifications', label: t('tabs.notifications'), icon: <Bell size={16} /> },
+    { id: 'appearance', label: t('tabs.appearance'), icon: <Palette size={16} /> },
+    { id: 'privacy', label: t('tabs.privacy'), icon: <Shield size={16} /> },
   ];
 
   const handleSave = () => {
@@ -111,11 +114,11 @@ export function ProfileSettings() {
           >
             <ArrowLeft size={18} />
           </button>
-          <h1 className="text-[18px] font-semibold text-[#242424] dark:text-[#f0f0f0]">Profile & Settings</h1>
+          <h1 className="text-[18px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('profile.title')}</h1>
           <div className="flex-1" />
           {saved && (
             <div className="flex items-center gap-1.5 px-3 py-1 bg-[#237b4b]/10 text-[#237b4b] dark:text-[#57ab5a] rounded-lg text-[12px] font-medium">
-              <Check size={14} /> Saved
+              <Check size={14} /> {t('profile.saved')}
             </div>
           )}
         </div>
@@ -171,7 +174,7 @@ export function ProfileSettings() {
               {/* Status */}
               <section className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] overflow-hidden">
                 <div className="px-5 py-3 border-b border-[#f0f0f0] dark:border-[#333] flex items-center justify-between">
-                  <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">Status</h3>
+                  <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('status.title')}</h3>
                 </div>
                 <div className="p-5 space-y-4">
                   <div className="flex gap-2">
@@ -191,12 +194,12 @@ export function ProfileSettings() {
                     ))}
                   </div>
                   <div>
-                    <label className="block text-[12px] font-medium text-[#616161] dark:text-[#b9bbbe] mb-1.5">Status message</label>
+                    <label className="block text-[12px] font-medium text-[#616161] dark:text-[#b9bbbe] mb-1.5">{t('status.message')}</label>
                     <input
                       type="text"
                       value={statusMessage}
                       onChange={e => setStatusMessage(e.target.value)}
-                      placeholder="What's on your mind?"
+                      placeholder={t('status.placeholder')}
                       className="w-full px-3 py-2 bg-[#faf9f8] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg text-[13px] text-[#242424] dark:text-[#e0e0e0] placeholder-[#b9bbbe] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/30"
                     />
                   </div>
@@ -206,7 +209,7 @@ export function ProfileSettings() {
               {/* Personal info */}
               <section className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] overflow-hidden">
                 <div className="px-5 py-3 border-b border-[#f0f0f0] dark:border-[#333] flex items-center justify-between">
-                  <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">Personal Information</h3>
+                  <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('profile.personalInfo')}</h3>
                   <button
                     onClick={() => isEditing ? handleSave() : setIsEditing(true)}
                     className={`text-[12px] font-medium px-3 py-1.5 rounded-lg transition-all ${
@@ -215,21 +218,21 @@ export function ProfileSettings() {
                         : 'text-[#5b5fc7] dark:text-[#a6a9dc] hover:bg-[#eeeef8] dark:hover:bg-[#5b5fc7]/10'
                     }`}
                   >
-                    {isEditing ? 'Save Changes' : 'Edit'}
+                    {isEditing ? t('profile.saveChanges') : t('profile.edit')}
                   </button>
                 </div>
                 <div className="p-5 space-y-4">
-                  <ProfileField icon={<User size={15} />} label="Display Name" value={profile.displayName} editing={isEditing} onChange={v => updateProfile('displayName', v)} />
-                  <ProfileField icon={<Mail size={15} />} label="Email" value={profile.email} editing={isEditing} onChange={v => updateProfile('email', v)} />
-                  <ProfileField icon={<Phone size={15} />} label="Phone" value={profile.phone} editing={isEditing} onChange={v => updateProfile('phone', v)} />
-                  <ProfileField icon={<Briefcase size={15} />} label="Job Title" value={profile.jobTitle} editing={isEditing} onChange={v => updateProfile('jobTitle', v)} />
-                  <ProfileField icon={<Building2 size={15} />} label="Department" value={profile.department} editing={isEditing} onChange={v => updateProfile('department', v)} />
-                  <ProfileField icon={<MapPin size={15} />} label="Location" value={profile.location} editing={isEditing} onChange={v => updateProfile('location', v)} />
-                  <ProfileField icon={<Clock size={15} />} label="Timezone" value={profile.timezone} editing={isEditing} onChange={v => updateProfile('timezone', v)} />
-                  <ProfileField icon={<Languages size={15} />} label="Pronouns" value={profile.pronouns} editing={isEditing} onChange={v => updateProfile('pronouns', v)} />
+                  <ProfileField icon={<User size={15} />} label={t('profile.field.displayName')} value={profile.displayName} editing={isEditing} onChange={v => updateProfile('displayName', v)} />
+                  <ProfileField icon={<Mail size={15} />} label={t('profile.field.email')} value={profile.email} editing={isEditing} onChange={v => updateProfile('email', v)} />
+                  <ProfileField icon={<Phone size={15} />} label={t('profile.field.phone')} value={profile.phone} editing={isEditing} onChange={v => updateProfile('phone', v)} />
+                  <ProfileField icon={<Briefcase size={15} />} label={t('profile.field.jobTitle')} value={profile.jobTitle} editing={isEditing} onChange={v => updateProfile('jobTitle', v)} />
+                  <ProfileField icon={<Building2 size={15} />} label={t('profile.field.department')} value={profile.department} editing={isEditing} onChange={v => updateProfile('department', v)} />
+                  <ProfileField icon={<MapPin size={15} />} label={t('profile.field.location')} value={profile.location} editing={isEditing} onChange={v => updateProfile('location', v)} />
+                  <ProfileField icon={<Clock size={15} />} label={t('profile.field.timezone')} value={profile.timezone} editing={isEditing} onChange={v => updateProfile('timezone', v)} />
+                  <ProfileField icon={<Languages size={15} />} label={t('profile.field.pronouns')} value={profile.pronouns} editing={isEditing} onChange={v => updateProfile('pronouns', v)} />
                   <div>
                     <label className="flex items-center gap-2 text-[12px] font-medium text-[#616161] dark:text-[#b9bbbe] mb-1.5">
-                      <User size={15} /> Bio
+                      <User size={15} /> {t('profile.field.bio')}
                     </label>
                     {isEditing ? (
                       <textarea
@@ -252,39 +255,57 @@ export function ProfileSettings() {
             <>
               <section className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] overflow-hidden">
                 <div className="px-5 py-3 border-b border-[#f0f0f0] dark:border-[#333]">
-                  <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">Account Details</h3>
+                  <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('account.details')}</h3>
                 </div>
                 <div className="divide-y divide-[#f0f0f0] dark:divide-[#333]">
-                  <AccountRow icon={<Mail size={16} />} label="Email Address" value={profile.email} />
-                  <AccountRow icon={<KeyRound size={16} />} label="Password" value="Last changed 45 days ago" action="Change" />
-                  <AccountRow icon={<Shield size={16} />} label="Two-Factor Authentication" value={privacySettings.twoFactorEnabled ? 'Enabled' : 'Disabled'} action={privacySettings.twoFactorEnabled ? 'Manage' : 'Enable'} />
-                  <AccountRow icon={<Smartphone size={16} />} label="Connected Devices" value="3 active sessions" action="Manage" />
-                  <AccountRow icon={<Globe size={16} />} label="Language" value="English (US)" action="Change" />
-                  <AccountRow icon={<Clock size={16} />} label="Timezone" value={profile.timezone} action="Change" />
+                  <AccountRow icon={<Mail size={16} />} label={t('account.email')} value={profile.email} />
+                  <AccountRow icon={<KeyRound size={16} />} label={t('account.password')} value={t('account.passwordValue')} action={t('account.passwordAction')} />
+                  <AccountRow icon={<Shield size={16} />} label={t('account.twoFactor')} value={privacySettings.twoFactorEnabled ? t('account.twoFactorEnabled') : t('account.twoFactorDisabled')} action={privacySettings.twoFactorEnabled ? t('account.twoFactorManage') : t('account.twoFactorEnable')} />
+                  <AccountRow icon={<Smartphone size={16} />} label={t('account.devices')} value={t('account.devicesValue')} action={t('account.manage')} />
+                  <div className="flex items-center gap-3 py-3 border-b border-[#f0f0f0] dark:border-[#333]">
+                    <div className="w-10 h-10 rounded-lg bg-[#5b5fc7]/10 dark:bg-[#5b5fc7]/20 flex items-center justify-center">
+                      <Globe size={16} className="text-[#5b5fc7]" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[13px] font-medium text-[#242424] dark:text-[#f0f0f0]">{t('account.language')}</p>
+                      <p className="text-[12px] text-[#8a8a8a] dark:text-[#6d6f78]">{LANGUAGES.find(l => l.code === lang)?.label}</p>
+                    </div>
+                    <Select value={lang} onValueChange={(v) => setLang(v as typeof lang)}>
+                      <SelectTrigger className="h-8 w-40 text-[12px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {LANGUAGES.map(l => (
+                          <SelectItem key={l.code} value={l.code}>{l.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <AccountRow icon={<Clock size={16} />} label={t('account.timezone')} value={profile.timezone} action={t('account.change')} />
                 </div>
               </section>
 
               <section className="bg-white dark:bg-[#252525] rounded-xl border border-[#c4314b]/20 overflow-hidden">
                 <div className="px-5 py-3 border-b border-[#c4314b]/10">
-                  <h3 className="text-[14px] font-semibold text-[#c4314b] dark:text-[#f47067]">Danger Zone</h3>
+                  <h3 className="text-[14px] font-semibold text-[#c4314b] dark:text-[#f47067]">{t('profile.dangerZone')}</h3>
                 </div>
                 <div className="p-5 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-[13px] font-medium text-[#242424] dark:text-[#e0e0e0]">Deactivate Account</p>
-                      <p className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">Temporarily disable your account</p>
+                      <p className="text-[13px] font-medium text-[#242424] dark:text-[#e0e0e0]">{t('profile.deactivateAccount')}</p>
+                      <p className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">{t('profile.deactivateDesc')}</p>
                     </div>
                     <button className="text-[12px] font-medium px-3 py-1.5 rounded-lg border border-[#c4314b]/30 text-[#c4314b] dark:text-[#f47067] hover:bg-[#c4314b]/5 transition-colors">
-                      Deactivate
+                      {t('profile.deactivate')}
                     </button>
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-[13px] font-medium text-[#242424] dark:text-[#e0e0e0]">Delete Account</p>
-                      <p className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">Permanently delete your account and all data</p>
+                      <p className="text-[13px] font-medium text-[#242424] dark:text-[#e0e0e0]">{t('profile.deleteAccount')}</p>
+                      <p className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">{t('profile.deleteDesc')}</p>
                     </div>
                     <button className="text-[12px] font-medium px-3 py-1.5 rounded-lg bg-[#c4314b] text-white hover:bg-[#a3283f] transition-colors">
-                      Delete
+                      {t('common.delete')}
                     </button>
                   </div>
                 </div>
@@ -297,42 +318,42 @@ export function ProfileSettings() {
             <>
               <section className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] overflow-hidden">
                 <div className="px-5 py-3 border-b border-[#f0f0f0] dark:border-[#333]">
-                  <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">Notification Preferences</h3>
+                  <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('profile.notifications.title')}</h3>
                 </div>
                 <div className="divide-y divide-[#f0f0f0] dark:divide-[#333]">
-                  <ToggleRow label="Mentions & Replies" desc="Get notified when someone mentions or replies to you" checked={notifSettings.mentionsAndReplies} onChange={v => setNotifSettings(p => ({ ...p, mentionsAndReplies: v }))} />
-                  <ToggleRow label="Direct Messages" desc="Notifications for new direct messages" checked={notifSettings.directMessages} onChange={v => setNotifSettings(p => ({ ...p, directMessages: v }))} />
-                  <ToggleRow label="Channel Activity" desc="Get notified for all messages in channels you follow" checked={notifSettings.channelActivity} onChange={v => setNotifSettings(p => ({ ...p, channelActivity: v }))} />
-                  <ToggleRow label="Task Assignments" desc="Notifications when tasks are assigned to you" checked={notifSettings.taskAssignments} onChange={v => setNotifSettings(p => ({ ...p, taskAssignments: v }))} />
-                  <ToggleRow label="App Updates" desc="Notifications from installed apps and integrations" checked={notifSettings.appUpdates} onChange={v => setNotifSettings(p => ({ ...p, appUpdates: v }))} />
+                  <ToggleRow label={t('profile.notifications.mentionsReplies')} desc={t('profile.notifications.mentionsRepliesDesc')} checked={notifSettings.mentionsAndReplies} onChange={v => setNotifSettings(p => ({ ...p, mentionsAndReplies: v }))} />
+                  <ToggleRow label={t('profile.notifications.directMessages')} desc={t('profile.notifications.directMessagesDesc')} checked={notifSettings.directMessages} onChange={v => setNotifSettings(p => ({ ...p, directMessages: v }))} />
+                  <ToggleRow label={t('profile.notifications.channelActivity')} desc={t('profile.notifications.channelActivityDesc')} checked={notifSettings.channelActivity} onChange={v => setNotifSettings(p => ({ ...p, channelActivity: v }))} />
+                  <ToggleRow label={t('profile.notifications.taskAssignments')} desc={t('profile.notifications.taskAssignmentsDesc')} checked={notifSettings.taskAssignments} onChange={v => setNotifSettings(p => ({ ...p, taskAssignments: v }))} />
+                  <ToggleRow label={t('profile.notifications.appUpdates')} desc={t('profile.notifications.appUpdatesDesc')} checked={notifSettings.appUpdates} onChange={v => setNotifSettings(p => ({ ...p, appUpdates: v }))} />
                 </div>
               </section>
 
               <section className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] overflow-hidden">
                 <div className="px-5 py-3 border-b border-[#f0f0f0] dark:border-[#333]">
-                  <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">Delivery</h3>
+                  <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('profile.delivery.title')}</h3>
                 </div>
                 <div className="divide-y divide-[#f0f0f0] dark:divide-[#333]">
-                  <ToggleRow label="Email Digest" desc="Receive a daily summary of activity by email" checked={notifSettings.emailDigest} onChange={v => setNotifSettings(p => ({ ...p, emailDigest: v }))} />
-                  <ToggleRow label="Desktop Notifications" desc="Show browser push notifications" checked={notifSettings.desktopNotifications} onChange={v => setNotifSettings(p => ({ ...p, desktopNotifications: v }))} />
-                  <ToggleRow label="Sound" desc="Play a sound for new notifications" checked={notifSettings.soundEnabled} onChange={v => setNotifSettings(p => ({ ...p, soundEnabled: v }))} />
+                  <ToggleRow label={t('profile.delivery.emailDigest')} desc={t('profile.delivery.emailDigestDesc')} checked={notifSettings.emailDigest} onChange={v => setNotifSettings(p => ({ ...p, emailDigest: v }))} />
+                  <ToggleRow label={t('profile.delivery.desktopNotifications')} desc={t('profile.delivery.desktopNotificationsDesc')} checked={notifSettings.desktopNotifications} onChange={v => setNotifSettings(p => ({ ...p, desktopNotifications: v }))} />
+                  <ToggleRow label={t('profile.delivery.sound')} desc={t('profile.delivery.soundDesc')} checked={notifSettings.soundEnabled} onChange={v => setNotifSettings(p => ({ ...p, soundEnabled: v }))} />
                 </div>
               </section>
 
               <section className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] overflow-hidden">
                 <div className="px-5 py-3 border-b border-[#f0f0f0] dark:border-[#333]">
-                  <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">Quiet Hours</h3>
+                  <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('profile.quietHours.title')}</h3>
                 </div>
                 <div className="p-5 space-y-4">
-                  <ToggleRow label="Enable Quiet Hours" desc="Mute all notifications during specified hours" checked={notifSettings.quietHoursEnabled} onChange={v => setNotifSettings(p => ({ ...p, quietHoursEnabled: v }))} noBorder />
+                  <ToggleRow label={t('profile.quietHours.enable')} desc={t('profile.quietHours.enableDesc')} checked={notifSettings.quietHoursEnabled} onChange={v => setNotifSettings(p => ({ ...p, quietHoursEnabled: v }))} noBorder />
                   {notifSettings.quietHoursEnabled && (
                     <div className="flex items-center gap-4 pl-1">
                       <div>
-                        <label className="block text-[11px] font-medium text-[#616161] dark:text-[#b9bbbe] mb-1">From</label>
+                        <label className="block text-[11px] font-medium text-[#616161] dark:text-[#b9bbbe] mb-1">{t('profile.quietHours.from')}</label>
                         <input type="time" value={notifSettings.quietHoursStart} onChange={e => setNotifSettings(p => ({ ...p, quietHoursStart: e.target.value }))} className="px-3 py-1.5 bg-[#faf9f8] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg text-[13px] text-[#242424] dark:text-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/30" />
                       </div>
                       <div>
-                        <label className="block text-[11px] font-medium text-[#616161] dark:text-[#b9bbbe] mb-1">To</label>
+                        <label className="block text-[11px] font-medium text-[#616161] dark:text-[#b9bbbe] mb-1">{t('profile.quietHours.to')}</label>
                         <input type="time" value={notifSettings.quietHoursEnd} onChange={e => setNotifSettings(p => ({ ...p, quietHoursEnd: e.target.value }))} className="px-3 py-1.5 bg-[#faf9f8] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg text-[13px] text-[#242424] dark:text-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/30" />
                       </div>
                     </div>
@@ -347,14 +368,14 @@ export function ProfileSettings() {
             <>
               <section className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] overflow-hidden">
                 <div className="px-5 py-3 border-b border-[#f0f0f0] dark:border-[#333]">
-                  <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">Theme</h3>
+                  <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('profile.appearance.theme')}</h3>
                 </div>
                 <div className="p-5">
                   <div className="grid grid-cols-3 gap-3">
                     {[
-                      { id: 'light' as const, label: 'Light', icon: <Sun size={24} />, colors: 'bg-white border-[#e1dfdd]', preview: 'bg-gradient-to-br from-[#faf9f8] to-white' },
-                      { id: 'dark' as const, label: 'Dark', icon: <Moon size={24} />, colors: 'bg-[#1e1f22] border-[#3d3d3d]', preview: 'bg-gradient-to-br from-[#313338] to-[#1e1f22]' },
-                      { id: 'system' as const, label: 'System', icon: <Monitor size={24} />, colors: 'bg-gradient-to-r from-white to-[#1e1f22] border-[#8a8a8a]', preview: 'bg-gradient-to-r from-[#faf9f8] to-[#313338]' },
+                      { id: 'light' as const, label: t('profile.appearance.light'), icon: <Sun size={24} />, colors: 'bg-white border-[#e1dfdd]', preview: 'bg-gradient-to-br from-[#faf9f8] to-white' },
+                      { id: 'dark' as const, label: t('profile.appearance.dark'), icon: <Moon size={24} />, colors: 'bg-[#1e1f22] border-[#3d3d3d]', preview: 'bg-gradient-to-br from-[#313338] to-[#1e1f22]' },
+                      { id: 'system' as const, label: t('profile.appearance.system'), icon: <Monitor size={24} />, colors: 'bg-gradient-to-r from-white to-[#1e1f22] border-[#8a8a8a]', preview: 'bg-gradient-to-r from-[#faf9f8] to-[#313338]' },
                     ].map(t => (
                       <button
                         key={t.id}
@@ -382,7 +403,7 @@ export function ProfileSettings() {
 
               <section className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] overflow-hidden">
                 <div className="px-5 py-3 border-b border-[#f0f0f0] dark:border-[#333]">
-                  <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">Accent Color</h3>
+                  <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('profile.appearance.accentColor')}</h3>
                 </div>
                 <div className="p-5">
                   <div className="flex gap-3">
@@ -407,27 +428,27 @@ export function ProfileSettings() {
             <>
               <section className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] overflow-hidden">
                 <div className="px-5 py-3 border-b border-[#f0f0f0] dark:border-[#333]">
-                  <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">Visibility</h3>
+                  <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('profile.privacy.visibility')}</h3>
                 </div>
                 <div className="divide-y divide-[#f0f0f0] dark:divide-[#333]">
-                  <ToggleRow label="Show Online Status" desc="Let others see when you're online" checked={privacySettings.showOnlineStatus} onChange={v => setPrivacySettings(p => ({ ...p, showOnlineStatus: v }))} />
-                  <ToggleRow label="Show Last Seen" desc="Let others see when you were last active" checked={privacySettings.showLastSeen} onChange={v => setPrivacySettings(p => ({ ...p, showLastSeen: v }))} />
-                  <ToggleRow label="Read Receipts" desc="Let others know when you've read their messages" checked={privacySettings.showReadReceipts} onChange={v => setPrivacySettings(p => ({ ...p, showReadReceipts: v }))} />
-                  <ToggleRow label="Typing Indicator" desc="Show when you're typing a message" checked={privacySettings.showTypingIndicator} onChange={v => setPrivacySettings(p => ({ ...p, showTypingIndicator: v }))} />
-                  <ToggleRow label="Searchable by Email" desc="Allow others to find you by email address" checked={privacySettings.allowSearchByEmail} onChange={v => setPrivacySettings(p => ({ ...p, allowSearchByEmail: v }))} />
+                  <ToggleRow label={t('profile.privacy.showOnlineStatus')} desc={t('profile.privacy.showOnlineStatusDesc')} checked={privacySettings.showOnlineStatus} onChange={v => setPrivacySettings(p => ({ ...p, showOnlineStatus: v }))} />
+                  <ToggleRow label={t('profile.privacy.showLastSeen')} desc={t('profile.privacy.showLastSeenDesc')} checked={privacySettings.showLastSeen} onChange={v => setPrivacySettings(p => ({ ...p, showLastSeen: v }))} />
+                  <ToggleRow label={t('profile.privacy.readReceipts')} desc={t('profile.privacy.readReceiptsDesc')} checked={privacySettings.showReadReceipts} onChange={v => setPrivacySettings(p => ({ ...p, showReadReceipts: v }))} />
+                  <ToggleRow label={t('profile.privacy.typingIndicator')} desc={t('profile.privacy.typingIndicatorDesc')} checked={privacySettings.showTypingIndicator} onChange={v => setPrivacySettings(p => ({ ...p, showTypingIndicator: v }))} />
+                  <ToggleRow label={t('profile.privacy.searchableByEmail')} desc={t('profile.privacy.searchableByEmailDesc')} checked={privacySettings.allowSearchByEmail} onChange={v => setPrivacySettings(p => ({ ...p, allowSearchByEmail: v }))} />
                 </div>
               </section>
 
               <section className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] overflow-hidden">
                 <div className="px-5 py-3 border-b border-[#f0f0f0] dark:border-[#333]">
-                  <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">Profile Visibility</h3>
+                  <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('profile.privacy.profileVisibility')}</h3>
                 </div>
                 <div className="p-5">
                   <div className="flex gap-2">
                     {[
-                      { value: 'everyone' as const, label: 'Everyone', desc: 'Anyone in the org' },
-                      { value: 'team' as const, label: 'Team Only', desc: 'People in your spaces' },
-                      { value: 'private' as const, label: 'Private', desc: 'Only you' },
+                      { value: 'everyone' as const, label: t('profile.privacy.profileVisibility.everyone'), desc: t('profile.privacy.profileVisibility.everyoneDesc') },
+                      { value: 'team' as const, label: t('profile.privacy.profileVisibility.team'), desc: t('profile.privacy.profileVisibility.teamDesc') },
+                      { value: 'private' as const, label: t('profile.privacy.profileVisibility.private'), desc: t('profile.privacy.profileVisibility.privateDesc') },
                     ].map(opt => (
                       <button
                         key={opt.value}
@@ -448,26 +469,26 @@ export function ProfileSettings() {
 
               <section className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] overflow-hidden">
                 <div className="px-5 py-3 border-b border-[#f0f0f0] dark:border-[#333]">
-                  <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">Security</h3>
+                  <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('profile.security.title')}</h3>
                 </div>
                 <div className="divide-y divide-[#f0f0f0] dark:divide-[#333]">
-                  <ToggleRow label="Two-Factor Authentication" desc="Add an extra layer of security with 2FA" checked={privacySettings.twoFactorEnabled} onChange={v => setPrivacySettings(p => ({ ...p, twoFactorEnabled: v }))} />
+                  <ToggleRow label={t('profile.security.twoFactor')} desc={t('profile.security.twoFactorDesc')} checked={privacySettings.twoFactorEnabled} onChange={v => setPrivacySettings(p => ({ ...p, twoFactorEnabled: v }))} />
                   <div className="px-5 py-4 flex items-center justify-between">
                     <div>
-                      <p className="text-[13px] font-medium text-[#242424] dark:text-[#e0e0e0]">Active Sessions</p>
-                      <p className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">Manage devices signed into your account</p>
+                      <p className="text-[13px] font-medium text-[#242424] dark:text-[#e0e0e0]">{t('profile.security.activeSessions')}</p>
+                      <p className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">{t('profile.security.activeSessionsDesc')}</p>
                     </div>
                     <button className="flex items-center gap-1 text-[12px] font-medium text-[#5b5fc7] dark:text-[#a6a9dc] hover:underline">
-                      View All <ChevronRight size={14} />
+                      {t('profile.security.viewAll')} <ChevronRight size={14} />
                     </button>
                   </div>
                   <div className="px-5 py-4 flex items-center justify-between">
                     <div>
-                      <p className="text-[13px] font-medium text-[#242424] dark:text-[#e0e0e0]">Download My Data</p>
-                      <p className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">Export a copy of all your data</p>
+                      <p className="text-[13px] font-medium text-[#242424] dark:text-[#e0e0e0]">{t('profile.security.downloadData')}</p>
+                      <p className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">{t('profile.security.downloadDataDesc')}</p>
                     </div>
                     <button className="flex items-center gap-1 text-[12px] font-medium text-[#5b5fc7] dark:text-[#a6a9dc] hover:underline">
-                      Request Export <ChevronRight size={14} />
+                      {t('profile.security.requestExport')} <ChevronRight size={14} />
                     </button>
                   </div>
                 </div>

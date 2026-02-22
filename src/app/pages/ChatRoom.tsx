@@ -11,6 +11,7 @@ import { MessageItem } from '../components/MessageItem';
 import { MessageThread } from '../components/MessageThread';
 import { useState, useMemo, useRef, useCallback } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
+import { useI18n } from '../context/I18nContext';
 
 // ─── Widget icon / color maps (shared with SpaceHome) ───
 const widgetIconMap: Record<string, LucideIcon> = {
@@ -134,6 +135,7 @@ function WidgetDetailDialog({ widget, open, onOpenChange }: {
 
 export function ChatRoom() {
   const { spaceId, channelId } = useParams();
+  const { t } = useI18n();
   const [activeThread, setActiveThread] = useState<string | null>(null);
   const [selectedWidget, setSelectedWidget] = useState<ChannelWidget | null>(null);
 
@@ -244,7 +246,7 @@ export function ChatRoom() {
   if (!currentSpace || !currentChannel) {
     return (
       <div className="flex-1 flex items-center justify-center text-[#616161] dark:text-[#b9bbbe] bg-gradient-to-br from-white via-[#faf9f8] to-[#f3f2f1] dark:from-[#2b2d31] dark:via-[#1e1f22] dark:to-[#1a1b1e]">
-        Select a channel to start chatting
+        {t('chatRoom.selectChannel')}
       </div>
     );
   }
@@ -268,8 +270,8 @@ export function ChatRoom() {
           </div>
           <div className="flex items-center gap-1">
             {[
-              { icon: <Phone size={18} />, label: 'Audio call' },
-              { icon: <Video size={18} />, label: 'Video call' },
+              { icon: <Phone size={18} />, label: t('chat.audioCall') },
+              { icon: <Video size={18} />, label: t('chat.videoCall') },
             ].map(btn => (
               <Tooltip key={btn.label}>
                 <TooltipTrigger asChild>
@@ -282,10 +284,10 @@ export function ChatRoom() {
             ))}
             <Separator orientation="vertical" className="mx-1 h-6 bg-[#e1dfdd] dark:bg-[#3d3d3d]" />
             {[
-              { icon: <Pin size={18} />, label: 'Pinned' },
-              { icon: <Users size={18} />, label: 'Members' },
-              { icon: <Search size={18} />, label: 'Search' },
-              { icon: <MoreHorizontal size={18} />, label: 'More' },
+              { icon: <Pin size={18} />, label: t('chat.pinned') },
+              { icon: <Users size={18} />, label: t('chat.members') },
+              { icon: <Search size={18} />, label: t('chat.search') },
+              { icon: <MoreHorizontal size={18} />, label: t('chat.more') },
             ].map(btn => (
               <Tooltip key={btn.label}>
                 <TooltipTrigger asChild>
@@ -310,7 +312,7 @@ export function ChatRoom() {
             {/* Channel origin chip */}
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gradient-to-r from-[#5b5fc7]/10 to-[#6264a7]/5 dark:from-[#5b5fc7]/20 dark:to-[#6264a7]/10 border border-[#5b5fc7]/20 dark:border-[#5b5fc7]/30 shrink-0">
               <Hash size={12} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
-              <span className="text-[12px] font-semibold text-[#5b5fc7] dark:text-[#a6a9dc]">Start</span>
+              <span className="text-[12px] font-semibold text-[#5b5fc7] dark:text-[#a6a9dc]">{t('chatRoom.start')}</span>
             </div>
 
             {/* Pinned message chip */}
@@ -328,7 +330,7 @@ export function ChatRoom() {
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom" sideOffset={4} className="max-w-xs">
-                    <p className="text-xs font-semibold mb-1">Pinned · {pinnedCount} message{pinnedCount > 1 ? 's' : ''}</p>
+                    <p className="text-xs font-semibold mb-1">{t('chatRoom.pinnedTooltip', { count: pinnedCount })}</p>
                     <p className="text-xs opacity-80">{latestPinned.content.replace(/[#*_~`>\-\[\]()!]/g, '').slice(0, 120)}</p>
                   </TooltipContent>
                 </Tooltip>
@@ -397,12 +399,12 @@ export function ChatRoom() {
         >
           <div className="border border-[#e1dfdd] dark:border-[#5a5a5a] rounded-xl focus-within:border-[#6264a7] dark:focus-within:border-[#5865f2] bg-white dark:bg-[#383a40] shadow-lg transition-all focus-within:shadow-xl px-4 py-3">
             <RichMessageInput
-              placeholder={`Message #${currentChannel.name}`}
+              placeholder={t('chat.messageChannelPlaceholder', { name: currentChannel.name })}
               onSend={handleSendMessage}
               extraButtons={
                 <>
                   {[
-                    { icon: <Paperclip size={15} />, label: 'Attach file' },
+                    { icon: <Paperclip size={15} />, label: t('chat.attachFile') },
                   ].map(btn => (
                     <Tooltip key={btn.label}>
                       <TooltipTrigger asChild>

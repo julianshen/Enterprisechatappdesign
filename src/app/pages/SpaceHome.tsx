@@ -13,6 +13,7 @@ import {
 import { spaces, users, currentUser, spacePosts, documents, type SpacePost, type SpacePostComment, type PostAttachment } from '../data/mockData';
 import { MarkdownContent } from '@/components/ui';
 import { VideoPlayerViewer } from '../components/VideoPlayerViewer';
+import { type LanguageCode, useI18n } from '../context/I18nContext';
 
 const widgetIconMap: Record<string, LucideIcon> = {
   users: Users,
@@ -45,6 +46,22 @@ const fileIconMap: Record<string, { icon: LucideIcon; color: string }> = {
 // Storage key for tracking last visited timestamps
 const LAST_VISIT_KEY = 'space-home-last-visit';
 
+const LOCALE_MAP: Record<LanguageCode, string> = {
+  en: 'en-US',
+  'zh-Hant': 'zh-TW',
+  'zh-Hans': 'zh-CN',
+  ja: 'ja-JP',
+  de: 'de-DE',
+  es: 'es-ES',
+  fr: 'fr-FR',
+  hi: 'hi-IN',
+  pl: 'pl-PL',
+};
+
+function getLocaleForLanguage(language: LanguageCode) {
+  return LOCALE_MAP[language] || 'en-US';
+}
+
 export function getSpaceHomeLastVisit(spaceId: string): Date | null {
   try {
     const stored = localStorage.getItem(LAST_VISIT_KEY);
@@ -74,17 +91,17 @@ function setSpaceHomeLastVisit(spaceId: string) {
   }
 }
 
-function timeAgo(date: Date): string {
+function timeAgo(date: Date, t: (key: string, vars?: Record<string, string | number>) => string, locale: string): string {
   const now = new Date('2026-02-16T16:00:00');
   const diff = now.getTime() - date.getTime();
   const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return 'just now';
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 1) return t('time.justNow');
+  if (minutes < 60) return t('time.minutesAgo', { count: minutes });
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return t('time.hoursAgo', { count: hours });
   const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  if (days < 7) return t('time.daysAgo', { count: days });
+  return new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' }).format(date);
 }
 
 function AttachmentPreview({ attachment, onRemove }: { attachment: PostAttachment; onRemove?: (id: string) => void }) {
@@ -303,6 +320,8 @@ function VideoCard({ video }: { video: PostAttachment }) {
 }
 
 function DeleteConfirmDialog({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void }) {
+  const { t } = useI18n();
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -323,8 +342,8 @@ function DeleteConfirmDialog({ onConfirm, onCancel }: { onConfirm: () => void; o
             <Trash2 size={20} className="text-[#c4314b] dark:text-[#f47067]" />
           </div>
           <div>
-            <h3 className="text-[16px] font-semibold text-[#242424] dark:text-[#f0f0f0]">Delete post?</h3>
-            <p className="text-[13px] text-[#8a8a8a] dark:text-[#6d6f78]">This action cannot be undone.</p>
+            <h3 className="text-[16px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('spaceHome.deletePostTitle')}</h3>
+            <p className="text-[13px] text-[#8a8a8a] dark:text-[#6d6f78]">{t('spaceHome.deletePostDesc')}</p>
           </div>
         </div>
         <div className="flex items-center justify-end gap-2 mt-6">
@@ -332,13 +351,13 @@ function DeleteConfirmDialog({ onConfirm, onCancel }: { onConfirm: () => void; o
             onClick={onCancel}
             className="px-4 py-2 text-[13px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#333] rounded-lg transition-colors"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             onClick={onConfirm}
             className="px-4 py-2 text-[13px] font-medium text-white bg-[#c4314b] hover:bg-[#b02a42] rounded-lg transition-colors"
           >
-            Delete
+            {t('common.delete')}
           </button>
         </div>
       </motion.div>
@@ -347,6 +366,8 @@ function DeleteConfirmDialog({ onConfirm, onCancel }: { onConfirm: () => void; o
 }
 
 function PostCommentItem({ comment, onLikeComment }: { comment: SpacePostComment; onLikeComment: (id: string) => void }) {
+  const { t, language } = useI18n();
+  const locale = getLocaleForLanguage(language);
   const author = users.find(u => u.id === comment.userId);
   const isLiked = comment.likes.includes(currentUser.id);
 
@@ -360,7 +381,7 @@ function PostCommentItem({ comment, onLikeComment }: { comment: SpacePostComment
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-[13px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{author?.name}</span>
-          <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">{timeAgo(comment.timestamp)}</span>
+          <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">{timeAgo(comment.timestamp, t, locale)}</span>
         </div>
         <p className="text-[13px] text-[#424242] dark:text-[#d1d1d1] mt-0.5 leading-relaxed">{comment.content}</p>
         <button
@@ -380,6 +401,8 @@ function PostCommentItem({ comment, onLikeComment }: { comment: SpacePostComment
 }
 
 function LinkedDocumentEmbed({ docId }: { docId: string }) {
+  const { t, language } = useI18n();
+  const locale = getLocaleForLanguage(language);
   const linkedDoc = documents.find(d => d.id === docId);
   if (!linkedDoc) return null;
   const docAuthor = users.find(u => u.id === linkedDoc.authorId);
@@ -410,9 +433,9 @@ function LinkedDocumentEmbed({ docId }: { docId: string }) {
                   </div>
                 )}
                 <span>·</span>
-                <span>{linkedDoc.lastModified.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                <span>{linkedDoc.lastModified.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                 <span>·</span>
-                <span className="text-[#5b5fc7] dark:text-[#a6a9dc]">Open document →</span>
+                <span className="text-[#5b5fc7] dark:text-[#a6a9dc]">{t('spaceHome.openDocument')}</span>
               </div>
             </div>
           </div>
@@ -441,6 +464,8 @@ const PostCard = forwardRef<HTMLDivElement, PostCardProps>(function PostCard({
   onEdit,
   onDelete,
 }, ref) {
+  const { t, language } = useI18n();
+  const locale = getLocaleForLanguage(language);
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [showMenu, setShowMenu] = useState(false);
@@ -516,7 +541,7 @@ const PostCard = forwardRef<HTMLDivElement, PostCardProps>(function PostCard({
           <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#5b5fc7]/5 to-[#7b4db8]/5 dark:from-[#5b5fc7]/10 dark:to-[#7b4db8]/10 border-b border-[#e1dfdd]/50 dark:border-[#3d3d3d]/50">
             <Pin size={12} className="text-[#5b5fc7] dark:text-[#a6a9dc] rotate-45" />
             <span className="text-[11px] font-medium text-[#5b5fc7] dark:text-[#a6a9dc]">
-              Pinned by {pinnedByUser?.name || 'Admin'}
+              {t('spaceHome.pinnedBy', { name: pinnedByUser?.name || t('spaceHome.pinnedByFallback') })}
             </span>
           </div>
         )}
@@ -539,13 +564,13 @@ const PostCard = forwardRef<HTMLDivElement, PostCardProps>(function PostCard({
                     author?.status === 'away' ? 'bg-[#d4820c]' : 'bg-[#8a8a8a]'
                   }`} />
                   {isAuthor && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#5b5fc7]/10 text-[#5b5fc7] dark:bg-[#5b5fc7]/20 dark:text-[#a6a9dc] font-medium">You</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#5b5fc7]/10 text-[#5b5fc7] dark:bg-[#5b5fc7]/20 dark:text-[#a6a9dc] font-medium">{t('common.you')}</span>
                   )}
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[12px] text-[#8a8a8a] dark:text-[#6d6f78]">{timeAgo(post.timestamp)}</span>
+                  <span className="text-[12px] text-[#8a8a8a] dark:text-[#6d6f78]">{timeAgo(post.timestamp, t, locale)}</span>
                   {post.edited && (
-                    <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] italic">(edited)</span>
+                    <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] italic">({t('common.edited')})</span>
                   )}
                 </div>
               </div>
@@ -572,14 +597,14 @@ const PostCard = forwardRef<HTMLDivElement, PostCardProps>(function PostCard({
                           className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-[#424242] dark:text-[#d1d1d1] hover:bg-[#f5f5f5] dark:hover:bg-[#333] transition-colors"
                         >
                           <Pencil size={14} />
-                          Edit post
+                          {t('spaceHome.editPost')}
                         </button>
                         <button
                           onClick={handleDelete}
                           className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-[#c4314b] dark:text-[#f47067] hover:bg-[#c4314b]/5 dark:hover:bg-[#c4314b]/10 transition-colors"
                         >
                           <Trash2 size={14} />
-                          Delete post
+                          {t('spaceHome.deletePost')}
                         </button>
                         <div className="h-px bg-[#e1dfdd] dark:bg-[#3d3d3d] my-1" />
                       </>
@@ -589,21 +614,21 @@ const PostCard = forwardRef<HTMLDivElement, PostCardProps>(function PostCard({
                       className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-[#424242] dark:text-[#d1d1d1] hover:bg-[#f5f5f5] dark:hover:bg-[#333] transition-colors"
                     >
                       <Pin size={14} className={post.pinned ? 'rotate-45' : ''} />
-                      {post.pinned ? 'Unpin post' : 'Pin to top'}
+                      {post.pinned ? t('spaceHome.unpinPost') : t('spaceHome.pinPost')}
                     </button>
                     <button
                       onClick={() => setShowMenu(false)}
                       className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-[#424242] dark:text-[#d1d1d1] hover:bg-[#f5f5f5] dark:hover:bg-[#333] transition-colors"
                     >
                       <Bookmark size={14} />
-                      Save post
+                      {t('spaceHome.savePost')}
                     </button>
                     <button
                       onClick={() => setShowMenu(false)}
                       className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-[#424242] dark:text-[#d1d1d1] hover:bg-[#f5f5f5] dark:hover:bg-[#333] transition-colors"
                     >
                       <Share2 size={14} />
-                      Share
+                      {t('common.share')}
                     </button>
                   </motion.div>
                 )}
@@ -627,7 +652,7 @@ const PostCard = forwardRef<HTMLDivElement, PostCardProps>(function PostCard({
                 onClick={handleCancelEdit}
                 className="px-3 py-1.5 text-[13px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#333] rounded-md transition-colors"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleSaveEdit}
@@ -635,7 +660,7 @@ const PostCard = forwardRef<HTMLDivElement, PostCardProps>(function PostCard({
                 className="px-4 py-1.5 text-[13px] font-medium text-white bg-gradient-to-r from-[#5b5fc7] to-[#7b4db8] rounded-md hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
               >
                 <Check size={14} />
-                Save
+                {t('common.save')}
               </button>
             </div>
           </div>
@@ -772,7 +797,7 @@ const PostCard = forwardRef<HTMLDivElement, PostCardProps>(function PostCard({
           <div className="flex-1 flex items-center gap-2 bg-[#f5f5f5] dark:bg-[#1e1f22] rounded-lg px-3 py-1.5">
             <input
               type="text"
-              placeholder="Write a comment..."
+              placeholder={t('spaceHome.writeComment')}
               value={commentText}
               onChange={e => setCommentText(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmitComment(); } }}
@@ -810,6 +835,7 @@ const PostCard = forwardRef<HTMLDivElement, PostCardProps>(function PostCard({
 PostCard.displayName = 'PostCard';
 
 function PostComposer({ onPost }: { onPost: (content: string, attachments: PostAttachment[]) => void }) {
+  const { t } = useI18n();
   const [content, setContent] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -915,7 +941,7 @@ function PostComposer({ onPost }: { onPost: (content: string, attachments: PostA
         />
         <div className="flex-1">
           <textarea
-            placeholder="Share an update with your team..."
+            placeholder={t('spaceHome.shareUpdatePlaceholder')}
             value={content}
             onChange={e => setContent(e.target.value)}
             onFocus={() => setIsFocused(true)}
@@ -933,7 +959,7 @@ function PostComposer({ onPost }: { onPost: (content: string, attachments: PostA
                 className="overflow-hidden"
               >
                 <div className="mt-2 px-3 py-2 bg-[#f5f5f5] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg">
-                  <p className="text-[10px] text-[#8a8a8a] mb-1 uppercase tracking-wider">Preview</p>
+                  <p className="text-[10px] text-[#8a8a8a] mb-1 uppercase tracking-wider">{t('common.preview')}</p>
                   <MarkdownContent content={content} />
                 </div>
               </motion.div>
@@ -988,7 +1014,7 @@ function PostComposer({ onPost }: { onPost: (content: string, attachments: PostA
                     ? 'text-[#5b5fc7] dark:text-[#a6a9dc] bg-[#5b5fc7]/10 dark:bg-[#5b5fc7]/20'
                     : 'text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#333] hover:text-[#5b5fc7] dark:hover:text-[#a6a9dc]'
                 }`}
-                title="Add image"
+                title={t('spaceHome.addImage')}
               >
                 <ImageIcon size={18} />
               </button>
@@ -1007,7 +1033,7 @@ function PostComposer({ onPost }: { onPost: (content: string, attachments: PostA
                     ? 'text-[#5b5fc7] dark:text-[#a6a9dc] bg-[#5b5fc7]/10 dark:bg-[#5b5fc7]/20'
                     : 'text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#333] hover:text-[#5b5fc7] dark:hover:text-[#a6a9dc]'
                 }`}
-                title="Add video"
+                title={t('spaceHome.addVideo')}
               >
                 <Video size={18} />
               </button>
@@ -1026,7 +1052,7 @@ function PostComposer({ onPost }: { onPost: (content: string, attachments: PostA
                     ? 'text-[#5b5fc7] dark:text-[#a6a9dc] bg-[#5b5fc7]/10 dark:bg-[#5b5fc7]/20'
                     : 'text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#333] hover:text-[#5b5fc7] dark:hover:text-[#a6a9dc]'
                 }`}
-                title="Attach file"
+                title={t('spaceHome.attachFile')}
               >
                 <Paperclip size={18} />
               </button>
@@ -1043,13 +1069,16 @@ function PostComposer({ onPost }: { onPost: (content: string, attachments: PostA
                     ? 'text-[#5b5fc7] dark:text-[#a6a9dc] bg-[#5b5fc7]/10 dark:bg-[#5b5fc7]/20'
                     : 'text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#333] hover:text-[#5b5fc7] dark:hover:text-[#a6a9dc]'
                 }`}
-                title="Toggle Markdown preview"
+                title={t('spaceHome.toggleMarkdownPreview')}
               >
                 <Eye size={18} />
               </button>
               {attachments.length > 0 && (
                 <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] ml-1">
-                  {attachments.length} attachment{attachments.length !== 1 ? 's' : ''}
+                  {t('spaceHome.attachmentCount', {
+                    count: attachments.length,
+                    label: attachments.length === 1 ? t('spaceHome.attachment') : t('spaceHome.attachments'),
+                  })}
                 </span>
               )}
             </div>
@@ -1058,7 +1087,7 @@ function PostComposer({ onPost }: { onPost: (content: string, attachments: PostA
                 onClick={() => { setIsFocused(false); setContent(''); setAttachments([]); setShowPreview(false); }}
                 className="px-3 py-1.5 text-[13px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#333] rounded-md transition-colors"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handlePost}
@@ -1066,7 +1095,7 @@ function PostComposer({ onPost }: { onPost: (content: string, attachments: PostA
                 className="px-4 py-1.5 text-[13px] font-medium text-white bg-gradient-to-r from-[#5b5fc7] to-[#7b4db8] rounded-md hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
               >
                 <Send size={14} />
-                Post
+                {t('common.post')}
               </button>
             </div>
           </motion.div>
@@ -1077,6 +1106,7 @@ function PostComposer({ onPost }: { onPost: (content: string, attachments: PostA
 }
 
 export function SpaceHome() {
+  const { t } = useI18n();
   const { spaceId } = useParams();
   const space = spaces.find(s => s.id === spaceId);
   const homeConfig = space?.home;
@@ -1131,7 +1161,7 @@ export function SpaceHome() {
   if (!space || !homeConfig) {
     return (
       <div className="flex-1 flex items-center justify-center text-[#8a8a8a] dark:text-[#6d6f78]">
-        <p>This space doesn't have a home page configured.</p>
+        <p>{t('spaceHome.noHome')}</p>
       </div>
     );
   }
@@ -1253,7 +1283,7 @@ export function SpaceHome() {
             </div>
             <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/15 backdrop-blur-md text-white text-[13px] font-medium hover:bg-white/25 transition-colors border border-white/20">
               <Settings size={14} />
-              Customize
+              {t('spaceHome.customize')}
             </button>
           </div>
         </div>
@@ -1311,7 +1341,7 @@ export function SpaceHome() {
           {/* End of feed */}
           {sortedPosts.length > 0 && (
             <div className="text-center py-6 text-[13px] text-[#8a8a8a] dark:text-[#6d6f78]">
-              You're all caught up!
+              {t('spaceHome.caughtUp')}
             </div>
           )}
 
@@ -1320,8 +1350,8 @@ export function SpaceHome() {
               <div className="w-16 h-16 mx-auto rounded-2xl bg-[#5b5fc7]/10 dark:bg-[#5b5fc7]/20 flex items-center justify-center mb-4">
                 <MessageSquare size={28} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
               </div>
-              <p className="text-[15px] font-medium text-[#424242] dark:text-[#d1d1d1]">No posts yet</p>
-              <p className="text-[13px] text-[#8a8a8a] dark:text-[#6d6f78] mt-1">Be the first to share something!</p>
+              <p className="text-[15px] font-medium text-[#424242] dark:text-[#d1d1d1]">{t('spaceHome.emptyTitle')}</p>
+              <p className="text-[13px] text-[#8a8a8a] dark:text-[#6d6f78] mt-1">{t('spaceHome.emptySubtitle')}</p>
             </div>
           )}
         </div>

@@ -4,6 +4,7 @@ import { spaces, directMessages, groupChats, users } from '../data/mockData';
 import { getAppsForSpace } from '../data/appData';
 import { useState, useEffect, useCallback } from 'react';
 import { getNewPostCount } from '../pages/SpaceHome';
+import { useI18n } from '../context/I18nContext';
 
 const dashboardIconMap: Record<string, LucideIcon> = {
   'bar-chart': BarChart3,
@@ -20,6 +21,7 @@ const dashboardIconMap: Record<string, LucideIcon> = {
 
 export function ChannelSidebar() {
   const { spaceId, channelId, dashboardId, appId } = useParams();
+  const { t } = useI18n();
   const [channelsExpanded, setChannelsExpanded] = useState(true);
   const [dashboardsExpanded, setDashboardsExpanded] = useState(true);
   const [appsExpanded, setAppsExpanded] = useState(true);
@@ -84,7 +86,7 @@ export function ChannelSidebar() {
       <div className="w-[280px] bg-gradient-to-b from-[#faf9f8] to-[#f3f2f1] dark:from-[#2b2d31] dark:to-[#1e1f22] border-r border-[#e1dfdd] dark:border-[#3d3d3d] flex flex-col">
         {/* Header */}
         <div className="h-[60px] px-4 flex items-center justify-between border-b border-[#e1dfdd] dark:border-[#3d3d3d] shadow-sm">
-          <h2 className="font-bold text-[#242424] dark:text-[#f2f3f5] text-[16px] tracking-tight">Chat</h2>
+          <h2 className="font-bold text-[#242424] dark:text-[#f2f3f5] text-[16px] tracking-tight">{t('channel.chatTitle')}</h2>
           <button className="text-[#616161] dark:text-[#b9bbbe] hover:text-[#242424] dark:hover:text-[#f2f3f5] transition-all hover:bg-[#e8e8f8] dark:hover:bg-[#3d3d3d] p-1.5 rounded-md">
             <Plus size={18} />
           </button>
@@ -95,7 +97,7 @@ export function ChannelSidebar() {
           <div className="relative">
             <input
               type="text"
-              placeholder="Search messages"
+              placeholder={t('channel.searchMessages')}
               className="w-full bg-[#e8e8e8] dark:bg-[#1e1f22] border-0 rounded-md px-3 py-2 text-sm text-[#242424] dark:text-[#dbdee1] placeholder-[#616161] dark:placeholder-[#6d6f78] focus:outline-none focus:ring-2 focus:ring-[#6264a7] transition-all shadow-inner"
             />
           </div>
@@ -113,7 +115,7 @@ export function ChannelSidebar() {
                 size={14}
                 className={`transition-transform duration-200 ${dmsExpanded ? 'rotate-90' : ''}`}
               />
-              Direct Messages
+              {t('channel.directMessages')}
             </button>
             
             {dmsExpanded && (
@@ -166,7 +168,7 @@ export function ChannelSidebar() {
                 size={14}
                 className={`transition-transform duration-200 ${groupsExpanded ? 'rotate-90' : ''}`}
               />
-              Group Chats
+              {t('channel.groupChats')}
             </button>
             
             {groupsExpanded && (
@@ -241,7 +243,7 @@ export function ChannelSidebar() {
               }`}
             >
               <Home size={20} />
-              <span className="flex-1">Home</span>
+              <span className="flex-1">{t('channel.home')}</span>
               {!isOnHomePage && newPostCount > 0 && (
                 <span className="bg-gradient-to-r from-[#5b5fc7] to-[#7b4db8] text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] text-center font-bold shadow-sm">
                   {newPostCount > 9 ? '9+' : newPostCount}
@@ -258,7 +260,7 @@ export function ChannelSidebar() {
             }`}
           >
             <FileText size={20} />
-            <span>Documents</span>
+            <span>{t('channel.documents')}</span>
           </Link>
           <Link
             to={`/space/${spaceId}/files`}
@@ -269,7 +271,7 @@ export function ChannelSidebar() {
             }`}
           >
             <FolderOpen size={20} />
-            <span>Files</span>
+            <span>{t('channel.files')}</span>
           </Link>
           <Link
             to={`/space/${spaceId}/tasks`}
@@ -280,7 +282,7 @@ export function ChannelSidebar() {
             }`}
           >
             <CheckSquare size={20} />
-            <span>Tasks</span>
+            <span>{t('channel.tasks')}</span>
           </Link>
         </div>
 
@@ -296,7 +298,7 @@ export function ChannelSidebar() {
               size={14}
               className={`transition-transform duration-200 ${dashboardsExpanded ? 'rotate-90' : ''}`}
             />
-            Dashboards
+            {t('channel.dashboards')}
           </button>
           
           {dashboardsExpanded && (
@@ -320,7 +322,7 @@ export function ChannelSidebar() {
               })}
               <button className="flex items-center gap-3 px-3 py-2 rounded-md text-[14px] text-[#616161] dark:text-[#96989d] hover:text-[#242424] dark:hover:text-[#dbdee1] hover:bg-[#e8e8f8] dark:hover:bg-[#35373c] w-full transition-all">
                 <Plus size={16} />
-                <span>Add dashboard</span>
+                <span>{t('channel.addDashboard')}</span>
               </button>
             </div>
           )}
@@ -338,7 +340,7 @@ export function ChannelSidebar() {
               size={14}
               className={`transition-transform duration-200 ${appsExpanded ? 'rotate-90' : ''}`}
             />
-            Apps
+            {t('channel.apps')}
           </button>
           
           {appsExpanded && (
@@ -366,7 +368,7 @@ export function ChannelSidebar() {
                 }`}
               >
                 <Puzzle size={16} />
-                <span>Manage apps</span>
+                <span>{t('channel.manageApps')}</span>
               </Link>
             </div>
           )}
@@ -384,7 +386,7 @@ export function ChannelSidebar() {
               size={14}
               className={`transition-transform duration-200 ${channelsExpanded ? 'rotate-90' : ''}`}
             />
-            Channels
+            {t('channel.channels')}
           </button>
           
           {channelsExpanded && (
@@ -410,7 +412,7 @@ export function ChannelSidebar() {
               ))}
               <button className="flex items-center gap-3 px-3 py-2 rounded-md text-[14px] text-[#616161] dark:text-[#96989d] hover:text-[#242424] dark:hover:text-[#dbdee1] hover:bg-[#e8e8f8] dark:hover:bg-[#35373c] w-full transition-all">
                 <Plus size={16} />
-                <span>Add channel</span>
+                <span>{t('channel.addChannel')}</span>
               </button>
             </div>
           )}

@@ -9,8 +9,8 @@ import {
   FolderPlus, ArrowUpRight, SortAsc, Check,
 } from 'lucide-react';
 import { spaces, files, folders, type FileItem, type Folder } from '../data/mockData';
-import { format, formatDistanceToNow } from 'date-fns';
 import { SecurityBadge } from '../components/SecurityBadge';
+import { type LanguageCode, useI18n } from '../context/I18nContext';
 
 // File type icon mapping
 function FileIcon({ type, size = 28 }: { type: string; size?: number }) {
@@ -61,7 +61,43 @@ const FOLDER_COLORS: Record<string, string> = {
 type SortKey = 'name' | 'date' | 'size';
 type ViewMode = 'grid' | 'list';
 
+const LOCALE_MAP: Record<LanguageCode, string> = {
+  en: 'en-US',
+  'zh-Hant': 'zh-TW',
+  'zh-Hans': 'zh-CN',
+  ja: 'ja-JP',
+  de: 'de-DE',
+  es: 'es-ES',
+  fr: 'fr-FR',
+  hi: 'hi-IN',
+  pl: 'pl-PL',
+};
+
+function getLocaleForLanguage(language: LanguageCode) {
+  return LOCALE_MAP[language] || 'en-US';
+}
+
+function formatRelativeTime(date: Date, locale: string, style: 'short' | 'long' = 'short') {
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto', style });
+  const diff = date.getTime() - Date.now();
+  const seconds = Math.round(diff / 1000);
+  const absSeconds = Math.abs(seconds);
+  if (absSeconds < 60) return rtf.format(seconds, 'second');
+  const minutes = Math.round(seconds / 60);
+  if (Math.abs(minutes) < 60) return rtf.format(minutes, 'minute');
+  const hours = Math.round(minutes / 60);
+  if (Math.abs(hours) < 24) return rtf.format(hours, 'hour');
+  const days = Math.round(hours / 24);
+  if (Math.abs(days) < 30) return rtf.format(days, 'day');
+  const months = Math.round(days / 30);
+  if (Math.abs(months) < 12) return rtf.format(months, 'month');
+  const years = Math.round(months / 12);
+  return rtf.format(years, 'year');
+}
+
 export function Files() {
+  const { t, language } = useI18n();
+  const locale = getLocaleForLanguage(language);
   const { spaceId } = useParams();
   const currentSpace = spaces.find(s => s.id === spaceId);
 
@@ -133,6 +169,14 @@ export function Files() {
   };
 
   const selectedFile = selectedFileId ? files.find(f => f.id === selectedFileId) : null;
+  const dateFormatter = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', year: 'numeric' });
+  const dateTimeFormatter = new Intl.DateTimeFormat(locale, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 
   // Recent files: top 5 most recently uploaded across all folders
   const recentFiles = useMemo(() =>
@@ -147,7 +191,7 @@ export function Files() {
         <div className="h-[52px] px-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <FolderOpen size={18} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
-            <h2 className="text-[16px] font-semibold text-[#242424] dark:text-[#f0f0f0]">Files</h2>
+            <h2 className="text-[16px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('files.title')}</h2>
             <span className="text-[13px] text-[#999] dark:text-[#666]">· {currentSpace.name}</span>
           </div>
 
@@ -182,9 +226,9 @@ export function Files() {
                     className="absolute right-0 top-full mt-1 bg-white dark:bg-[#2b2b2b] rounded-lg border border-[#e8e8e8] dark:border-[#3d3d3d] shadow-xl z-20 py-1 min-w-[160px]"
                   >
                     {([
-                      ['name', 'Name'],
-                      ['date', 'Date uploaded'],
-                      ['size', 'Size'],
+                      ['name', t('files.sort.name')],
+                      ['date', t('files.sort.date')],
+                      ['size', t('files.sort.size')],
                     ] as [SortKey, string][]).map(([key, label]) => (
                       <button
                         key={key}
@@ -228,12 +272,12 @@ export function Files() {
 
             <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-[#616161] dark:text-[#999] hover:bg-[#f5f5f5] dark:hover:bg-[#2a2a2a] border border-[#e8e8e8] dark:border-[#333] transition-colors">
               <FolderPlus size={14} />
-              New Folder
+              {t('files.newFolder')}
             </button>
 
             <button className="flex items-center gap-1.5 bg-[#5b5fc7] hover:bg-[#5254b5] text-white px-3.5 py-1.5 rounded-lg text-[12px] font-semibold transition-colors shadow-sm">
               <Upload size={14} />
-              Upload
+              {t('files.upload')}
             </button>
           </div>
         </div>
@@ -252,7 +296,7 @@ export function Files() {
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#aaa] dark:text-[#666]" />
                 <input
                   type="text"
-                  placeholder="Search all files..."
+                  placeholder={t('files.searchAll')}
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   autoFocus
@@ -274,7 +318,7 @@ export function Files() {
             }`}
           >
             <FolderOpen size={14} />
-            All Files
+            {t('files.allFiles')}
           </button>
           {breadcrumbs.map((folder) => (
             <React.Fragment key={folder.id}>
@@ -294,12 +338,12 @@ export function Files() {
           ))}
           {!searchQuery && (
             <span className="text-[12px] text-[#ccc] dark:text-[#555] ml-2">
-              {totalItems} item{totalItems !== 1 ? 's' : ''}
+              {t('files.itemsCount', { count: totalItems })}
             </span>
           )}
           {searchQuery && (
             <span className="text-[12px] text-[#ccc] dark:text-[#555] ml-2">
-              Showing results for "{searchQuery}"
+              {t('files.showingResults', { query: searchQuery })}
             </span>
           )}
         </div>
@@ -315,7 +359,7 @@ export function Files() {
               className="flex items-center gap-2 px-3 py-2 mb-4 rounded-lg text-[13px] text-[#616161] dark:text-[#999] hover:bg-[#f5f5f5] dark:hover:bg-[#2a2a2a] transition-colors"
             >
               <ArrowLeft size={14} />
-              Back to {currentFolder.parentId ? folders.find(f => f.id === currentFolder.parentId)?.name : 'All Files'}
+              {t('files.backTo', { name: currentFolder.parentId ? folders.find(f => f.id === currentFolder.parentId)?.name : t('files.allFiles') })}
             </button>
           )}
 
@@ -327,7 +371,7 @@ export function Files() {
                   <div className="flex items-center gap-2 mb-3 px-1">
                     <Clock size={13} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
                     <p className="text-[11px] font-semibold text-[#999] dark:text-[#666] uppercase tracking-wider">
-                      Recent
+                      {t('files.recent')}
                     </p>
                   </div>
                   <div className="flex gap-2.5 overflow-x-auto scrollbar-on-hover pb-1">
@@ -355,7 +399,7 @@ export function Files() {
                             )}
                             <span className="text-[11px] text-[#999] dark:text-[#666]">{file.size}</span>
                             <span className="text-[11px] text-[#ccc] dark:text-[#444]">·</span>
-                            <span className="text-[11px] text-[#999] dark:text-[#666]">{formatDistanceToNow(file.uploadedAt, { addSuffix: true })}</span>
+                            <span className="text-[11px] text-[#999] dark:text-[#666]">{formatRelativeTime(file.uploadedAt, locale, 'short')}</span>
                           </div>
                         </div>
                       </motion.div>
@@ -368,7 +412,7 @@ export function Files() {
               {!searchQuery && childFolders.length > 0 && (
                 <div className="mb-6">
                   <p className="text-[11px] font-semibold text-[#999] dark:text-[#666] uppercase tracking-wider mb-3 px-1">
-                    Folders
+                    {t('files.folders')}
                   </p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                     {childFolders.map(folder => (
@@ -395,7 +439,7 @@ export function Files() {
                         </div>
                         <h3 className="text-[13px] font-medium text-[#242424] dark:text-[#f0f0f0] truncate mb-1">{folder.name}</h3>
                         <p className="text-[11px] text-[#999] dark:text-[#666]">
-                          {files.filter(f => f.folderId === folder.id).length + folders.filter(f => f.parentId === folder.id).length} items
+                          {t('files.itemsCount', { count: files.filter(f => f.folderId === folder.id).length + folders.filter(f => f.parentId === folder.id).length })}
                         </p>
                       </motion.div>
                     ))}
@@ -408,7 +452,7 @@ export function Files() {
                 <div>
                   {!searchQuery && childFolders.length > 0 && (
                     <p className="text-[11px] font-semibold text-[#999] dark:text-[#666] uppercase tracking-wider mb-3 px-1">
-                      Files
+                      {t('files.files')}
                     </p>
                   )}
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
@@ -438,7 +482,7 @@ export function Files() {
                             <SecurityBadge level={file.securityLevel} variant="compact" />
                           ) : (
                             <span className="text-[11px] text-[#999] dark:text-[#666]">
-                              {formatDistanceToNow(file.uploadedAt, { addSuffix: false })}
+                              {formatRelativeTime(file.uploadedAt, locale, 'short')}
                             </span>
                           )}
                         </div>
@@ -454,8 +498,8 @@ export function Files() {
               {searchQuery && childFiles.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
                   <Search size={40} className="text-[#ddd] dark:text-[#444] mb-4" />
-                  <h3 className="text-[16px] font-medium text-[#242424] dark:text-[#f0f0f0] mb-1">No files found</h3>
-                  <p className="text-[14px] text-[#999] dark:text-[#666]">Try a different search term</p>
+                  <h3 className="text-[16px] font-medium text-[#242424] dark:text-[#f0f0f0] mb-1">{t('files.noFilesFound')}</h3>
+                  <p className="text-[14px] text-[#999] dark:text-[#666]">{t('files.tryDifferentSearch')}</p>
                 </div>
               )}
             </div>
@@ -468,7 +512,7 @@ export function Files() {
                   <div className="flex items-center gap-2 mb-3 px-1">
                     <Clock size={13} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
                     <p className="text-[11px] font-semibold text-[#999] dark:text-[#666] uppercase tracking-wider">
-                      Recent
+                      {t('files.recent')}
                     </p>
                   </div>
                   <div className="bg-white dark:bg-[#222] rounded-xl border border-[#e8e8e8] dark:border-[#333] overflow-hidden">
@@ -496,7 +540,7 @@ export function Files() {
                           )}
                           <span className="text-[12px] text-[#616161] dark:text-[#b9bbbe] truncate">{file.uploadedBy}</span>
                         </div>
-                        <span className="text-[12px] text-[#999] dark:text-[#666]">{formatDistanceToNow(file.uploadedAt, { addSuffix: true })}</span>
+                        <span className="text-[12px] text-[#999] dark:text-[#666]">{formatRelativeTime(file.uploadedAt, locale, 'short')}</span>
                         <div className="flex items-center">
                           <button className="p-1 rounded text-transparent group-hover:text-[#999] dark:group-hover:text-[#666] hover:!text-[#242424] dark:hover:!text-[#f0f0f0] transition-colors">
                             <MoreHorizontal size={14} />
@@ -511,10 +555,10 @@ export function Files() {
               <div className="bg-white dark:bg-[#222] rounded-xl border border-[#e8e8e8] dark:border-[#333] overflow-hidden">
                 {/* Table header */}
                 <div className="grid grid-cols-[1fr_100px_140px_120px_40px] px-4 py-2.5 bg-[#faf9f8] dark:bg-[#252525] border-b border-[#e8e8e8] dark:border-[#333] text-[11px] font-semibold text-[#999] dark:text-[#666] uppercase tracking-wider">
-                  <span>Name</span>
-                  <span>Size</span>
-                  <span>Uploaded by</span>
-                  <span>Date</span>
+                  <span>{t('files.column.name')}</span>
+                  <span>{t('files.column.size')}</span>
+                  <span>{t('files.column.uploadedBy')}</span>
+                  <span>{t('files.column.date')}</span>
                   <span />
                 </div>
 
@@ -533,12 +577,12 @@ export function Files() {
                       )}
                       <span className="text-[13px] font-medium text-[#242424] dark:text-[#f0f0f0] truncate">{folder.name}</span>
                       <span className="text-[11px] text-[#999] dark:text-[#666] flex-shrink-0 ml-1">
-                        {files.filter(f => f.folderId === folder.id).length + folders.filter(f => f.parentId === folder.id).length} items
+                        {t('files.itemsCount', { count: files.filter(f => f.folderId === folder.id).length + folders.filter(f => f.parentId === folder.id).length })}
                       </span>
                     </div>
                     <span className="text-[12px] text-[#999] dark:text-[#666]">—</span>
                     <span className="text-[12px] text-[#616161] dark:text-[#b9bbbe] truncate">{folder.createdBy}</span>
-                    <span className="text-[12px] text-[#999] dark:text-[#666]">{format(folder.createdAt, 'MMM d, yyyy')}</span>
+                    <span className="text-[12px] text-[#999] dark:text-[#666]">{dateFormatter.format(folder.createdAt)}</span>
                     <div>
                       <ArrowUpRight size={14} className="text-transparent group-hover:text-[#999] dark:group-hover:text-[#666] transition-colors" />
                     </div>
@@ -570,7 +614,7 @@ export function Files() {
                       )}
                       <span className="text-[12px] text-[#616161] dark:text-[#b9bbbe] truncate">{file.uploadedBy}</span>
                     </div>
-                    <span className="text-[12px] text-[#999] dark:text-[#666]">{format(file.uploadedAt, 'MMM d, yyyy')}</span>
+                    <span className="text-[12px] text-[#999] dark:text-[#666]">{dateFormatter.format(file.uploadedAt)}</span>
                     <div className="flex items-center">
                       <button className="p-1 rounded text-transparent group-hover:text-[#999] dark:group-hover:text-[#666] hover:!text-[#242424] dark:hover:!text-[#f0f0f0] transition-colors">
                         <MoreHorizontal size={14} />
@@ -602,7 +646,7 @@ export function Files() {
           >
             {/* Panel header */}
             <div className="h-[52px] px-4 flex items-center justify-between border-b border-[#e8e8e8] dark:border-[#333] flex-shrink-0">
-              <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">File Details</h3>
+              <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('files.details')}</h3>
               <button
                 onClick={() => setSelectedFileId(null)}
                 className="p-1.5 rounded-md text-[#999] hover:text-[#242424] dark:text-[#666] dark:hover:text-[#f0f0f0] hover:bg-[#f5f5f5] dark:hover:bg-[#333] transition-colors"
@@ -631,11 +675,11 @@ export function Files() {
 
               {/* Meta info */}
               <div className="space-y-3">
-                <MetaRow label="Size" value={selectedFile.size} />
-                <MetaRow label="Type" value={selectedFile.type.toUpperCase()} />
-                <MetaRow label="Uploaded" value={format(selectedFile.uploadedAt, 'MMM d, yyyy \'at\' h:mm a')} />
+                <MetaRow label={t('files.meta.size')} value={selectedFile.size} />
+                <MetaRow label={t('files.meta.type')} value={selectedFile.type.toUpperCase()} />
+                <MetaRow label={t('files.meta.uploaded')} value={dateTimeFormatter.format(selectedFile.uploadedAt)} />
                 <MetaRow
-                  label="Uploaded by"
+                  label={t('files.meta.uploadedBy')}
                   value={
                     <div className="flex items-center gap-2">
                       {selectedFile.uploadedByAvatar && (
@@ -647,14 +691,14 @@ export function Files() {
                 />
                 {selectedFile.folderId && (
                   <MetaRow
-                    label="Location"
+                    label={t('files.meta.location')}
                     value={
                       <button
                         onClick={() => { navigateToFolder(selectedFile.folderId); setSelectedFileId(null); }}
                         className="flex items-center gap-1.5 text-[#5b5fc7] dark:text-[#a6a9dc] hover:underline"
                       >
                         <FolderIcon size={12} />
-                        {folders.find(f => f.id === selectedFile.folderId)?.name || 'Unknown'}
+                        {folders.find(f => f.id === selectedFile.folderId)?.name || t('files.unknown')}
                       </button>
                     }
                   />
@@ -663,10 +707,10 @@ export function Files() {
 
               {/* Actions */}
               <div className="mt-6 space-y-1.5">
-                <FileAction icon={<Download size={14} />} label="Download" />
-                <FileAction icon={<Copy size={14} />} label="Copy link" />
-                <FileAction icon={<Eye size={14} />} label="Preview" />
-                <FileAction icon={<Trash2 size={14} />} label="Delete" danger />
+                <FileAction icon={<Download size={14} />} label={t('files.action.download')} />
+                <FileAction icon={<Copy size={14} />} label={t('files.action.copyLink')} />
+                <FileAction icon={<Eye size={14} />} label={t('files.action.preview')} />
+                <FileAction icon={<Trash2 size={14} />} label={t('files.action.delete')} danger />
               </div>
             </div>
           </motion.div>
@@ -699,19 +743,20 @@ function FileAction({ icon, label, danger }: { icon: React.ReactNode; label: str
 }
 
 function EmptyState({ onUpload }: { onUpload: () => void }) {
+  const { t } = useI18n();
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       <div className="w-16 h-16 rounded-2xl bg-[#f7f6f3] dark:bg-[#2a2a2a] flex items-center justify-center mb-4">
         <Upload size={28} className="text-[#ccc] dark:text-[#555]" />
       </div>
-      <h3 className="text-[16px] font-medium text-[#242424] dark:text-[#f0f0f0] mb-1">This folder is empty</h3>
-      <p className="text-[14px] text-[#999] dark:text-[#666] mb-4">Drop files here or click Upload to add files</p>
+      <h3 className="text-[16px] font-medium text-[#242424] dark:text-[#f0f0f0] mb-1">{t('files.emptyTitle')}</h3>
+      <p className="text-[14px] text-[#999] dark:text-[#666] mb-4">{t('files.emptySubtitle')}</p>
       <button
         onClick={onUpload}
         className="flex items-center gap-2 bg-[#5b5fc7] hover:bg-[#5254b5] text-white px-4 py-2 rounded-lg text-[13px] font-medium transition-colors"
       >
         <Upload size={14} />
-        Upload Files
+        {t('files.uploadFiles')}
       </button>
     </div>
   );

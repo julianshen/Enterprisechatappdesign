@@ -4,30 +4,52 @@ import {
   ClipboardCheck, X, Send, ChevronRight,
 } from 'lucide-react';
 import { notifications, type Notification } from '../data/mockData';
-import { format, isToday, isYesterday } from 'date-fns';
+import { isToday, isYesterday } from 'date-fns';
+import { type LanguageCode, useI18n } from '../context/I18nContext';
 
-const typeConfig: Record<Notification['type'], { icon: typeof Bell; color: string; bg: string; label: string }> = {
-  system: { icon: Server, color: 'text-[#616161] dark:text-[#b9bbbe]', bg: 'bg-[#f0f0f0] dark:bg-[#3d3d3d]', label: 'System' },
-  admin: { icon: Bell, color: 'text-[#5b5fc7] dark:text-[#a6a9dc]', bg: 'bg-[#eeeef8] dark:bg-[#5b5fc7]/15', label: 'Admin' },
-  security: { icon: Shield, color: 'text-[#c4314b] dark:text-[#f47067]', bg: 'bg-[#fdf0f2] dark:bg-[#c4314b]/15', label: 'Security' },
-  update: { icon: RefreshCw, color: 'text-[#237b4b] dark:text-[#57ab5a]', bg: 'bg-[#edf7f0] dark:bg-[#237b4b]/15', label: 'Update' },
-  invite: { icon: UserPlus, color: 'text-[#8764b8] dark:text-[#c49ded]', bg: 'bg-[#f3eef9] dark:bg-[#8764b8]/15', label: 'Invitation' },
-  approval: { icon: ClipboardCheck, color: 'text-[#d4820c] dark:text-[#f0b850]', bg: 'bg-[#fef7ec] dark:bg-[#d4820c]/15', label: 'Approval' },
+const LOCALE_MAP: Record<LanguageCode, string> = {
+  en: 'en-US',
+  'zh-Hant': 'zh-TW',
+  'zh-Hans': 'zh-CN',
+  ja: 'ja-JP',
+  de: 'de-DE',
+  es: 'es-ES',
+  fr: 'fr-FR',
+  hi: 'hi-IN',
+  pl: 'pl-PL',
 };
 
-function formatTimestamp(date: Date) {
-  if (isToday(date)) return `Today at ${format(date, 'h:mm a')}`;
-  if (isYesterday(date)) return `Yesterday at ${format(date, 'h:mm a')}`;
-  return format(date, 'MMM d, h:mm a');
-}
-
-function formatShortTime(date: Date) {
-  if (isToday(date)) return format(date, 'h:mm a');
-  if (isYesterday(date)) return 'Yesterday';
-  return format(date, 'MMM d');
+function getLocaleForLanguage(language: LanguageCode) {
+  return LOCALE_MAP[language] || 'en-US';
 }
 
 export function Inbox() {
+  const { t, language } = useI18n();
+  const locale = getLocaleForLanguage(language);
+  const timeFormatter = new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' });
+  const dateTimeFormatter = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  const dateFormatter = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' });
+
+  const typeConfig: Record<Notification['type'], { icon: typeof Bell; color: string; bg: string; label: string }> = {
+    system: { icon: Server, color: 'text-[#616161] dark:text-[#b9bbbe]', bg: 'bg-[#f0f0f0] dark:bg-[#3d3d3d]', label: t('inbox.type.system') },
+    admin: { icon: Bell, color: 'text-[#5b5fc7] dark:text-[#a6a9dc]', bg: 'bg-[#eeeef8] dark:bg-[#5b5fc7]/15', label: t('inbox.type.admin') },
+    security: { icon: Shield, color: 'text-[#c4314b] dark:text-[#f47067]', bg: 'bg-[#fdf0f2] dark:bg-[#c4314b]/15', label: t('inbox.type.security') },
+    update: { icon: RefreshCw, color: 'text-[#237b4b] dark:text-[#57ab5a]', bg: 'bg-[#edf7f0] dark:bg-[#237b4b]/15', label: t('inbox.type.update') },
+    invite: { icon: UserPlus, color: 'text-[#8764b8] dark:text-[#c49ded]', bg: 'bg-[#f3eef9] dark:bg-[#8764b8]/15', label: t('inbox.type.invitation') },
+    approval: { icon: ClipboardCheck, color: 'text-[#d4820c] dark:text-[#f0b850]', bg: 'bg-[#fef7ec] dark:bg-[#d4820c]/15', label: t('inbox.type.approval') },
+  };
+
+  const formatTimestamp = (date: Date) => {
+    if (isToday(date)) return t('inbox.todayAt', { time: timeFormatter.format(date) });
+    if (isYesterday(date)) return t('inbox.yesterdayAt', { time: timeFormatter.format(date) });
+    return dateTimeFormatter.format(date);
+  };
+
+  const formatShortTime = (date: Date) => {
+    if (isToday(date)) return timeFormatter.format(date);
+    if (isYesterday(date)) return t('common.yesterday');
+    return dateFormatter.format(date);
+  };
   const [items, setItems] = useState(notifications);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -70,7 +92,7 @@ export function Inbox() {
         <div className="h-[60px] px-5 flex items-center justify-between border-b border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#252525] shrink-0">
           <div className="flex items-center gap-2.5">
             <Bell size={18} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
-            <h2 className="font-semibold text-[#242424] dark:text-[#f0f0f0] text-[16px]">Inbox</h2>
+            <h2 className="font-semibold text-[#242424] dark:text-[#f0f0f0] text-[16px]">{t('inbox.title')}</h2>
             {unreadCount > 0 && (
               <span className="text-[11px] bg-[#c4314b] text-white px-1.5 py-0.5 rounded-full font-semibold leading-none">
                 {unreadCount}
@@ -87,7 +109,7 @@ export function Inbox() {
                     : 'text-[#616161] dark:text-[#b9bbbe]'
                 }`}
               >
-                All
+                {t('common.all')}
               </button>
               <button
                 onClick={() => setFilter('unread')}
@@ -97,14 +119,14 @@ export function Inbox() {
                     : 'text-[#616161] dark:text-[#b9bbbe]'
                 }`}
               >
-                Unread
+                {t('inbox.unread')}
               </button>
             </div>
             {unreadCount > 0 && (
               <button
                 onClick={markAllRead}
                 className="p-1.5 text-[#5b5fc7] dark:text-[#a6a9dc] hover:bg-[#eeeef8] dark:hover:bg-[#5b5fc7]/10 rounded-md transition-all"
-                title="Mark all read"
+                title={t('inbox.markAllRead')}
               >
                 <CheckCheck size={16} />
               </button>
@@ -119,8 +141,8 @@ export function Inbox() {
               <div className="w-12 h-12 bg-[#edf7f0] dark:bg-[#237b4b]/15 rounded-full flex items-center justify-center mb-3">
                 <Check size={22} className="text-[#237b4b] dark:text-[#57ab5a]" />
               </div>
-              <p className="text-[#242424] dark:text-[#f0f0f0] font-medium text-sm mb-0.5">All caught up!</p>
-              <p className="text-xs text-[#616161] dark:text-[#b9bbbe]">No unread notifications.</p>
+              <p className="text-[#242424] dark:text-[#f0f0f0] font-medium text-sm mb-0.5">{t('inbox.caughtUpTitle')}</p>
+              <p className="text-xs text-[#616161] dark:text-[#b9bbbe]">{t('inbox.caughtUpSubtitle')}</p>
             </div>
           ) : (
             filtered.map((notif) => {
@@ -170,12 +192,12 @@ export function Inbox() {
                       </span>
                       {notif.formFields && !submitted[notif.id] && (
                         <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[#fef7ec] dark:bg-[#d4820c]/15 text-[#d4820c] dark:text-[#f0b850]">
-                          Action required
+                          {t('inbox.actionRequired')}
                         </span>
                       )}
                       {submitted[notif.id] && (
                         <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[#edf7f0] dark:bg-[#237b4b]/15 text-[#237b4b] dark:text-[#57ab5a]">
-                          Submitted
+                          {t('inbox.submitted')}
                         </span>
                       )}
                     </div>
@@ -196,9 +218,9 @@ export function Inbox() {
             <div className="w-16 h-16 bg-[#f0f0f0] dark:bg-[#292929] rounded-2xl flex items-center justify-center mb-4">
               <Bell size={28} className="text-[#b9bbbe] dark:text-[#5a5a5a]" />
             </div>
-            <p className="text-[#242424] dark:text-[#f0f0f0] font-medium mb-1">Select a notification</p>
+            <p className="text-[#242424] dark:text-[#f0f0f0] font-medium mb-1">{t('inbox.selectNotification')}</p>
             <p className="text-sm text-[#616161] dark:text-[#8a8a8a] max-w-xs">
-              Choose a notification from the list to view its details or take action.
+              {t('inbox.selectNotificationDesc')}
             </p>
           </div>
         ) : (
@@ -236,7 +258,7 @@ export function Inbox() {
                     <>
                       <span className="text-[#d1d1d1] dark:text-[#3d3d3d]">·</span>
                       <span className="text-xs text-[#616161] dark:text-[#8a8a8a]">
-                        From <span className="font-medium text-[#424242] dark:text-[#c8c8c8]">{selected.from}</span>
+                        {t('inbox.from')} <span className="font-medium text-[#424242] dark:text-[#c8c8c8]">{selected.from}</span>
                       </span>
                     </>
                   )}
@@ -254,7 +276,7 @@ export function Inbox() {
                   <div className="bg-gradient-to-br from-[#faf9f8] to-[#f3f2f1] dark:from-[#252525] dark:to-[#1f1f1f] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] p-5">
                     <div className="flex items-center gap-2 mb-4">
                       <ClipboardCheck size={16} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
-                      <h4 className="font-semibold text-[#242424] dark:text-[#f0f0f0] text-sm">Your Response</h4>
+                      <h4 className="font-semibold text-[#242424] dark:text-[#f0f0f0] text-sm">{t('inbox.yourResponse')}</h4>
                     </div>
                     <div className="space-y-4">
                       {selected.formFields.map((field) => (
@@ -269,7 +291,7 @@ export function Inbox() {
                               onChange={(e) => updateFormField(selected.id, field.label, e.target.value)}
                               className="w-full bg-white dark:bg-[#1e1f22] border border-[#d1d1d1] dark:border-[#3d3d3d] rounded-lg px-3 py-2.5 text-sm text-[#242424] dark:text-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7] focus:border-transparent transition-all appearance-none cursor-pointer"
                             >
-                              <option value="">Select...</option>
+                              <option value="">{t('inbox.selectOption')}</option>
                               {field.options.map(opt => (
                                 <option key={opt} value={opt}>{opt}</option>
                               ))}
@@ -278,7 +300,7 @@ export function Inbox() {
                             <textarea
                               value={formState[selected.id]?.[field.label] || ''}
                               onChange={(e) => updateFormField(selected.id, field.label, e.target.value)}
-                              placeholder={`Enter ${field.label.toLowerCase()}...`}
+                              placeholder={t('inbox.enterField', { field: field.label.toLowerCase() })}
                               rows={3}
                               className="w-full bg-white dark:bg-[#1e1f22] border border-[#d1d1d1] dark:border-[#3d3d3d] rounded-lg px-3 py-2.5 text-sm text-[#242424] dark:text-[#e0e0e0] placeholder-[#8a8a8a] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7] focus:border-transparent transition-all resize-none"
                             />
@@ -287,7 +309,7 @@ export function Inbox() {
                               type="text"
                               value={formState[selected.id]?.[field.label] || ''}
                               onChange={(e) => updateFormField(selected.id, field.label, e.target.value)}
-                              placeholder={`Enter ${field.label.toLowerCase()}...`}
+                              placeholder={t('inbox.enterField', { field: field.label.toLowerCase() })}
                               className="w-full bg-white dark:bg-[#1e1f22] border border-[#d1d1d1] dark:border-[#3d3d3d] rounded-lg px-3 py-2.5 text-sm text-[#242424] dark:text-[#e0e0e0] placeholder-[#8a8a8a] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7] focus:border-transparent transition-all"
                             />
                           )}
@@ -299,7 +321,7 @@ export function Inbox() {
                         className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#5b5fc7] hover:bg-[#4f52b5] text-white text-sm font-medium rounded-lg transition-all shadow-sm hover:shadow-md"
                       >
                         <Send size={14} />
-                        Submit
+                        {t('inbox.submit')}
                       </button>
                     </div>
                   </div>
@@ -312,9 +334,9 @@ export function Inbox() {
                       <Check size={16} className="text-white" />
                     </div>
                     <div>
-                      <p className="font-semibold text-[#237b4b] dark:text-[#57ab5a] text-sm mb-0.5">Response submitted</p>
+                      <p className="font-semibold text-[#237b4b] dark:text-[#57ab5a] text-sm mb-0.5">{t('inbox.responseSubmitted')}</p>
                       <p className="text-xs text-[#3d8c5c] dark:text-[#6fbe7b]">
-                        Your response has been recorded. You'll be notified if any follow-up is needed.
+                        {t('inbox.responseRecorded')}
                       </p>
                     </div>
                   </div>

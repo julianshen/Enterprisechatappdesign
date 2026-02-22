@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router';
 import {
   format, startOfMonth, endOfMonth, startOfWeek, endOfWeek,
-  eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths,
+  eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, addDays,
   isToday, isWeekend,
 } from 'date-fns';
 import {
@@ -16,6 +16,7 @@ import {
   recentActivity, notifications, tasks, files, users, directMessages,
   messages, currentUser, meetings,
 } from '../data/mockData';
+import { type LanguageCode, useI18n } from '../context/I18nContext';
 
 // ─── Types ───
 type WidgetId = 'calendar' | 'meetings' | 'services' | 'messages' | 'tasks' | 'approvals' | 'files' | 'threads' | 'unread';
@@ -43,6 +44,17 @@ const DEFAULT_WIDGETS: WidgetConfig[] = [
 ];
 
 const STORAGE_KEY = 'my-dashboard-prefs';
+const LOCALE_MAP: Record<LanguageCode, string> = {
+  en: 'en-US',
+  'zh-Hant': 'zh-TW',
+  'zh-Hans': 'zh-CN',
+  ja: 'ja-JP',
+  de: 'de-DE',
+  es: 'es-ES',
+  fr: 'fr-FR',
+  hi: 'hi-IN',
+  pl: 'pl-PL',
+};
 
 function loadPrefs(): WidgetConfig[] {
   try {
@@ -63,7 +75,7 @@ function savePrefs(widgets: WidgetConfig[]) {
 }
 
 // ─── Sub-components ───
-function WidgetCard({ config, children }: { config: WidgetConfig; children: React.ReactNode }) {
+function WidgetCard({ config, label, children }: { config: WidgetConfig; label: string; children: React.ReactNode }) {
   const Icon = config.icon;
   return (
     <div className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] shadow-sm hover:shadow-md transition-shadow flex flex-col overflow-hidden">
@@ -71,7 +83,7 @@ function WidgetCard({ config, children }: { config: WidgetConfig; children: Reac
         <div className={`w-7 h-7 rounded-lg ${config.bg} flex items-center justify-center shrink-0`}>
           <Icon size={14} className={config.color} />
         </div>
-        <h3 className="font-semibold text-[13px] text-[#242424] dark:text-[#f0f0f0]">{config.label}</h3>
+        <h3 className="font-semibold text-[13px] text-[#242424] dark:text-[#f0f0f0]">{label}</h3>
       </div>
       <div className="flex-1 overflow-hidden">{children}</div>
     </div>
@@ -80,6 +92,8 @@ function WidgetCard({ config, children }: { config: WidgetConfig; children: Reac
 
 // ─── Calendar Widget ───
 function WorkingCalendarWidget() {
+  const { t, language } = useI18n();
+  const locale = LOCALE_MAP[language] || 'en-US';
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
 
@@ -88,7 +102,10 @@ function WorkingCalendarWidget() {
   const calStart = startOfWeek(monthStart, { weekStartsOn: 1 });
   const calEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
   const days = eachDayOfInterval({ start: calStart, end: calEnd });
-  const weekDays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+  const weekDays = Array.from({ length: 7 }, (_, idx) => {
+    const base = startOfWeek(new Date(), { weekStartsOn: 1 });
+    return new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(addDays(base, idx));
+  });
 
   // Days that have meetings
   const meetingDays = useMemo(() => {
@@ -122,7 +139,7 @@ function WorkingCalendarWidget() {
           <ChevronLeft size={14} />
         </button>
         <span className="text-[13px] font-semibold text-[#242424] dark:text-[#f0f0f0]">
-          {format(currentMonth, 'MMMM yyyy')}
+          {new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(currentMonth)}
         </span>
         <button
           onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
@@ -191,7 +208,10 @@ function WorkingCalendarWidget() {
       {meetingsOnSelected.length > 0 && (
         <div className="mt-3 pt-3 border-t border-[#f0f0f0] dark:border-[#333]">
           <p className="text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider mb-2 px-0.5">
-            {isToday(selectedDate) ? 'Today' : format(selectedDate, 'EEE, MMM d')} — {meetingsOnSelected.length} event{meetingsOnSelected.length > 1 ? 's' : ''}
+            {isToday(selectedDate)
+              ? t('common.today')
+              : new Intl.DateTimeFormat(locale, { weekday: 'short', month: 'short', day: 'numeric' }).format(selectedDate)
+            } — {t('recent.calendar.eventsCount', { count: meetingsOnSelected.length })}
           </p>
           <div className="space-y-1.5">
             {meetingsOnSelected.map(m => (
@@ -203,17 +223,19 @@ function WorkingCalendarWidget() {
                 <div className="flex-1 min-w-0">
                   <p className="text-[12px] text-[#242424] dark:text-[#e0e0e0] font-medium truncate">{m.title}</p>
                   <p className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78]">
-                    {format(m.startTime, 'h:mm a')} – {format(m.endTime, 'h:mm a')}
+                    {new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' }).format(m.startTime)}
+                    {' – '}
+                    {new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' }).format(m.endTime)}
                   </p>
                 </div>
                 {m.status === 'completed' && (
                   <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[#e8e8e8] dark:bg-[#3d3d3d] text-[#8a8a8a] dark:text-[#6d6f78]">
-                    Done
+                    {t('recent.calendar.status.done')}
                   </span>
                 )}
                 {m.status === 'in-progress' && (
                   <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[#237b4b]/15 text-[#237b4b] dark:text-[#57ab5a] animate-pulse">
-                    Live
+                    {t('recent.calendar.status.live')}
                   </span>
                 )}
               </div>
@@ -227,6 +249,8 @@ function WorkingCalendarWidget() {
 
 // ─── Incoming Meetings Widget ───
 function IncomingMeetingsWidget() {
+  const { t, language } = useI18n();
+  const locale = LOCALE_MAP[language] || 'en-US';
   const now = new Date();
   const upcomingMeetings = meetings
     .filter(m => m.status !== 'completed')
@@ -238,13 +262,13 @@ function IncomingMeetingsWidget() {
       dot: 'bg-[#237b4b]',
       bg: 'bg-[#edf7f0] dark:bg-[#237b4b]/15',
       text: 'text-[#237b4b] dark:text-[#57ab5a]',
-      label: 'In Progress',
+      label: t('recent.meetings.status.inProgress'),
     },
     'upcoming': {
       dot: 'bg-[#0078d4]',
       bg: 'bg-[#ecf5fe] dark:bg-[#0078d4]/15',
       text: 'text-[#0078d4] dark:text-[#6cb8f6]',
-      label: 'Upcoming',
+      label: t('recent.meetings.status.upcoming'),
     },
   };
 
@@ -259,7 +283,7 @@ function IncomingMeetingsWidget() {
   if (upcomingMeetings.length === 0) {
     return (
       <div className="p-4 text-center text-sm text-[#8a8a8a] dark:text-[#6d6f78]">
-        No upcoming meetings
+        {t('recent.meetings.empty')}
       </div>
     );
   }
@@ -285,14 +309,14 @@ function IncomingMeetingsWidget() {
             {/* Time column */}
             <div className="shrink-0 w-[52px] text-center pt-0.5">
               <p className="text-[12px] font-semibold text-[#242424] dark:text-[#e0e0e0]">
-                {format(meeting.startTime, 'h:mm')}
+                {new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' }).format(meeting.startTime)}
               </p>
               <p className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78]">
-                {format(meeting.startTime, 'a')}
+                {new Intl.DateTimeFormat(locale, { hour: 'numeric' }).format(meeting.startTime)}
               </p>
               {!isCurrentDay && (
                 <p className="text-[9px] text-[#8a8a8a] dark:text-[#6d6f78] mt-0.5">
-                  {format(meeting.startTime, 'MMM d')}
+                  {new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' }).format(meeting.startTime)}
                 </p>
               )}
             </div>
@@ -313,12 +337,14 @@ function IncomingMeetingsWidget() {
               <div className="flex items-center gap-3 text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] mb-1.5">
                 <span className="flex items-center gap-1">
                   <Clock size={10} />
-                  {format(meeting.startTime, 'h:mm a')} – {format(meeting.endTime, 'h:mm a')}
+                  {new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' }).format(meeting.startTime)}
+                  {' – '}
+                  {new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' }).format(meeting.endTime)}
                 </span>
                 {meeting.recurring && (
                   <span className="flex items-center gap-0.5">
                     <Repeat size={9} />
-                    Recurring
+                    {t('recent.meetings.recurring')}
                   </span>
                 )}
               </div>
@@ -360,7 +386,7 @@ function IncomingMeetingsWidget() {
                   )}
                 </div>
                 <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78]">
-                  {meeting.attendees.length} attendee{meeting.attendees.length > 1 ? 's' : ''}
+                  {t('recent.meetings.attendeesCount', { count: meeting.attendees.length })}
                 </span>
               </div>
             </div>
@@ -375,8 +401,8 @@ function IncomingMeetingsWidget() {
 const serviceItems = [
   {
     id: 'leave',
-    label: 'Apply for Leave',
-    description: 'Request time off',
+    labelKey: 'recent.services.leave.label',
+    descriptionKey: 'recent.services.leave.desc',
     icon: DoorOpen,
     color: 'text-[#237b4b] dark:text-[#57ab5a]',
     bg: 'bg-[#edf7f0] dark:bg-[#237b4b]/15',
@@ -384,8 +410,8 @@ const serviceItems = [
   },
   {
     id: 'overtime',
-    label: 'Overtime',
-    description: 'Log extra hours',
+    labelKey: 'recent.services.overtime.label',
+    descriptionKey: 'recent.services.overtime.desc',
     icon: Clock3,
     color: 'text-[#d4820c] dark:text-[#f0b850]',
     bg: 'bg-[#fef7ec] dark:bg-[#d4820c]/15',
@@ -393,8 +419,8 @@ const serviceItems = [
   },
   {
     id: 'expense',
-    label: 'Expense',
-    description: 'Submit claims',
+    labelKey: 'recent.services.expense.label',
+    descriptionKey: 'recent.services.expense.desc',
     icon: Receipt,
     color: 'text-[#5b5fc7] dark:text-[#a6a9dc]',
     bg: 'bg-[#eeeef8] dark:bg-[#5b5fc7]/15',
@@ -402,8 +428,8 @@ const serviceItems = [
   },
   {
     id: 'travel',
-    label: 'Travel Request',
-    description: 'Book business trips',
+    labelKey: 'recent.services.travel.label',
+    descriptionKey: 'recent.services.travel.desc',
     icon: Plane,
     color: 'text-[#0078d4] dark:text-[#6cb8f6]',
     bg: 'bg-[#ecf5fe] dark:bg-[#0078d4]/15',
@@ -411,8 +437,8 @@ const serviceItems = [
   },
   {
     id: 'it-support',
-    label: 'IT Support',
-    description: 'Get tech help',
+    labelKey: 'recent.services.it.label',
+    descriptionKey: 'recent.services.it.desc',
     icon: Headphones,
     color: 'text-[#c4314b] dark:text-[#f47067]',
     bg: 'bg-[#fdf0f2] dark:bg-[#c4314b]/15',
@@ -420,8 +446,8 @@ const serviceItems = [
   },
   {
     id: 'meeting-room',
-    label: 'Meeting Room',
-    description: 'Reserve a room',
+    labelKey: 'recent.services.room.label',
+    descriptionKey: 'recent.services.room.desc',
     icon: Users,
     color: 'text-[#8764b8] dark:text-[#c49ded]',
     bg: 'bg-[#f3eef9] dark:bg-[#8764b8]/15',
@@ -430,6 +456,7 @@ const serviceItems = [
 ];
 
 function CommonServicesWidget() {
+  const { t } = useI18n();
   const [activeService, setActiveService] = useState<string | null>(null);
 
   return (
@@ -454,10 +481,10 @@ function CommonServicesWidget() {
                 <Icon size={18} className={svc.color} />
               </div>
               <span className="text-[11px] font-medium text-[#242424] dark:text-[#e0e0e0] text-center leading-tight">
-                {svc.label}
+                {t(svc.labelKey)}
               </span>
               <span className="text-[9px] text-[#8a8a8a] dark:text-[#6d6f78] text-center leading-tight">
-                {svc.description}
+                {t(svc.descriptionKey)}
               </span>
             </button>
           );
@@ -473,13 +500,13 @@ function CommonServicesWidget() {
           {activeService !== 'leave' && activeService !== 'overtime' && activeService !== 'expense' && (
             <div className="text-center py-3">
               <p className="text-[12px] text-[#8a8a8a] dark:text-[#6d6f78] mb-2">
-                {serviceItems.find(s => s.id === activeService)?.label} — Coming soon
+                {t(serviceItems.find(s => s.id === activeService)?.labelKey || '')} — {t('recent.services.comingSoon')}
               </p>
               <button
                 onClick={() => setActiveService(null)}
                 className="text-[11px] text-[#5b5fc7] dark:text-[#a6a9dc] font-medium hover:underline"
               >
-                Dismiss
+                {t('recent.services.dismiss')}
               </button>
             </div>
           )}
@@ -490,6 +517,7 @@ function CommonServicesWidget() {
 }
 
 function LeaveForm({ onClose }: { onClose: () => void }) {
+  const { t } = useI18n();
   const [submitted, setSubmitted] = useState(false);
   if (submitted) {
     return (
@@ -497,10 +525,10 @@ function LeaveForm({ onClose }: { onClose: () => void }) {
         <div className="w-8 h-8 rounded-full bg-[#edf7f0] dark:bg-[#237b4b]/15 flex items-center justify-center mx-auto mb-2">
           <CheckSquare size={14} className="text-[#237b4b] dark:text-[#57ab5a]" />
         </div>
-        <p className="text-[12px] font-medium text-[#242424] dark:text-[#e0e0e0]">Leave request submitted!</p>
-        <p className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] mt-0.5">Awaiting manager approval</p>
+        <p className="text-[12px] font-medium text-[#242424] dark:text-[#e0e0e0]">{t('recent.leave.submittedTitle')}</p>
+        <p className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] mt-0.5">{t('recent.leave.submittedSubtitle')}</p>
         <button onClick={onClose} className="text-[11px] text-[#5b5fc7] dark:text-[#a6a9dc] font-medium hover:underline mt-2">
-          Close
+          {t('common.close')}
         </button>
       </div>
     );
@@ -508,34 +536,34 @@ function LeaveForm({ onClose }: { onClose: () => void }) {
   return (
     <div className="space-y-2.5">
       <div className="flex items-center justify-between">
-        <p className="text-[12px] font-semibold text-[#242424] dark:text-[#e0e0e0]">Apply for Leave</p>
+        <p className="text-[12px] font-semibold text-[#242424] dark:text-[#e0e0e0]">{t('recent.leave.title')}</p>
         <button onClick={onClose} className="text-[#8a8a8a] hover:text-[#242424] dark:hover:text-[#e0e0e0] transition-colors">
           <X size={12} />
         </button>
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">Type</label>
+          <label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">{t('recent.form.type')}</label>
           <select className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0]">
-            <option>Annual Leave</option>
-            <option>Sick Leave</option>
-            <option>Personal Leave</option>
-            <option>Unpaid Leave</option>
+            <option>{t('recent.leave.type.annual')}</option>
+            <option>{t('recent.leave.type.sick')}</option>
+            <option>{t('recent.leave.type.personal')}</option>
+            <option>{t('recent.leave.type.unpaid')}</option>
           </select>
         </div>
         <div>
-          <label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">Duration</label>
+          <label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">{t('recent.form.duration')}</label>
           <select className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0]">
-            <option>Half Day</option>
-            <option>1 Day</option>
-            <option>2 Days</option>
-            <option>3+ Days</option>
+            <option>{t('recent.leave.duration.halfDay')}</option>
+            <option>{t('recent.leave.duration.oneDay')}</option>
+            <option>{t('recent.leave.duration.twoDays')}</option>
+            <option>{t('recent.leave.duration.threePlus')}</option>
           </select>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">From</label>
+          <label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">{t('recent.form.from')}</label>
           <input
             type="date"
             defaultValue="2026-02-17"
@@ -543,7 +571,7 @@ function LeaveForm({ onClose }: { onClose: () => void }) {
           />
         </div>
         <div>
-          <label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">To</label>
+          <label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">{t('recent.form.to')}</label>
           <input
             type="date"
             defaultValue="2026-02-17"
@@ -552,7 +580,7 @@ function LeaveForm({ onClose }: { onClose: () => void }) {
         </div>
       </div>
       <textarea
-        placeholder="Reason (optional)"
+        placeholder={t('recent.leave.reasonPlaceholder')}
         rows={2}
         className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0] placeholder:text-[#b9bbbe] resize-none"
       />
@@ -561,13 +589,13 @@ function LeaveForm({ onClose }: { onClose: () => void }) {
           onClick={onClose}
           className="px-3 py-1.5 text-[11px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#333] rounded-md transition-colors"
         >
-          Cancel
+          {t('common.cancel')}
         </button>
         <button
           onClick={() => setSubmitted(true)}
           className="px-3 py-1.5 text-[11px] font-medium text-white bg-[#5b5fc7] hover:bg-[#4b4fbf] rounded-md transition-colors shadow-sm"
         >
-          Submit
+          {t('common.submit')}
         </button>
       </div>
     </div>
@@ -575,6 +603,7 @@ function LeaveForm({ onClose }: { onClose: () => void }) {
 }
 
 function OvertimeForm({ onClose }: { onClose: () => void }) {
+  const { t } = useI18n();
   const [submitted, setSubmitted] = useState(false);
   if (submitted) {
     return (
@@ -582,10 +611,10 @@ function OvertimeForm({ onClose }: { onClose: () => void }) {
         <div className="w-8 h-8 rounded-full bg-[#fef7ec] dark:bg-[#d4820c]/15 flex items-center justify-center mx-auto mb-2">
           <Clock3 size={14} className="text-[#d4820c] dark:text-[#f0b850]" />
         </div>
-        <p className="text-[12px] font-medium text-[#242424] dark:text-[#e0e0e0]">Overtime logged!</p>
-        <p className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] mt-0.5">Pending HR review</p>
+        <p className="text-[12px] font-medium text-[#242424] dark:text-[#e0e0e0]">{t('recent.overtime.submittedTitle')}</p>
+        <p className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] mt-0.5">{t('recent.overtime.submittedSubtitle')}</p>
         <button onClick={onClose} className="text-[11px] text-[#5b5fc7] dark:text-[#a6a9dc] font-medium hover:underline mt-2">
-          Close
+          {t('common.close')}
         </button>
       </div>
     );
@@ -593,14 +622,14 @@ function OvertimeForm({ onClose }: { onClose: () => void }) {
   return (
     <div className="space-y-2.5">
       <div className="flex items-center justify-between">
-        <p className="text-[12px] font-semibold text-[#242424] dark:text-[#e0e0e0]">Log Overtime</p>
+        <p className="text-[12px] font-semibold text-[#242424] dark:text-[#e0e0e0]">{t('recent.overtime.title')}</p>
         <button onClick={onClose} className="text-[#8a8a8a] hover:text-[#242424] dark:hover:text-[#e0e0e0] transition-colors">
           <X size={12} />
         </button>
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">Date</label>
+          <label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">{t('recent.form.date')}</label>
           <input
             type="date"
             defaultValue="2026-02-16"
@@ -608,7 +637,7 @@ function OvertimeForm({ onClose }: { onClose: () => void }) {
           />
         </div>
         <div>
-          <label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">Hours</label>
+          <label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">{t('recent.form.hours')}</label>
           <input
             type="number"
             defaultValue="2"
@@ -619,7 +648,7 @@ function OvertimeForm({ onClose }: { onClose: () => void }) {
         </div>
       </div>
       <textarea
-        placeholder="Description of work done"
+        placeholder={t('recent.overtime.descriptionPlaceholder')}
         rows={2}
         className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0] placeholder:text-[#b9bbbe] resize-none"
       />
@@ -628,13 +657,13 @@ function OvertimeForm({ onClose }: { onClose: () => void }) {
           onClick={onClose}
           className="px-3 py-1.5 text-[11px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#333] rounded-md transition-colors"
         >
-          Cancel
+          {t('common.cancel')}
         </button>
         <button
           onClick={() => setSubmitted(true)}
           className="px-3 py-1.5 text-[11px] font-medium text-white bg-[#d4820c] hover:bg-[#c0760b] rounded-md transition-colors shadow-sm"
         >
-          Submit
+          {t('common.submit')}
         </button>
       </div>
     </div>
@@ -642,6 +671,7 @@ function OvertimeForm({ onClose }: { onClose: () => void }) {
 }
 
 function ExpenseForm({ onClose }: { onClose: () => void }) {
+  const { t } = useI18n();
   const [submitted, setSubmitted] = useState(false);
   if (submitted) {
     return (
@@ -649,10 +679,10 @@ function ExpenseForm({ onClose }: { onClose: () => void }) {
         <div className="w-8 h-8 rounded-full bg-[#eeeef8] dark:bg-[#5b5fc7]/15 flex items-center justify-center mx-auto mb-2">
           <Receipt size={14} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
         </div>
-        <p className="text-[12px] font-medium text-[#242424] dark:text-[#e0e0e0]">Expense submitted!</p>
-        <p className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] mt-0.5">Pending finance approval</p>
+        <p className="text-[12px] font-medium text-[#242424] dark:text-[#e0e0e0]">{t('recent.expense.submittedTitle')}</p>
+        <p className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] mt-0.5">{t('recent.expense.submittedSubtitle')}</p>
         <button onClick={onClose} className="text-[11px] text-[#5b5fc7] dark:text-[#a6a9dc] font-medium hover:underline mt-2">
-          Close
+          {t('common.close')}
         </button>
       </div>
     );
@@ -660,24 +690,24 @@ function ExpenseForm({ onClose }: { onClose: () => void }) {
   return (
     <div className="space-y-2.5">
       <div className="flex items-center justify-between">
-        <p className="text-[12px] font-semibold text-[#242424] dark:text-[#e0e0e0]">Expense Claim</p>
+        <p className="text-[12px] font-semibold text-[#242424] dark:text-[#e0e0e0]">{t('recent.expense.title')}</p>
         <button onClick={onClose} className="text-[#8a8a8a] hover:text-[#242424] dark:hover:text-[#e0e0e0] transition-colors">
           <X size={12} />
         </button>
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">Category</label>
+          <label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">{t('recent.expense.category')}</label>
           <select className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0]">
-            <option>Meals</option>
-            <option>Transport</option>
-            <option>Equipment</option>
-            <option>Software</option>
-            <option>Other</option>
+            <option>{t('recent.expense.category.meals')}</option>
+            <option>{t('recent.expense.category.transport')}</option>
+            <option>{t('recent.expense.category.equipment')}</option>
+            <option>{t('recent.expense.category.software')}</option>
+            <option>{t('recent.expense.category.other')}</option>
           </select>
         </div>
         <div>
-          <label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">Amount ($)</label>
+          <label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">{t('recent.expense.amount')}</label>
           <input
             type="number"
             placeholder="0.00"
@@ -686,18 +716,18 @@ function ExpenseForm({ onClose }: { onClose: () => void }) {
         </div>
       </div>
       <div>
-        <label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">Description</label>
+        <label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">{t('recent.form.description')}</label>
         <input
           type="text"
-          placeholder="Brief description"
+          placeholder={t('recent.expense.descriptionPlaceholder')}
           className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0] placeholder:text-[#b9bbbe]"
         />
       </div>
       <div>
-        <label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">Receipt</label>
+        <label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">{t('recent.expense.receipt')}</label>
         <div className="flex items-center gap-2 px-2 py-2 rounded-md border border-dashed border-[#d1d1d1] dark:border-[#3d3d3d] text-center cursor-pointer hover:border-[#5b5fc7] dark:hover:border-[#5b5fc7] transition-colors">
           <FolderOpen size={12} className="text-[#8a8a8a] dark:text-[#6d6f78]" />
-          <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78]">Upload receipt image or PDF</span>
+          <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78]">{t('recent.expense.uploadHint')}</span>
         </div>
       </div>
       <div className="flex justify-end gap-2">
@@ -705,13 +735,13 @@ function ExpenseForm({ onClose }: { onClose: () => void }) {
           onClick={onClose}
           className="px-3 py-1.5 text-[11px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#333] rounded-md transition-colors"
         >
-          Cancel
+          {t('common.cancel')}
         </button>
         <button
           onClick={() => setSubmitted(true)}
           className="px-3 py-1.5 text-[11px] font-medium text-white bg-[#5b5fc7] hover:bg-[#4b4fbf] rounded-md transition-colors shadow-sm"
         >
-          Submit
+          {t('common.submit')}
         </button>
       </div>
     </div>
@@ -720,11 +750,13 @@ function ExpenseForm({ onClose }: { onClose: () => void }) {
 
 // ─── Existing Widgets ───
 function PendingApprovalsWidget() {
+  const { t, language } = useI18n();
+  const locale = LOCALE_MAP[language] || 'en-US';
   const pending = notifications.filter(n => n.formFields && !n.read);
   return (
     <div className="divide-y divide-[#f0f0f0] dark:divide-[#333]">
       {pending.length === 0 ? (
-        <div className="p-4 text-center text-sm text-[#8a8a8a] dark:text-[#6d6f78]">No pending approvals</div>
+        <div className="p-4 text-center text-sm text-[#8a8a8a] dark:text-[#6d6f78]">{t('recent.approvals.empty')}</div>
       ) : (
         pending.slice(0, 4).map(n => (
           <Link key={n.id} to="/inbox" className="flex items-center gap-3 px-4 py-3 hover:bg-[#faf9f8] dark:hover:bg-[#2a2a2a] transition-colors group">
@@ -733,10 +765,10 @@ function PendingApprovalsWidget() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm text-[#242424] dark:text-[#e0e0e0] font-medium truncate">{n.title}</p>
-              <p className="text-xs text-[#8a8a8a] dark:text-[#6d6f78] truncate">{n.from} · {format(n.timestamp, 'MMM d')}</p>
+              <p className="text-xs text-[#8a8a8a] dark:text-[#6d6f78] truncate">{n.from} · {new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' }).format(n.timestamp)}</p>
             </div>
             <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[#fef7ec] dark:bg-[#d4820c]/15 text-[#d4820c] dark:text-[#f0b850]">
-              Action needed
+              {t('recent.approvals.actionNeeded')}
             </span>
             <ChevronRight size={14} className="text-[#d1d1d1] dark:text-[#3d3d3d] group-hover:text-[#8a8a8a] transition-colors shrink-0" />
           </Link>
@@ -747,6 +779,8 @@ function PendingApprovalsWidget() {
 }
 
 function MyTasksWidget() {
+  const { t, language } = useI18n();
+  const locale = LOCALE_MAP[language] || 'en-US';
   const myTasks = tasks.filter(t => t.status !== 'done').slice(0, 5);
   const priorityColors: Record<string, string> = {
     high: 'bg-[#c4314b] text-white',
@@ -760,7 +794,7 @@ function MyTasksWidget() {
   return (
     <div className="divide-y divide-[#f0f0f0] dark:divide-[#333]">
       {myTasks.length === 0 ? (
-        <div className="p-4 text-center text-sm text-[#8a8a8a] dark:text-[#6d6f78]">All tasks done!</div>
+        <div className="p-4 text-center text-sm text-[#8a8a8a] dark:text-[#6d6f78]">{t('recent.tasks.empty')}</div>
       ) : (
         myTasks.map(task => (
           <div key={task.id} className="flex items-center gap-3 px-4 py-3 hover:bg-[#faf9f8] dark:hover:bg-[#2a2a2a] transition-colors">
@@ -768,11 +802,11 @@ function MyTasksWidget() {
             <div className="flex-1 min-w-0">
               <p className="text-sm text-[#242424] dark:text-[#e0e0e0] truncate">{task.title}</p>
               <p className="text-xs text-[#8a8a8a] dark:text-[#6d6f78]">
-                {task.assignee} · Due {format(task.dueDate, 'MMM d')}
+                {task.assignee} · {t('recent.tasks.due', { date: new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' }).format(task.dueDate) })}
               </p>
             </div>
             <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full capitalize ${priorityColors[task.priority]}`}>
-              {task.priority}
+              {t(`tasks.priority.${task.priority}`)}
             </span>
           </div>
         ))
@@ -782,6 +816,8 @@ function MyTasksWidget() {
 }
 
 function RecentMessagesWidget() {
+  const { language } = useI18n();
+  const locale = LOCALE_MAP[language] || 'en-US';
   const recentDMs = directMessages.slice(0, 3);
   return (
     <div className="divide-y divide-[#f0f0f0] dark:divide-[#333]">
@@ -804,7 +840,9 @@ function RecentMessagesWidget() {
               <div className="flex items-center justify-between gap-2">
                 <span className="text-sm text-[#242424] dark:text-[#e0e0e0] font-medium truncate">{user?.name}</span>
                 {dm.lastMessageTime && (
-                  <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] whitespace-nowrap">{format(dm.lastMessageTime, 'h:mm a')}</span>
+                  <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] whitespace-nowrap">
+                    {new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' }).format(dm.lastMessageTime)}
+                  </span>
                 )}
               </div>
               {dm.lastMessage && (
@@ -831,7 +869,9 @@ function RecentMessagesWidget() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-sm text-[#242424] dark:text-[#e0e0e0] font-medium truncate">{channelId.replace(/-/g, ' › ')}</span>
-                <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] whitespace-nowrap">{format(lastMsg.timestamp, 'h:mm a')}</span>
+                <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] whitespace-nowrap">
+                  {new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' }).format(lastMsg.timestamp)}
+                </span>
               </div>
               <p className="text-xs text-[#8a8a8a] dark:text-[#6d6f78] truncate">{msgUser?.name}: {lastMsg.content}</p>
             </div>
@@ -843,10 +883,12 @@ function RecentMessagesWidget() {
 }
 
 function UnreadChannelsWidget() {
+  const { t, language } = useI18n();
+  const locale = LOCALE_MAP[language] || 'en-US';
   return (
     <div className="divide-y divide-[#f0f0f0] dark:divide-[#333]">
       {recentActivity.unread.length === 0 ? (
-        <div className="p-4 text-center text-sm text-[#8a8a8a] dark:text-[#6d6f78]">All caught up!</div>
+        <div className="p-4 text-center text-sm text-[#8a8a8a] dark:text-[#6d6f78]">{t('recent.unread.empty')}</div>
       ) : (
         recentActivity.unread.map(ch => (
           <Link
@@ -861,7 +903,9 @@ function UnreadChannelsWidget() {
               <p className="text-sm text-[#242424] dark:text-[#e0e0e0] font-medium truncate">
                 {ch.spaceName} <span className="text-[#d1d1d1] dark:text-[#5a5a5a] mx-1">›</span> {ch.channelName}
               </p>
-              <p className="text-xs text-[#8a8a8a] dark:text-[#6d6f78]">Last message {format(ch.lastMessage, 'h:mm a')}</p>
+              <p className="text-xs text-[#8a8a8a] dark:text-[#6d6f78]">
+                {t('recent.unread.lastMessage', { time: new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' }).format(ch.lastMessage) })}
+              </p>
             </div>
             <span className="bg-[#c4314b] text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
               {ch.count}
@@ -874,6 +918,8 @@ function UnreadChannelsWidget() {
 }
 
 function SharedFilesWidget() {
+  const { language } = useI18n();
+  const locale = LOCALE_MAP[language] || 'en-US';
   const recentFiles = files.slice(0, 4);
   const typeIcons: Record<string, { color: string; label: string }> = {
     figma: { color: 'text-[#a259ff]', label: 'FIG' },
@@ -894,7 +940,9 @@ function SharedFilesWidget() {
               <p className="text-sm text-[#242424] dark:text-[#e0e0e0] truncate">{file.name}</p>
               <p className="text-xs text-[#8a8a8a] dark:text-[#6d6f78]">{file.uploadedBy} · {file.size}</p>
             </div>
-            <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">{format(file.uploadedAt, 'MMM d')}</span>
+            <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">
+              {new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' }).format(file.uploadedAt)}
+            </span>
           </div>
         );
       })}
@@ -903,10 +951,12 @@ function SharedFilesWidget() {
 }
 
 function ActiveThreadsWidget() {
+  const { t, language } = useI18n();
+  const locale = LOCALE_MAP[language] || 'en-US';
   return (
     <div className="divide-y divide-[#f0f0f0] dark:divide-[#333]">
       {recentActivity.threads.length === 0 ? (
-        <div className="p-4 text-center text-sm text-[#8a8a8a] dark:text-[#6d6f78]">No active threads</div>
+        <div className="p-4 text-center text-sm text-[#8a8a8a] dark:text-[#6d6f78]">{t('recent.threads.empty')}</div>
       ) : (
         recentActivity.threads.map(thread => (
           <div key={thread.id} className="px-4 py-3 hover:bg-[#faf9f8] dark:hover:bg-[#2a2a2a] transition-colors cursor-pointer">
@@ -916,12 +966,14 @@ function ActiveThreadsWidget() {
                 <span className="text-[#d1d1d1] dark:text-[#5a5a5a]">›</span>
                 <span className="text-[#242424] dark:text-[#e0e0e0] font-medium">#{thread.channelName}</span>
               </div>
-              <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">{format(thread.lastReply, 'h:mm a')}</span>
+              <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">
+                {new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' }).format(thread.lastReply)}
+              </span>
             </div>
             <p className="text-sm text-[#424242] dark:text-[#c8c8c8] truncate mb-1.5">{thread.content}</p>
             <div className="flex items-center gap-1.5 text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">
               <MessageSquare size={12} />
-              <span>{thread.replies} replies</span>
+              <span>{t('recent.threads.replies', { count: thread.replies })}</span>
             </div>
           </div>
         ))
@@ -945,6 +997,8 @@ const widgetRenderers: Record<WidgetId, () => JSX.Element> = {
 
 // ─── Main Dashboard ───
 export function Recent() {
+  const { t, language } = useI18n();
+  const locale = LOCALE_MAP[language] || 'en-US';
   const [widgets, setWidgets] = useState<WidgetConfig[]>(loadPrefs);
   const [customizing, setCustomizing] = useState(false);
 
@@ -964,11 +1018,26 @@ export function Recent() {
 
   // Greeting
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const greeting = hour < 12
+    ? t('recent.greeting.morning')
+    : hour < 17
+    ? t('recent.greeting.afternoon')
+    : t('recent.greeting.evening');
   const pendingCount = notifications.filter(n => n.formFields && !n.read).length;
   const taskCount = tasks.filter(t => t.status !== 'done').length;
   const unreadTotal = recentActivity.unread.reduce((s, u) => s + u.count, 0);
   const meetingCount = meetings.filter(m => m.status !== 'completed').length;
+  const widgetLabels: Record<WidgetId, string> = {
+    calendar: t('recent.widget.calendar'),
+    meetings: t('recent.widget.meetings'),
+    services: t('recent.widget.services'),
+    approvals: t('recent.widget.approvals'),
+    tasks: t('recent.widget.tasks'),
+    messages: t('recent.widget.messages'),
+    unread: t('recent.widget.unread'),
+    files: t('recent.widget.files'),
+    threads: t('recent.widget.threads'),
+  };
 
   return (
     <div className="flex-1 flex flex-col bg-[#faf9f8] dark:bg-[#1f1f1f] overflow-hidden">
@@ -980,7 +1049,9 @@ export function Recent() {
               {greeting}, {currentUser.name.split(' ')[0]}
             </h1>
             <p className="text-sm text-[#616161] dark:text-[#8a8a8a]">
-              {format(new Date(), 'EEEE, MMMM d, yyyy')} — Here's what needs your attention.
+              {t('recent.header.subtitle', {
+                date: new Intl.DateTimeFormat(locale, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }).format(new Date()),
+              })}
             </p>
           </div>
           <div className="relative">
@@ -993,18 +1064,18 @@ export function Recent() {
               }`}
             >
               <Settings2 size={16} />
-              Customize
+              {t('recent.customize')}
             </button>
             {/* Customize Panel */}
             {customizing && (
               <div className="absolute right-0 top-full mt-2 w-[280px] bg-white dark:bg-[#2a2a2a] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] shadow-xl z-50">
                 <div className="px-4 py-3 border-b border-[#f0f0f0] dark:border-[#333] flex items-center justify-between">
-                  <span className="font-semibold text-sm text-[#242424] dark:text-[#f0f0f0]">Dashboard Widgets</span>
+                  <span className="font-semibold text-sm text-[#242424] dark:text-[#f0f0f0]">{t('recent.widgets.title')}</span>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={resetWidgets}
                       className="p-1.5 text-[#616161] dark:text-[#b9bbbe] hover:text-[#5b5fc7] dark:hover:text-[#a6a9dc] hover:bg-[#f0f0f0] dark:hover:bg-[#333] rounded-md transition-all"
-                      title="Reset to defaults"
+                      title={t('recent.widgets.reset')}
                     >
                       <RotateCcw size={14} />
                     </button>
@@ -1028,7 +1099,7 @@ export function Recent() {
                         <div className={`w-6 h-6 rounded ${w.bg} flex items-center justify-center shrink-0`}>
                           <Icon size={13} className={w.color} />
                         </div>
-                        <span className="flex-1 text-left text-sm text-[#242424] dark:text-[#e0e0e0]">{w.label}</span>
+                        <span className="flex-1 text-left text-sm text-[#242424] dark:text-[#e0e0e0]">{widgetLabels[w.id]}</span>
                         {w.visible ? (
                           <Eye size={15} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
                         ) : (
@@ -1048,26 +1119,26 @@ export function Recent() {
           {meetingCount > 0 && (
             <div className="flex items-center gap-2 px-3 py-1.5 bg-[#ecf5fe] dark:bg-[#0078d4]/15 rounded-lg text-[#0078d4] dark:text-[#6cb8f6]">
               <Video size={14} />
-              <span className="text-xs font-medium">{meetingCount} meeting{meetingCount > 1 ? 's' : ''} ahead</span>
+              <span className="text-xs font-medium">{t('recent.quickStats.meetings', { count: meetingCount })}</span>
             </div>
           )}
           {pendingCount > 0 && (
             <Link to="/inbox" className="flex items-center gap-2 px-3 py-1.5 bg-[#fef7ec] dark:bg-[#d4820c]/15 rounded-lg text-[#d4820c] dark:text-[#f0b850] hover:shadow-sm transition-all group">
               <ClipboardCheck size={14} />
-              <span className="text-xs font-medium">{pendingCount} pending approval{pendingCount > 1 ? 's' : ''}</span>
+              <span className="text-xs font-medium">{t('recent.quickStats.approvals', { count: pendingCount })}</span>
               <ArrowRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
             </Link>
           )}
           {taskCount > 0 && (
             <div className="flex items-center gap-2 px-3 py-1.5 bg-[#eeeef8] dark:bg-[#5b5fc7]/15 rounded-lg text-[#5b5fc7] dark:text-[#a6a9dc]">
               <CheckSquare size={14} />
-              <span className="text-xs font-medium">{taskCount} open task{taskCount > 1 ? 's' : ''}</span>
+              <span className="text-xs font-medium">{t('recent.quickStats.tasks', { count: taskCount })}</span>
             </div>
           )}
           {unreadTotal > 0 && (
             <div className="flex items-center gap-2 px-3 py-1.5 bg-[#edf7f0] dark:bg-[#237b4b]/15 rounded-lg text-[#237b4b] dark:text-[#57ab5a]">
               <Mail size={14} />
-              <span className="text-xs font-medium">{unreadTotal} unread message{unreadTotal > 1 ? 's' : ''}</span>
+              <span className="text-xs font-medium">{t('recent.quickStats.unread', { count: unreadTotal })}</span>
             </div>
           )}
         </div>
@@ -1080,13 +1151,13 @@ export function Recent() {
             <div className="w-14 h-14 bg-[#f0f0f0] dark:bg-[#292929] rounded-2xl flex items-center justify-center mb-4">
               <Settings2 size={24} className="text-[#b9bbbe] dark:text-[#5a5a5a]" />
             </div>
-            <p className="text-[#242424] dark:text-[#f0f0f0] font-medium mb-1">No widgets visible</p>
-            <p className="text-sm text-[#616161] dark:text-[#8a8a8a] mb-4">Click "Customize" to add widgets to your dashboard.</p>
+            <p className="text-[#242424] dark:text-[#f0f0f0] font-medium mb-1">{t('recent.widgets.emptyTitle')}</p>
+            <p className="text-sm text-[#616161] dark:text-[#8a8a8a] mb-4">{t('recent.widgets.emptySubtitle')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
             {visibleWidgets.map(w => (
-              <WidgetCard key={w.id} config={w}>
+              <WidgetCard key={w.id} config={w} label={widgetLabels[w.id]}>
                 {widgetRenderers[w.id]()}
               </WidgetCard>
             ))}

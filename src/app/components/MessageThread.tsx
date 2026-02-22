@@ -4,6 +4,7 @@ import { Message, Thread, users, currentUser } from '../data/mockData';
 import { MessageItem } from './MessageItem';
 import { motion } from 'motion/react';
 import { useState, useRef, useEffect } from 'react';
+import { useI18n } from '../context/I18nContext';
 
 interface MessageThreadProps {
   parentMessage: Message;
@@ -15,6 +16,7 @@ interface MessageThreadProps {
 }
 
 export function MessageThread({ parentMessage, thread, onClose, onMessageUpdate, onMessageDelete, onReply }: MessageThreadProps) {
+  const { t } = useI18n();
   const parentUser = users.find(u => u.id === parentMessage.userId);
   const [threadMessages, setThreadMessages] = useState<Message[]>(thread.messages);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -69,9 +71,9 @@ export function MessageThread({ parentMessage, thread, onClose, onMessageUpdate,
       <div className="h-[60px] px-4 flex items-center justify-between border-b border-[#e1dfdd] dark:border-[#3d3d3d] shadow-sm backdrop-blur-sm bg-white/80 dark:bg-[#2b2d31]/80">
         <div className="flex items-center gap-2">
           <MessageSquare size={16} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
-          <h3 className="font-bold text-[#242424] dark:text-[#f2f3f5] text-[16px]">Thread</h3>
+          <h3 className="font-bold text-[#242424] dark:text-[#f2f3f5] text-[16px]">{t('thread.title')}</h3>
           <span className="text-xs text-[#616161] dark:text-[#949ba4] font-medium bg-[#f0f0f5] dark:bg-[#383a40] px-2 py-0.5 rounded-full">
-            {threadMessages.length} {threadMessages.length === 1 ? 'reply' : 'replies'}
+            {t('thread.replyCount', { count: threadMessages.length })}
           </span>
         </div>
         <Tooltip>
@@ -85,7 +87,7 @@ export function MessageThread({ parentMessage, thread, onClose, onMessageUpdate,
               <X size={18} />
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="bottom" sideOffset={4}>Close thread</TooltipContent>
+          <TooltipContent side="bottom" sideOffset={4}>{t('thread.close')}</TooltipContent>
         </Tooltip>
       </div>
 
@@ -105,7 +107,7 @@ export function MessageThread({ parentMessage, thread, onClose, onMessageUpdate,
         <div className="py-3">
           {threadMessages.length > 0 && (
             <div className="px-4 text-xs text-[#616161] dark:text-[#b9bbbe] font-bold mb-3 uppercase tracking-wider">
-              {threadMessages.length} {threadMessages.length === 1 ? 'reply' : 'replies'}
+              {t('thread.replyCount', { count: threadMessages.length })}
             </div>
           )}
           {threadMessages.map((message) => (
@@ -121,9 +123,9 @@ export function MessageThread({ parentMessage, thread, onClose, onMessageUpdate,
               <div className="w-12 h-12 rounded-full bg-[#5b5fc7]/10 dark:bg-[#5b5fc7]/20 flex items-center justify-center mb-3">
                 <MessageSquare size={20} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
               </div>
-              <p className="text-[14px] font-medium text-[#242424] dark:text-[#f2f3f5] mb-1">No replies yet</p>
+              <p className="text-[14px] font-medium text-[#242424] dark:text-[#f2f3f5] mb-1">{t('thread.emptyTitle')}</p>
               <p className="text-[13px] text-[#616161] dark:text-[#949ba4]">
-                Be the first to reply to {parentUser?.name}
+                {t('thread.emptySubtitle', { name: parentUser?.name ?? '' })}
               </p>
             </div>
           )}
@@ -138,7 +140,7 @@ export function MessageThread({ parentMessage, thread, onClose, onMessageUpdate,
         className="p-4 border-t border-[#e1dfdd] dark:border-[#3d3d3d] bg-gradient-to-r from-white to-[#faf9f8] dark:from-[#232428] dark:to-[#1e1f22] shadow-lg"
       >
         <RichMessageInput
-          placeholder={`Reply to ${parentUser?.name}...`}
+          placeholder={t('thread.replyPlaceholder', { name: parentUser?.name ?? '' })}
           onSend={handleSendReply}
           compact
           autoFocus

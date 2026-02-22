@@ -9,29 +9,30 @@ import { CircleDot, Bug, Zap, BookOpen, CheckCircle2, Clock, Eye,
 import { format } from 'date-fns';
 import { cn } from "@/lib/utils";
 import { MessageAttachment, documents, tasks as allTasks, users } from '../data/mockData';
+import { useI18n } from '../context/I18nContext';
 
 // ─── Status & Priority configs ───
-const TASK_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
-  'backlog': { label: 'Backlog', color: 'text-[#858585]', bg: 'bg-[#858585]/10 border-[#858585]/20', icon: <Clock size={14} /> },
-  'todo': { label: 'To Do', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20', icon: <CircleDot size={14} /> },
-  'in-progress': { label: 'In Progress', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20', icon: <Zap size={14} /> },
-  'in-review': { label: 'In Review', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20', icon: <Eye size={14} /> },
-  'done': { label: 'Done', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', icon: <CheckCircle2 size={14} /> },
+const TASK_STATUS_STYLE: Record<string, { color: string; bg: string; icon: React.ReactNode }> = {
+  'backlog': { color: 'text-[#858585]', bg: 'bg-[#858585]/10 border-[#858585]/20', icon: <Clock size={14} /> },
+  'todo': { color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20', icon: <CircleDot size={14} /> },
+  'in-progress': { color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20', icon: <Zap size={14} /> },
+  'in-review': { color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20', icon: <Eye size={14} /> },
+  'done': { color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', icon: <CheckCircle2 size={14} /> },
 };
 
-const TASK_PRIORITY_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  'critical': { label: 'Critical', color: 'text-red-600 dark:text-red-400', bg: 'bg-red-500/10 border-red-500/20' },
-  'high': { label: 'High', color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-500/10 border-orange-500/20' },
-  'medium': { label: 'Medium', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
-  'low': { label: 'Low', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
+const TASK_PRIORITY_STYLE: Record<string, { color: string; bg: string }> = {
+  'critical': { color: 'text-red-600 dark:text-red-400', bg: 'bg-red-500/10 border-red-500/20' },
+  'high': { color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-500/10 border-orange-500/20' },
+  'medium': { color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
+  'low': { color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
 };
 
-function getTaskTypeInfo(type?: string): { icon: React.ReactNode; label: string } {
+function getTaskTypeInfo(type: string | undefined, t: (key: string) => string): { icon: React.ReactNode; label: string } {
   switch (type) {
-    case 'bug': return { icon: <Bug size={14} className="text-red-500" />, label: 'Bug' };
-    case 'story': return { icon: <BookOpen size={14} className="text-[#5b5fc7]" />, label: 'Story' };
-    case 'spike': return { icon: <Zap size={14} className="text-amber-500" />, label: 'Spike' };
-    default: return { icon: <CircleDot size={14} className="text-[#5b5fc7]" />, label: 'Task' };
+    case 'bug': return { icon: <Bug size={14} className="text-red-500" />, label: t('tasks.type.bug') };
+    case 'story': return { icon: <BookOpen size={14} className="text-[#5b5fc7]" />, label: t('tasks.type.story') };
+    case 'spike': return { icon: <Zap size={14} className="text-amber-500" />, label: t('tasks.type.spike') };
+    default: return { icon: <CircleDot size={14} className="text-[#5b5fc7]" />, label: t('tasks.type.task') };
   }
 }
 
@@ -45,6 +46,7 @@ interface TaskDetailDialogProps {
 export function TaskDetailDialog({ attachment, open, onOpenChange }: TaskDetailDialogProps) {
   const navigate = useNavigate();
   const { spaceId } = useParams();
+  const { t } = useI18n();
 
   // Try to find full task data from mock
   const fullTask = allTasks.find(t =>
@@ -52,9 +54,30 @@ export function TaskDetailDialog({ attachment, open, onOpenChange }: TaskDetailD
     t.id === attachment.taskId
   );
 
-  const statusCfg = TASK_STATUS_CONFIG[attachment.taskStatus || 'todo'];
-  const prioCfg = TASK_PRIORITY_CONFIG[attachment.taskPriority || 'medium'];
-  const typeInfo = getTaskTypeInfo(attachment.taskType);
+  const statusKey = attachment.taskStatus || 'todo';
+  const statusLabelKey = {
+    backlog: 'tasks.status.backlog',
+    todo: 'tasks.status.todo',
+    'in-progress': 'tasks.status.inProgress',
+    'in-review': 'tasks.status.inReview',
+    done: 'tasks.status.done',
+  }[statusKey] || 'tasks.status.todo';
+  const statusCfg = {
+    ...TASK_STATUS_STYLE[statusKey],
+    label: t(statusLabelKey),
+  };
+  const prioKey = attachment.taskPriority || 'medium';
+  const prioLabelKey = {
+    critical: 'tasks.priority.critical',
+    high: 'tasks.priority.high',
+    medium: 'tasks.priority.medium',
+    low: 'tasks.priority.low',
+  }[prioKey] || 'tasks.priority.medium';
+  const prioCfg = {
+    ...TASK_PRIORITY_STYLE[prioKey],
+    label: t(prioLabelKey),
+  };
+  const typeInfo = getTaskTypeInfo(attachment.taskType, t);
 
   const handleGoToTasks = () => {
     onOpenChange(false);
@@ -98,7 +121,7 @@ export function TaskDetailDialog({ attachment, open, onOpenChange }: TaskDetailD
             {/* Status */}
             <DetailRow
               icon={statusCfg.icon}
-              label="Status"
+              label={t('tasks.field.status')}
               value={
                 <span className={cn('inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[12px] font-semibold border', statusCfg.bg, statusCfg.color)}>
                   {statusCfg.icon}
@@ -109,7 +132,7 @@ export function TaskDetailDialog({ attachment, open, onOpenChange }: TaskDetailD
             {/* Priority */}
             <DetailRow
               icon={<AlertTriangle size={14} className="text-[#616161] dark:text-[#949ba4]" />}
-              label="Priority"
+              label={t('tasks.field.priority')}
               value={
                 <span className={cn('inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[12px] font-semibold border', prioCfg.bg, prioCfg.color)}>
                   {attachment.taskPriority === 'critical' && <AlertTriangle size={11} />}
@@ -120,7 +143,7 @@ export function TaskDetailDialog({ attachment, open, onOpenChange }: TaskDetailD
             {/* Assignee */}
             <DetailRow
               icon={<User size={14} className="text-[#616161] dark:text-[#949ba4]" />}
-              label="Assignee"
+              label={t('tasks.field.assignee')}
               value={
                 <div className="flex items-center gap-2">
                   {(() => {
@@ -131,7 +154,7 @@ export function TaskDetailDialog({ attachment, open, onOpenChange }: TaskDetailD
                         <span className="text-[13px] text-[#242424] dark:text-[#f2f3f5]">{attachment.taskAssignee}</span>
                       </>
                     ) : (
-                      <span className="text-[13px] text-[#242424] dark:text-[#f2f3f5]">{attachment.taskAssignee || 'Unassigned'}</span>
+                      <span className="text-[13px] text-[#242424] dark:text-[#f2f3f5]">{attachment.taskAssignee || t('tasks.unassigned')}</span>
                     );
                   })()}
                 </div>
@@ -140,7 +163,7 @@ export function TaskDetailDialog({ attachment, open, onOpenChange }: TaskDetailD
             {/* Type */}
             <DetailRow
               icon={<Layers size={14} className="text-[#616161] dark:text-[#949ba4]" />}
-              label="Type"
+              label={t('tasks.field.type')}
               value={
                 <div className="flex items-center gap-1.5">
                   {typeInfo.icon}
@@ -158,14 +181,14 @@ export function TaskDetailDialog({ attachment, open, onOpenChange }: TaskDetailD
                 {fullTask.storyPoints !== undefined && (
                   <DetailRow
                     icon={<Hash size={14} className="text-[#616161] dark:text-[#949ba4]" />}
-                    label="Story Points"
+                    label={t('tasks.field.storyPoints')}
                     value={<span className="text-[13px] font-semibold text-[#242424] dark:text-[#f2f3f5]">{fullTask.storyPoints}</span>}
                   />
                 )}
                 {fullTask.epic && (
                   <DetailRow
                     icon={<Layers size={14} className="text-[#616161] dark:text-[#949ba4]" />}
-                    label="Epic"
+                    label={t('tasks.field.epic')}
                     value={
                       <span className={cn('text-[12px] font-semibold px-2 py-0.5 rounded-md border', {
                         'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20': fullTask.epicColor === 'purple',
@@ -182,14 +205,14 @@ export function TaskDetailDialog({ attachment, open, onOpenChange }: TaskDetailD
                 {fullTask.sprint && (
                   <DetailRow
                     icon={<Zap size={14} className="text-[#616161] dark:text-[#949ba4]" />}
-                    label="Sprint"
+                    label={t('tasks.field.sprint')}
                     value={<span className="text-[13px] text-[#242424] dark:text-[#f2f3f5]">{fullTask.sprint}</span>}
                   />
                 )}
                 {fullTask.dueDate && (
                   <DetailRow
                     icon={<Calendar size={14} className="text-[#616161] dark:text-[#949ba4]" />}
-                    label="Due Date"
+                    label={t('tasks.field.dueDate')}
                     value={<span className="text-[13px] text-[#242424] dark:text-[#f2f3f5]">{format(fullTask.dueDate, 'MMM d, yyyy')}</span>}
                   />
                 )}
@@ -200,7 +223,7 @@ export function TaskDetailDialog({ attachment, open, onOpenChange }: TaskDetailD
                 <div className="mt-1">
                   <div className="flex items-center gap-1.5 mb-1.5">
                     <Tag size={13} className="text-[#616161] dark:text-[#949ba4]" />
-                    <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wide font-semibold">Labels</span>
+                    <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wide font-semibold">{t('tasks.labels')}</span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {fullTask.labels.map(label => (
@@ -221,7 +244,7 @@ export function TaskDetailDialog({ attachment, open, onOpenChange }: TaskDetailD
                   <div className="flex items-center gap-1.5 mb-2">
                     <CheckSquare size={13} className="text-[#616161] dark:text-[#949ba4]" />
                     <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wide font-semibold">
-                      Subtasks ({fullTask.subtasks.filter(s => s.done).length}/{fullTask.subtasks.length})
+                      {t('tasks.subtasks', { done: fullTask.subtasks.filter(s => s.done).length, total: fullTask.subtasks.length })}
                     </span>
                     <div className="flex-1 h-1.5 rounded-full bg-[#e1dfdd] dark:bg-[#3d3d3d] overflow-hidden ml-1">
                       <div
@@ -258,14 +281,14 @@ export function TaskDetailDialog({ attachment, open, onOpenChange }: TaskDetailD
         {/* Footer */}
         <div className="px-6 py-3 border-t border-[#e1dfdd] dark:border-[#3d3d3d] bg-[#faf9f8] dark:bg-[#1a1b1e] flex items-center justify-between">
           <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">
-            {fullTask?.createdAt ? `Created ${format(fullTask.createdAt, 'MMM d, yyyy')}` : 'Task attachment'}
+            {fullTask?.createdAt ? t('attachments.created', { date: format(fullTask.createdAt, 'MMM d, yyyy') }) : t('attachments.taskAttachment')}
           </span>
           <Button
             onClick={handleGoToTasks}
             className="h-8 bg-[#5b5fc7] hover:bg-[#4f52b5] text-white text-[13px] gap-1.5"
             size="sm"
           >
-            Open in Tasks <ExternalLink size={13} />
+            {t('attachments.openInTasks')} <ExternalLink size={13} />
           </Button>
         </div>
       </DialogContent>
@@ -283,6 +306,7 @@ interface DocumentDetailDialogProps {
 export function DocumentDetailDialog({ attachment, open, onOpenChange }: DocumentDetailDialogProps) {
   const navigate = useNavigate();
   const { spaceId } = useParams();
+  const { t } = useI18n();
 
   const fullDoc = documents.find(d => d.id === attachment.docId);
 
@@ -308,20 +332,24 @@ export function DocumentDetailDialog({ attachment, open, onOpenChange }: Documen
                   {(attachment.docType || fullDoc?.type) && (
                     <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[#5b5fc7]/10 text-[#5b5fc7] dark:text-[#a6a9dc] border border-[#5b5fc7]/20">
                       {(() => {
-                        const t = attachment.docType || fullDoc?.type;
-                        return t === 'doc' ? 'Document' : t === 'sheet' ? 'Spreadsheet' : 'Presentation';
+                        const docType = attachment.docType || fullDoc?.type;
+                        return docType === 'doc'
+                          ? t('attachments.docType.document')
+                          : docType === 'sheet'
+                            ? t('attachments.docType.spreadsheet')
+                            : t('attachments.docType.presentation');
                       })()}
                     </span>
                   )}
                   {(attachment.docAuthor || fullDoc?.author) && (
                     <span className="text-[12px] text-[#616161] dark:text-[#949ba4]">
-                      by {attachment.docAuthor || fullDoc?.author}
+                      {t('attachments.by', { name: attachment.docAuthor || fullDoc?.author || '' })}
                     </span>
                   )}
                 </div>
               </div>
             </div>
-            <DialogDescription className="sr-only">Document preview</DialogDescription>
+            <DialogDescription className="sr-only">{t('attachments.documentPreview')}</DialogDescription>
           </DialogHeader>
         </div>
 
@@ -330,17 +358,17 @@ export function DocumentDetailDialog({ attachment, open, onOpenChange }: Documen
           {fullDoc?.createdAt && (
             <div className="flex items-center gap-1.5 text-[11px] text-[#616161] dark:text-[#949ba4]">
               <Calendar size={12} />
-              Created {format(fullDoc.createdAt, 'MMM d, yyyy')}
+              {t('attachments.created', { date: format(fullDoc.createdAt, 'MMM d, yyyy') })}
             </div>
           )}
           {(attachment.docLastModified || fullDoc?.lastModified) && (
             <div className="flex items-center gap-1.5 text-[11px] text-[#616161] dark:text-[#949ba4]">
               <Clock size={12} />
-              Modified {format(attachment.docLastModified || fullDoc!.lastModified, 'MMM d, yyyy')}
+              {t('attachments.modified', { date: format(attachment.docLastModified || fullDoc!.lastModified, 'MMM d, yyyy') })}
             </div>
           )}
           {fullDoc?.favorite && (
-            <span className="text-[11px] text-amber-500">&#9733; Favorite</span>
+            <span className="text-[11px] text-amber-500">&#9733; {t('attachments.favorite')}</span>
           )}
         </div>
 
@@ -353,14 +381,14 @@ export function DocumentDetailDialog({ attachment, open, onOpenChange }: Documen
               ))}
               {fullDoc.content.length > 10 && (
                 <p className="text-[12px] text-[#8a8a8a] dark:text-[#6d6f78] italic mt-2">
-                  ... and {fullDoc.content.length - 10} more blocks
+                  {t('attachments.moreBlocks', { count: fullDoc.content.length - 10 })}
                 </p>
               )}
             </div>
           ) : (
             <div className="text-center py-8">
               <FileText size={32} className="mx-auto text-[#8a8a8a] dark:text-[#6d6f78] mb-2" />
-              <p className="text-[13px] text-[#616161] dark:text-[#949ba4]">Document preview not available</p>
+              <p className="text-[13px] text-[#616161] dark:text-[#949ba4]">{t('attachments.documentPreviewUnavailable')}</p>
             </div>
           )}
         </div>
@@ -368,14 +396,16 @@ export function DocumentDetailDialog({ attachment, open, onOpenChange }: Documen
         {/* Footer */}
         <div className="px-6 py-3 border-t border-[#e1dfdd] dark:border-[#3d3d3d] bg-[#faf9f8] dark:bg-[#1a1b1e] flex items-center justify-between">
           <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">
-            {fullDoc ? `${fullDoc.content?.length || 0} content blocks` : 'Document attachment'}
+            {fullDoc
+              ? t('attachments.contentBlocks', { count: fullDoc.content?.length || 0 })
+              : t('attachments.documentAttachment')}
           </span>
           <Button
             onClick={handleGoToDocuments}
             className="h-8 bg-[#5b5fc7] hover:bg-[#4f52b5] text-white text-[13px] gap-1.5"
             size="sm"
           >
-            Open in Documents <ExternalLink size={13} />
+            {t('attachments.openInDocuments')} <ExternalLink size={13} />
           </Button>
         </div>
       </DialogContent>

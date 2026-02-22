@@ -14,6 +14,7 @@ import { ImageCarouselViewer } from './ImageCarouselViewer';
 import { VideoPlayerViewer } from './VideoPlayerViewer';
 import { TaskDetailDialog, DocumentDetailDialog } from './AttachmentDetailDialogs';
 import { mockTranslate, TRANSLATION_LANGUAGES, type TranslationLanguage } from '../data/translations';
+import { type LanguageCode, useI18n } from '../context/I18nContext';
 
 
 interface MessageItemProps {
@@ -31,6 +32,19 @@ export function MessageItem({
   onMessageUpdate,
   onMessageDelete,
 }: MessageItemProps) {
+  const { t, language } = useI18n();
+  const localeMap: Record<LanguageCode, string> = {
+    en: 'en-US',
+    'zh-Hant': 'zh-TW',
+    'zh-Hans': 'zh-CN',
+    ja: 'ja-JP',
+    de: 'de-DE',
+    es: 'es-ES',
+    fr: 'fr-FR',
+    hi: 'hi-IN',
+    pl: 'pl-PL',
+  };
+  const locale = localeMap[language] || 'en-US';
   const user = users.find(u => u.id === message.userId);
   const isOwn = message.userId === currentUser.id;
 
@@ -140,7 +154,7 @@ export function MessageItem({
             className="flex items-center gap-1.5 mb-1 ml-[52px] text-[11px] text-[#5b5fc7] dark:text-[#a6a9dc]"
           >
             <Pin size={11} className="rotate-45" />
-            <span className="font-medium">Pinned</span>
+            <span className="font-medium">{t('message.pinned')}</span>
           </motion.div>
         )}
       </AnimatePresence>
@@ -155,7 +169,7 @@ export function MessageItem({
           <div className="flex items-baseline gap-2 mb-0.5">
             <span className="font-bold text-[#242424] dark:text-[#f2f3f5] text-[15px]">{user?.name}</span>
             <span className="text-xs text-[#616161] dark:text-[#949ba4] font-medium">
-              {format(message.timestamp, 'h:mm a')}
+              {new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' }).format(message.timestamp)}
             </span>
           </div>
 
@@ -180,7 +194,7 @@ export function MessageItem({
               />
               <div className="flex items-center gap-2 mt-1.5">
                 <Button size="sm" onClick={handleSaveEdit} className="h-7 bg-[#5b5fc7] hover:bg-[#4f52b5] text-white gap-1">
-                  <Check size={13} /> Save
+                  <Check size={13} /> {t('common.save')}
                 </Button>
                 <Button
                   size="sm"
@@ -188,16 +202,16 @@ export function MessageItem({
                   onClick={() => { setIsEditing(false); setEditText(message.content); }}
                   className="h-7 text-[#616161] gap-1"
                 >
-                  <X size={13} /> Cancel
+                  <X size={13} /> {t('common.cancel')}
                 </Button>
-                <span className="text-[10px] text-muted-foreground ml-1">Esc to cancel · Enter to save</span>
+                <span className="text-[10px] text-muted-foreground ml-1">{t('message.editHint')}</span>
               </div>
             </motion.div>
           ) : (
             <div className="text-[14px] text-[#2e3338] dark:text-[#dbdee1] leading-relaxed">
               <MarkdownContent content={localContent} />
               {wasEdited && (
-                <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] ml-1 italic">(edited)</span>
+                <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] ml-1 italic">({t('common.edited')})</span>
               )}
             </div>
           )}
@@ -218,7 +232,9 @@ export function MessageItem({
                     <div className="flex items-center gap-1.5">
                       <Languages size={12} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
                       <span className="text-[10px] font-semibold text-[#5b5fc7] dark:text-[#a6a9dc] uppercase tracking-wider">
-                        {translationLang ? `${translationLang.flag} Translated to ${translationLang.name}` : 'Translating...'}
+                        {translationLang
+                          ? `${translationLang.flag} ${t('message.translation.translatedTo', { language: translationLang.name })}`
+                          : t('message.translation.translating')}
                       </span>
                     </div>
                     <Button
@@ -234,7 +250,7 @@ export function MessageItem({
                   {isTranslating ? (
                     <div className="flex items-center gap-2 py-1">
                       <Loader2 size={14} className="text-[#5b5fc7] dark:text-[#a6a9dc] animate-spin" />
-                      <span className="text-[13px] text-[#616161] dark:text-[#949ba4] italic">Translating message...</span>
+                      <span className="text-[13px] text-[#616161] dark:text-[#949ba4] italic">{t('message.translation.translatingMessage')}</span>
                     </div>
                   ) : translatedContent ? (
                     <div className="text-[14px] text-[#2e3338] dark:text-[#dbdee1] leading-relaxed">
@@ -245,7 +261,7 @@ export function MessageItem({
                   {!isTranslating && translatedContent && (
                     <div className="mt-1.5 flex items-center gap-1.5">
                       <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78]">
-                        Detected: English (auto)
+                        {t('message.translation.detected', { language: t('message.translation.english') })}
                       </span>
                       <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78]">·</span>
                       <Button
@@ -254,7 +270,7 @@ export function MessageItem({
                         onClick={handleDismissTranslation}
                         className="h-auto px-1 py-0 text-[10px] font-medium text-[#5b5fc7] dark:text-[#a6a9dc] hover:underline"
                       >
-                        Show original
+                        {t('message.translation.showOriginal')}
                       </Button>
                     </div>
                   )}
@@ -333,7 +349,7 @@ export function MessageItem({
               className="mt-2 h-auto px-0 text-xs text-[#6264a7] dark:text-[#949cf7] hover:text-[#5865f2] dark:hover:text-[#a5abf7] transition-all font-bold group/thread"
             >
               <MessageSquare size={14} className="group-hover/thread:scale-110 transition-transform" />
-              <span>{message.threadCount} {message.threadCount === 1 ? 'reply' : 'replies'}</span>
+              <span>{t('message.threadReplies', { count: message.threadCount })}</span>
               {message.threadPreview && (
                 <>
                   <span className="text-[#616161] dark:text-[#6d6f78]">·</span>
@@ -373,7 +389,7 @@ export function MessageItem({
                     )}
                   />
                 </TooltipTrigger>
-                <TooltipContent side="top" sideOffset={4}>Add reaction</TooltipContent>
+                <TooltipContent side="top" sideOffset={4}>{t('message.addReaction')}</TooltipContent>
               </Tooltip>
 
               <Separator orientation="vertical" className="h-4 mx-0.5 bg-[#e1dfdd] dark:bg-[#404249]" />
@@ -391,7 +407,7 @@ export function MessageItem({
                       <MessageSquare size={15} />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="top" sideOffset={4}>Reply in thread</TooltipContent>
+                  <TooltipContent side="top" sideOffset={4}>{t('message.replyInThread')}</TooltipContent>
                 </Tooltip>
               )}
 
@@ -413,7 +429,7 @@ export function MessageItem({
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="top" sideOffset={4}>
-                  {isPinned ? 'Unpin message' : 'Pin message'}
+                  {isPinned ? t('message.unpin') : t('message.pin')}
                 </TooltipContent>
               </Tooltip>
 
@@ -436,12 +452,12 @@ export function MessageItem({
                       </Button>
                     </PopoverTrigger>
                   </TooltipTrigger>
-                  <TooltipContent side="top" sideOffset={4}>Seen by</TooltipContent>
+                  <TooltipContent side="top" sideOffset={4}>{t('message.seenBy')}</TooltipContent>
                 </Tooltip>
                 <PopoverContent side="top" align="center" className="w-56 p-0">
                   <div className="p-3 border-b border-[#e1dfdd] dark:border-[#404249]">
                     <p className="text-xs font-bold text-[#242424] dark:text-[#f2f3f5]">
-                      Seen by {seenUsers.length > 0 ? seenUsers.length : 0}
+                      {t('message.seenByCount', { count: seenUsers.length > 0 ? seenUsers.length : 0 })}
                     </p>
                   </div>
                   <div className="max-h-48 overflow-y-auto p-2">
@@ -457,7 +473,7 @@ export function MessageItem({
                         )} />
                       </div>
                     )) : (
-                      <p className="text-xs text-muted-foreground text-center py-3">No read receipts yet</p>
+                      <p className="text-xs text-muted-foreground text-center py-3">{t('message.noReadReceipts')}</p>
                     )}
                   </div>
                 </PopoverContent>
@@ -482,7 +498,7 @@ export function MessageItem({
                       </Button>
                     </PopoverTrigger>
                   </TooltipTrigger>
-                  <TooltipContent side="top" sideOffset={4}>Translate message</TooltipContent>
+                  <TooltipContent side="top" sideOffset={4}>{t('message.translate')}</TooltipContent>
                 </Tooltip>
                 <PopoverContent side="top" align="end" className="w-56 p-0">
                   <TranslateLanguagePicker
@@ -509,7 +525,7 @@ export function MessageItem({
                         <Pencil size={14} />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent side="top" sideOffset={4}>Edit message</TooltipContent>
+                    <TooltipContent side="top" sideOffset={4}>{t('message.edit')}</TooltipContent>
                   </Tooltip>
                 </>
               )}
@@ -527,7 +543,7 @@ export function MessageItem({
                       <Trash2 size={14} />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="top" sideOffset={4}>Delete message</TooltipContent>
+                  <TooltipContent side="top" sideOffset={4}>{t('message.delete')}</TooltipContent>
                 </Tooltip>
               )}
             </motion.div>
@@ -575,19 +591,19 @@ function getFileIconColor(mimeType?: string, name?: string) {
   return 'text-[#5b5fc7] dark:text-[#a6a9dc]';
 }
 
-const TASK_STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  'backlog': { label: 'Backlog', color: 'bg-[#858585]/10 text-[#858585] border-[#858585]/20', icon: <Clock size={12} /> },
-  'todo': { label: 'To Do', color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20', icon: <CircleDot size={12} /> },
-  'in-progress': { label: 'In Progress', color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20', icon: <Zap size={12} /> },
-  'in-review': { label: 'In Review', color: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20', icon: <Eye size={12} /> },
-  'done': { label: 'Done', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20', icon: <CheckCircle2 size={12} /> },
+const TASK_STATUS_CONFIG: Record<string, { labelKey: string; color: string; icon: React.ReactNode }> = {
+  'backlog': { labelKey: 'tasks.status.backlog', color: 'bg-[#858585]/10 text-[#858585] border-[#858585]/20', icon: <Clock size={12} /> },
+  'todo': { labelKey: 'tasks.status.todo', color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20', icon: <CircleDot size={12} /> },
+  'in-progress': { labelKey: 'tasks.status.inProgress', color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20', icon: <Zap size={12} /> },
+  'in-review': { labelKey: 'tasks.status.inReview', color: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20', icon: <Eye size={12} /> },
+  'done': { labelKey: 'tasks.status.done', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20', icon: <CheckCircle2 size={12} /> },
 };
 
-const TASK_PRIORITY_CONFIG: Record<string, { label: string; color: string }> = {
-  'critical': { label: 'Critical', color: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20' },
-  'high': { label: 'High', color: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20' },
-  'medium': { label: 'Medium', color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' },
-  'low': { label: 'Low', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
+const TASK_PRIORITY_CONFIG: Record<string, { labelKey: string; color: string }> = {
+  'critical': { labelKey: 'tasks.priority.critical', color: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20' },
+  'high': { labelKey: 'tasks.priority.high', color: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20' },
+  'medium': { labelKey: 'tasks.priority.medium', color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' },
+  'low': { labelKey: 'tasks.priority.low', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
 };
 
 function getTaskTypeIcon(type?: string) {
@@ -800,6 +816,7 @@ function VideoAttachmentCard({ video }: { video: MessageAttachment }) {
 
 // ─── Task Attachment Card (with dialog) ───
 function TaskAttachmentCard({ task }: { task: MessageAttachment }) {
+  const { t } = useI18n();
   const [dialogOpen, setDialogOpen] = useState(false);
   const statusCfg = TASK_STATUS_CONFIG[task.taskStatus || 'todo'];
   const prioCfg = TASK_PRIORITY_CONFIG[task.taskPriority || 'medium'];
@@ -819,14 +836,14 @@ function TaskAttachmentCard({ task }: { task: MessageAttachment }) {
             )}
             <span className={cn('inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border', statusCfg.color)}>
               {statusCfg.icon}
-              {statusCfg.label}
+              {t(statusCfg.labelKey)}
             </span>
           </div>
           <p className="text-[13px] font-medium text-[#242424] dark:text-[#f2f3f5] truncate">{task.name}</p>
           <div className="flex items-center gap-2 mt-1.5">
             <span className={cn('inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold border', prioCfg.color)}>
               {task.taskPriority === 'critical' && <AlertTriangle size={10} className="mr-0.5" />}
-              {prioCfg.label}
+              {t(prioCfg.labelKey)}
             </span>
             {task.taskAssignee && (
               <span className="text-[11px] text-[#616161] dark:text-[#949ba4] truncate">{task.taskAssignee}</span>
@@ -843,6 +860,7 @@ function TaskAttachmentCard({ task }: { task: MessageAttachment }) {
 // ─── Document Attachment Card (with dialog) ───
 function DocumentAttachmentCard({ doc }: { doc: MessageAttachment }) {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { t } = useI18n();
 
   return (
     <>
@@ -857,7 +875,11 @@ function DocumentAttachmentCard({ doc }: { doc: MessageAttachment }) {
           <div className="flex items-center gap-2 mt-0.5">
             {doc.docType && (
               <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#5b5fc7]/10 text-[#5b5fc7] dark:text-[#a6a9dc] border border-[#5b5fc7]/20">
-                {doc.docType === 'doc' ? 'Document' : doc.docType === 'sheet' ? 'Sheet' : 'Presentation'}
+                {doc.docType === 'doc'
+                  ? t('attachments.docType.document')
+                  : doc.docType === 'sheet'
+                    ? t('attachments.docType.spreadsheet')
+                    : t('attachments.docType.presentation')}
               </span>
             )}
             {doc.docAuthor && (
@@ -871,7 +893,7 @@ function DocumentAttachmentCard({ doc }: { doc: MessageAttachment }) {
           </div>
         </div>
         <span className="text-[11px] font-medium text-[#5b5fc7] dark:text-[#a6a9dc] shrink-0 flex items-center gap-1">
-          Open <ArrowRight size={12} />
+          {t('common.open')} <ArrowRight size={12} />
         </span>
       </motion.div>
       <DocumentDetailDialog attachment={doc} open={dialogOpen} onOpenChange={setDialogOpen} />
@@ -891,9 +913,10 @@ function TranslateLanguagePicker({
   onDismiss: () => void;
   hasTranslation: boolean;
 }) {
+  const { t } = useI18n();
   return (
     <div className="p-2">
-      <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5 px-1">Translate to</p>
+      <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5 px-1">{t('message.translateTo')}</p>
       <div className="grid grid-cols-2 gap-1">
         {TRANSLATION_LANGUAGES.map(lang => (
           <Button

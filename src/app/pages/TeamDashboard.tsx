@@ -13,6 +13,7 @@ import {
   type MembersData,
   type LinksData,
 } from '../data/mockData';
+import { useI18n } from '../context/I18nContext';
 
 // ─── Icon mapping ───
 const dashboardIcons: Record<string, LucideIcon> = {
@@ -90,13 +91,14 @@ function MetricWidget({ widget }: { widget: DashboardWidget }) {
 }
 
 function ListWidget({ widget }: { widget: DashboardWidget }) {
+  const { t } = useI18n();
   const data = widget.data as ListData;
   const c = colorMap[widget.color];
   return (
     <div className={`bg-white dark:bg-[#252525] rounded-xl border ${c.border} shadow-sm overflow-hidden ${widget.wide ? 'lg:col-span-2 xl:col-span-3' : ''}`}>
       <div className={`px-4 py-3 border-b border-[#f0f0f0] dark:border-[#333] flex items-center justify-between ${c.light}`}>
         <h3 className="font-semibold text-[13px] text-[#242424] dark:text-[#f0f0f0]">{widget.title}</h3>
-        <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">{data.items.length} items</span>
+        <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">{t('teamDashboard.itemsCount', { count: data.items.length })}</span>
       </div>
       <div className="divide-y divide-[#f0f0f0] dark:divide-[#333]">
         {data.items.map((item) => (
@@ -159,6 +161,7 @@ function ProgressWidget({ widget }: { widget: DashboardWidget }) {
 }
 
 function MembersWidget({ widget }: { widget: DashboardWidget }) {
+  const { t } = useI18n();
   const data = widget.data as MembersData;
   const c = colorMap[widget.color];
   const statusDot: Record<string, string> = {
@@ -171,7 +174,7 @@ function MembersWidget({ widget }: { widget: DashboardWidget }) {
     <div className={`bg-white dark:bg-[#252525] rounded-xl border ${c.border} shadow-sm overflow-hidden ${widget.wide ? 'lg:col-span-2 xl:col-span-3' : ''}`}>
       <div className={`px-4 py-3 border-b border-[#f0f0f0] dark:border-[#333] flex items-center justify-between ${c.light}`}>
         <h3 className="font-semibold text-[13px] text-[#242424] dark:text-[#f0f0f0]">{widget.title}</h3>
-        <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">{data.members.length} members</span>
+        <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">{t('teamDashboard.membersCount', { count: data.members.length })}</span>
       </div>
       <div className="divide-y divide-[#f0f0f0] dark:divide-[#333]">
         {data.members.map((m, i) => (
@@ -241,6 +244,7 @@ function WidgetRenderer({ widget }: { widget: DashboardWidget }) {
 
 // ─── Main Page ───
 export function TeamDashboard() {
+  const { t } = useI18n();
   const { spaceId, dashboardId } = useParams();
 
   const space = spaces.find(s => s.id === spaceId);
@@ -250,8 +254,8 @@ export function TeamDashboard() {
     return (
       <div className="flex-1 flex items-center justify-center bg-white dark:bg-[#1f1f1f]">
         <div className="text-center">
-          <p className="text-[#242424] dark:text-[#f0f0f0] font-medium mb-1">Dashboard not found</p>
-          <p className="text-sm text-[#616161] dark:text-[#8a8a8a]">The dashboard you're looking for doesn't exist.</p>
+          <p className="text-[#242424] dark:text-[#f0f0f0] font-medium mb-1">{t('teamDashboard.notFoundTitle')}</p>
+          <p className="text-sm text-[#616161] dark:text-[#8a8a8a]">{t('teamDashboard.notFoundSubtitle')}</p>
         </div>
       </div>
     );

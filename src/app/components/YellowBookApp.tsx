@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from "@/lib/utils";
+import { useI18n } from '../context/I18nContext';
 
 // ─── Types ───
 
@@ -128,6 +129,7 @@ function OrgTreeNode({
   selectedId: string | null;
   scopeRootId: string;
 }) {
+  const { t } = useI18n();
   const isExpanded = expandedNodes.has(node.person.id);
   const hasChildren = node.children.length > 0;
   const isSelected = selectedId === node.person.id;
@@ -181,7 +183,7 @@ function OrgTreeNode({
               {node.person.name}
             </span>
             {node.person.id === scopeRootId && (
-              <span className="text-[8px] px-1 py-0.5 rounded bg-[#D4A017]/10 text-[#D4A017] font-bold">YOU</span>
+              <span className="text-[8px] px-1 py-0.5 rounded bg-[#D4A017]/10 text-[#D4A017] font-bold">{t('yellowBook.youBadge')}</span>
             )}
           </div>
           <p className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] truncate">{node.person.title}</p>
@@ -219,6 +221,7 @@ function OrgTreeNode({
 // ─── Person Detail Card ───
 
 function PersonDetail({ person, onNavigateUp, onClose }: { person: Person; onNavigateUp: (id: string) => void; onClose: () => void }) {
+  const { t } = useI18n();
   const manager = person.managerId ? people.find(p => p.id === person.managerId) : null;
   const directReports = people.filter(p => p.managerId === person.id);
 
@@ -249,16 +252,16 @@ function PersonDetail({ person, onNavigateUp, onClose }: { person: Person; onNav
               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#5b5fc7]/10 text-[#5b5fc7] dark:text-[#a6a9dc] font-medium">{person.team}</span>
             </div>
           </div>
-          <button onClick={onClose} className="text-[11px] text-[#8a8a8a] hover:text-[#D4A017] transition-colors">Close</button>
+          <button onClick={onClose} className="text-[11px] text-[#8a8a8a] hover:text-[#D4A017] transition-colors">{t('common.close')}</button>
         </div>
 
         {/* Quick actions */}
         <div className="flex items-center gap-2 mt-4">
           {[
-            { icon: MessageSquare, label: 'Message', color: 'bg-[#5b5fc7] text-white' },
-            { icon: Mail, label: 'Email', color: 'bg-[#5b5fc7]/10 text-[#5b5fc7] dark:text-[#a6a9dc]' },
-            { icon: Phone, label: 'Call', color: 'bg-[#5b5fc7]/10 text-[#5b5fc7] dark:text-[#a6a9dc]' },
-            { icon: Calendar, label: 'Schedule', color: 'bg-[#5b5fc7]/10 text-[#5b5fc7] dark:text-[#a6a9dc]' },
+            { icon: MessageSquare, label: t('yellowBook.action.message'), color: 'bg-[#5b5fc7] text-white' },
+            { icon: Mail, label: t('yellowBook.action.email'), color: 'bg-[#5b5fc7]/10 text-[#5b5fc7] dark:text-[#a6a9dc]' },
+            { icon: Phone, label: t('yellowBook.action.call'), color: 'bg-[#5b5fc7]/10 text-[#5b5fc7] dark:text-[#a6a9dc]' },
+            { icon: Calendar, label: t('yellowBook.action.schedule'), color: 'bg-[#5b5fc7]/10 text-[#5b5fc7] dark:text-[#a6a9dc]' },
           ].map(a => (
             <button
               key={a.label}
@@ -274,7 +277,7 @@ function PersonDetail({ person, onNavigateUp, onClose }: { person: Person; onNav
       <div className="border-t border-[#e1dfdd]/50 dark:border-[#3d3d3d]/50 px-5 py-3 space-y-3">
         {/* Contact info */}
         <div className="space-y-1.5">
-          <p className="text-[9px] text-[#8a8a8a] uppercase tracking-wider">Contact</p>
+          <p className="text-[9px] text-[#8a8a8a] uppercase tracking-wider">{t('yellowBook.contact')}</p>
           {[
             { icon: Mail, value: person.email },
             { icon: Phone, value: person.phone },
@@ -290,7 +293,7 @@ function PersonDetail({ person, onNavigateUp, onClose }: { person: Person; onNav
 
         {/* Skills */}
         <div>
-          <p className="text-[9px] text-[#8a8a8a] uppercase tracking-wider mb-1.5">Skills & Expertise</p>
+          <p className="text-[9px] text-[#8a8a8a] uppercase tracking-wider mb-1.5">{t('yellowBook.skills')}</p>
           <div className="flex flex-wrap gap-1.5">
             {person.skills.map(s => (
               <span key={s} className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#D4A017]/8 text-[#D4A017] dark:bg-[#D4A017]/15 dark:text-[#f0c040]">
@@ -303,7 +306,7 @@ function PersonDetail({ person, onNavigateUp, onClose }: { person: Person; onNav
         {/* Start date */}
         <div className="flex items-center gap-2 text-[11px] text-[#8a8a8a]">
           <Clock size={12} />
-          <span>Joined {person.startDate}</span>
+          <span>{t('yellowBook.joined', { date: person.startDate })}</span>
         </div>
       </div>
 
@@ -312,7 +315,7 @@ function PersonDetail({ person, onNavigateUp, onClose }: { person: Person; onNav
         {/* Manager */}
         {manager && (
           <div className="mb-3">
-            <p className="text-[9px] text-[#8a8a8a] uppercase tracking-wider mb-1.5 flex items-center gap-1"><ArrowUp size={9} /> Reports to</p>
+            <p className="text-[9px] text-[#8a8a8a] uppercase tracking-wider mb-1.5 flex items-center gap-1"><ArrowUp size={9} /> {t('yellowBook.reportsTo')}</p>
             <button
               onClick={() => onNavigateUp(manager.id)}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-[#faf9f8] dark:bg-[#1e1f22] hover:bg-[#f0f0f0] dark:hover:bg-[#2a2a2a] transition-colors text-left"
@@ -335,7 +338,7 @@ function PersonDetail({ person, onNavigateUp, onClose }: { person: Person; onNav
         {/* Direct reports */}
         {directReports.length > 0 && (
           <div>
-            <p className="text-[9px] text-[#8a8a8a] uppercase tracking-wider mb-1.5 flex items-center gap-1"><ArrowDown size={9} /> Direct Reports ({directReports.length})</p>
+            <p className="text-[9px] text-[#8a8a8a] uppercase tracking-wider mb-1.5 flex items-center gap-1"><ArrowDown size={9} /> {t('yellowBook.directReports', { count: directReports.length })}</p>
             <div className="space-y-1">
               {directReports.map(r => (
                 <button
@@ -370,6 +373,7 @@ function PersonDetail({ person, onNavigateUp, onClose }: { person: Person; onNav
 // ─── Main Component ───
 
 export function YellowBookApp() {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<TabId>('org-tree');
   const [search, setSearch] = useState('');
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
@@ -429,8 +433,8 @@ export function YellowBookApp() {
   const teams = [...new Set(people.map(p => p.team))];
 
   const tabs: { id: TabId; label: string; icon: typeof Users }[] = [
-    { id: 'org-tree', label: 'Org Tree', icon: Building2 },
-    { id: 'search', label: 'People Search', icon: Search },
+    { id: 'org-tree', label: t('yellowBook.tab.orgTree'), icon: Building2 },
+    { id: 'search', label: t('yellowBook.tab.peopleSearch'), icon: Search },
   ];
 
   return (
@@ -444,15 +448,15 @@ export function YellowBookApp() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-[#242424] dark:text-[#f0f0f0]">Yellow Book</span>
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#D4A017]/10 text-[#D4A017] dark:bg-[#D4A017]/20 dark:text-[#f0c040] font-bold">Company Directory</span>
+                <span className="text-sm font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('yellowBook.title')}</span>
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#D4A017]/10 text-[#D4A017] dark:bg-[#D4A017]/20 dark:text-[#f0c040] font-bold">{t('yellowBook.subtitle')}</span>
               </div>
               <div className="flex items-center gap-3 mt-0.5 text-[10px] text-[#8a8a8a] dark:text-[#6d6f78]">
-                <span className="flex items-center gap-1"><User size={9} /> {totalPeople} people</span>
+                <span className="flex items-center gap-1"><User size={9} /> {t('yellowBook.count.people', { count: totalPeople })}</span>
                 <span>·</span>
-                <span className="flex items-center gap-1"><Building2 size={9} /> {departments.length} departments</span>
+                <span className="flex items-center gap-1"><Building2 size={9} /> {t('yellowBook.count.departments', { count: departments.length })}</span>
                 <span>·</span>
-                <span className="flex items-center gap-1"><Users size={9} /> {teams.length} teams</span>
+                <span className="flex items-center gap-1"><Users size={9} /> {t('yellowBook.count.teams', { count: teams.length })}</span>
               </div>
             </div>
           </div>
@@ -461,7 +465,7 @@ export function YellowBookApp() {
             <input
               value={search}
               onChange={e => { setSearch(e.target.value); if (e.target.value) setActiveTab('search'); }}
-              placeholder="Search people, skills, teams..."
+              placeholder={t('yellowBook.searchPlaceholder')}
               className="pl-8 pr-3 py-1.5 text-[12px] rounded-lg border border-[#e1dfdd] dark:border-[#3d3d3d] bg-[#faf9f8] dark:bg-[#1e1f22] text-[#242424] dark:text-[#f0f0f0] placeholder-[#b9bbbe] w-[240px] focus:outline-none focus:ring-1 focus:ring-[#D4A017]/50"
             />
           </div>
@@ -496,20 +500,20 @@ export function YellowBookApp() {
               <div className="px-4 py-2.5 border-b border-[#e1dfdd]/50 dark:border-[#3d3d3d]/50 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Building2 size={13} className="text-[#D4A017]" />
-                  <span className="text-[12px] font-medium text-[#242424] dark:text-[#f0f0f0]">Organization Hierarchy</span>
+                  <span className="text-[12px] font-medium text-[#242424] dark:text-[#f0f0f0]">{t('yellowBook.orgHierarchy')}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => setExpandedNodes(new Set(people.map(p => p.id)))}
                     className="text-[10px] px-2 py-0.5 rounded text-[#8a8a8a] hover:bg-[#f0f0f0] dark:hover:bg-[#333] transition-colors"
                   >
-                    Expand all
+                    {t('yellowBook.expandAll')}
                   </button>
                   <button
                     onClick={() => setExpandedNodes(new Set())}
                     className="text-[10px] px-2 py-0.5 rounded text-[#8a8a8a] hover:bg-[#f0f0f0] dark:hover:bg-[#333] transition-colors"
                   >
-                    Collapse
+                    {t('yellowBook.collapse')}
                   </button>
                 </div>
               </div>
@@ -528,7 +532,7 @@ export function YellowBookApp() {
               <div className="px-4 py-2 border-t border-[#e1dfdd]/50 dark:border-[#3d3d3d]/50 flex items-center gap-2 bg-[#D4A017]/5 dark:bg-[#D4A017]/8">
                 <Award size={12} className="text-[#D4A017] shrink-0" />
                 <p className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78]">
-                  Viewing as <span className="font-medium text-[#D4A017]">Bob Johnson</span> · You can navigate up and down the org tree from your position
+                  {t('yellowBook.scopeNotice', { name: people.find(p => p.id === scopeRootId)?.name || '—' })}
                 </p>
               </div>
             </>
@@ -539,7 +543,9 @@ export function YellowBookApp() {
               <div className="px-4 py-2.5 border-b border-[#e1dfdd]/50 dark:border-[#3d3d3d]/50 flex items-center gap-2">
                 <Search size={13} className="text-[#D4A017]" />
                 <span className="text-[12px] font-medium text-[#242424] dark:text-[#f0f0f0]">
-                  {search ? `Results for "${search}" — ${searchResults.length} found` : 'All People'}
+                  {search
+                    ? t('yellowBook.searchResults', { query: search, count: searchResults.length })
+                    : t('yellowBook.allPeople')}
                 </span>
               </div>
               <div className="py-1 max-h-[520px] overflow-y-auto scrollbar-on-hover">
@@ -570,7 +576,7 @@ export function YellowBookApp() {
                       <div className="flex items-center gap-2">
                         <span className="text-[12px] font-medium text-[#242424] dark:text-[#f0f0f0] truncate">{p.name}</span>
                         {p.id === scopeRootId && (
-                          <span className="text-[8px] px-1 py-0.5 rounded bg-[#D4A017]/10 text-[#D4A017] font-bold">YOU</span>
+                          <span className="text-[8px] px-1 py-0.5 rounded bg-[#D4A017]/10 text-[#D4A017] font-bold">{t('yellowBook.youBadge')}</span>
                         )}
                       </div>
                       <p className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] truncate">{p.title} · {p.team}</p>
@@ -588,8 +594,8 @@ export function YellowBookApp() {
                 {search && searchResults.length === 0 && (
                   <div className="px-4 py-12 text-center">
                     <Search size={28} className="text-[#ddd] dark:text-[#555] mx-auto mb-2" />
-                    <p className="text-[13px] text-[#8a8a8a]">No people found for "{search}"</p>
-                    <p className="text-[11px] text-[#bbb] mt-1">Try searching by name, title, team, or skill</p>
+                    <p className="text-[13px] text-[#8a8a8a]">{t('yellowBook.noPeopleFound', { query: search })}</p>
+                    <p className="text-[11px] text-[#bbb] mt-1">{t('yellowBook.searchHint')}</p>
                   </div>
                 )}
               </div>
@@ -614,8 +620,8 @@ export function YellowBookApp() {
             >
               <div className="text-center">
                 <User size={32} className="text-[#ddd] dark:text-[#555] mx-auto mb-2" />
-                <p className="text-[13px] text-[#8a8a8a]">Select a person to view their profile</p>
-                <p className="text-[11px] text-[#bbb] mt-1">Browse the org tree or search by name</p>
+                <p className="text-[13px] text-[#8a8a8a]">{t('yellowBook.emptyTitle')}</p>
+                <p className="text-[11px] text-[#bbb] mt-1">{t('yellowBook.emptySubtitle')}</p>
               </div>
             </motion.div>
           )}

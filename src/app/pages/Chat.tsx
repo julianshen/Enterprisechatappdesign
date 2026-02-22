@@ -6,9 +6,11 @@ import { MessageItem } from '../components/MessageItem';
 import { MessageThread } from '../components/MessageThread';
 import { useState, useRef, useCallback } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
+import { useI18n } from '../context/I18nContext';
 
 export function Chat() {
   const { chatType, chatId } = useParams();
+  const { t } = useI18n();
   const [activeThread, setActiveThread] = useState<string | null>(null);
 
   const isGroup = chatType === 'group';
@@ -59,8 +61,18 @@ export function Chat() {
   const chatUser = isDM ? users.find(u => u.id === chatId) : null;
   const groupChat = isGroup ? groupChats.find(g => g.id === chatId) : null;
 
-  const chatName = isDM ? chatUser?.name : isGroup ? groupChat?.name : 'Chat';
-  const chatSubtitle = isGroup ? `${groupChat?.members.length} members` : chatUser?.status;
+  const chatName = isDM ? chatUser?.name : isGroup ? groupChat?.name : t('channel.chatTitle');
+  const statusLabelMap: Record<string, string> = {
+    online: t('sidebar.status.available'),
+    away: t('sidebar.status.away'),
+    busy: t('sidebar.status.busy'),
+    offline: t('sidebar.status.offline'),
+  };
+  const chatSubtitle = isGroup
+    ? t('chat.membersCount', { count: groupChat?.members.length ?? 0 })
+    : chatUser?.status
+    ? statusLabelMap[chatUser.status] || chatUser.status
+    : undefined;
 
   const handleMessageUpdate = (updated: Message) => {
     setChatMessages(prev => prev.map(m => m.id === updated.id ? updated : m));
@@ -155,8 +167,8 @@ export function Chat() {
           </div>
           <div className="flex items-center gap-1">
             {[
-              { icon: <Phone size={18} />, label: 'Audio call' },
-              { icon: <Video size={18} />, label: 'Video call' },
+              { icon: <Phone size={18} />, label: t('chat.audioCall') },
+              { icon: <Video size={18} />, label: t('chat.videoCall') },
             ].map(btn => (
               <Tooltip key={btn.label}>
                 <TooltipTrigger asChild>
@@ -169,8 +181,8 @@ export function Chat() {
             ))}
             <Separator orientation="vertical" className="mx-1 h-6 bg-[#e1dfdd] dark:bg-[#3d3d3d]" />
             {[
-              { icon: <Info size={18} />, label: 'Info' },
-              { icon: <MoreHorizontal size={18} />, label: 'More' },
+              { icon: <Info size={18} />, label: t('chat.info') },
+              { icon: <MoreHorizontal size={18} />, label: t('chat.more') },
             ].map(btn => (
               <Tooltip key={btn.label}>
                 <TooltipTrigger asChild>
@@ -211,8 +223,8 @@ export function Chat() {
               {chatName}
             </h3>
             <p className="text-[15px] text-[#616161] dark:text-[#b9bbbe] leading-relaxed">
-              {isDM && `This is the beginning of your direct message history with ${chatUser?.name}.`}
-              {isGroup && `This is the beginning of the ${groupChat?.name} group chat.`}
+              {isDM && t('chat.startDM', { name: chatUser?.name ?? '' })}
+              {isGroup && t('chat.startGroup', { name: groupChat?.name ?? '' })}
             </p>
           </motion.div>
 
@@ -240,12 +252,12 @@ export function Chat() {
         >
           <div className="border border-[#e1dfdd] dark:border-[#5a5a5a] rounded-xl focus-within:border-[#6264a7] dark:focus-within:border-[#5865f2] bg-white dark:bg-[#383a40] shadow-lg transition-all focus-within:shadow-xl px-4 py-3">
             <RichMessageInput
-              placeholder={`Message ${chatName}`}
+              placeholder={t('chat.messagePlaceholder', { name: chatName })}
               onSend={handleSendMessage}
               extraButtons={
                 <>
                   {[
-                    { icon: <Paperclip size={15} />, label: 'Attach file' },
+                    { icon: <Paperclip size={15} />, label: t('chat.attachFile') },
                   ].map(btn => (
                     <Tooltip key={btn.label}>
                       <TooltipTrigger asChild>

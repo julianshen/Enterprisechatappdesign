@@ -10,6 +10,7 @@ import {
   type AppIntegration, type AppCategory,
 } from '../data/appData';
 import { spaces } from '../data/mockData';
+import { useI18n } from '../context/I18nContext';
 
 // ─── Category colors ───
 const catColors: Record<AppCategory, { bg: string; text: string; border: string }> = {
@@ -21,6 +22,16 @@ const catColors: Record<AppCategory, { bg: string; text: string; border: string 
   Analytics:          { bg: 'bg-[#f3eef9] dark:bg-[#8764b8]/15', text: 'text-[#8764b8] dark:text-[#c49ded]', border: 'border-[#8764b8]/20' },
   Security:           { bg: 'bg-[#fef7ec] dark:bg-[#d4820c]/15', text: 'text-[#d4820c] dark:text-[#f0b850]', border: 'border-[#d4820c]/20' },
   AI:                 { bg: 'bg-[#edf7f0] dark:bg-[#10A37F]/15', text: 'text-[#10A37F] dark:text-[#57dba8]', border: 'border-[#10A37F]/20' },
+};
+const categoryKeyMap: Record<AppCategory, string> = {
+  DevOps: 'devOps',
+  'Project Management': 'projectManagement',
+  Productivity: 'productivity',
+  Design: 'design',
+  Communication: 'communication',
+  Analytics: 'analytics',
+  Security: 'security',
+  AI: 'ai',
 };
 
 function formatInstalls(n: number): string {
@@ -62,6 +73,7 @@ function getMockFAQs(_appId: string): { q: string; a: string }[] {
 
 // ─── Reviews Section Component ───
 function ReviewsSection({ app }: { app: AppIntegration }) {
+  const { t } = useI18n();
   const [userRating, setUserRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [reviewText, setReviewText] = useState('');
@@ -88,7 +100,7 @@ function ReviewsSection({ app }: { app: AppIntegration }) {
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
       rating: userRating,
       comment: reviewText.trim(),
-      date: 'Just now',
+      date: t('appStore.reviews.justNow'),
       helpful: 0,
     };
     setReviews(prev => [newReview, ...prev]);
@@ -114,7 +126,7 @@ function ReviewsSection({ app }: { app: AppIntegration }) {
       <div className="px-5 py-4 border-b border-[#f0f0f0] dark:border-[#333] bg-[#faf9f8] dark:bg-[#1e1f22]">
         <h3 className="font-semibold text-sm text-[#242424] dark:text-[#f0f0f0] flex items-center gap-2">
           <MessageCircle size={15} className="text-[#5b5fc7]" />
-          Ratings & Reviews
+          {t('appStore.reviews.title')}
         </h3>
       </div>
       <div className="p-5 space-y-6">
@@ -127,7 +139,7 @@ function ReviewsSection({ app }: { app: AppIntegration }) {
                 <Star key={s} size={14} className={s <= Math.round(avgRating) ? 'text-[#d4820c] fill-[#d4820c]' : 'text-[#e1dfdd] dark:text-[#3d3d3d]'} />
               ))}
             </div>
-            <p className="text-[11px] text-[#8a8a8a] mt-1">{reviews.length} reviews</p>
+            <p className="text-[11px] text-[#8a8a8a] mt-1">{t('appStore.reviews.count', { count: reviews.length })}</p>
           </div>
           <div className="flex-1 space-y-1.5">
             {[5, 4, 3, 2, 1].map(star => {
@@ -148,24 +160,24 @@ function ReviewsSection({ app }: { app: AppIntegration }) {
         </div>
         {/* Write Review */}
         <div className="border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-xl p-4">
-          <h4 className="text-sm font-medium text-[#242424] dark:text-[#f0f0f0] mb-3">Write a Review</h4>
+          <h4 className="text-sm font-medium text-[#242424] dark:text-[#f0f0f0] mb-3">{t('appStore.reviews.writeTitle')}</h4>
           <div className="flex items-center gap-1 mb-3">
-            <span className="text-xs text-[#616161] dark:text-[#8a8a8a] mr-2">Your rating:</span>
+            <span className="text-xs text-[#616161] dark:text-[#8a8a8a] mr-2">{t('appStore.reviews.yourRating')}</span>
             {[1, 2, 3, 4, 5].map(s => (
               <button key={s} onMouseEnter={() => setHoverRating(s)} onMouseLeave={() => setHoverRating(0)} onClick={() => setUserRating(s)} className="transition-transform hover:scale-110">
                 <Star size={22} className={`transition-colors ${s <= (hoverRating || userRating) ? 'text-[#d4820c] fill-[#d4820c]' : 'text-[#e1dfdd] dark:text-[#3d3d3d]'}`} />
               </button>
             ))}
           </div>
-          <textarea value={reviewText} onChange={e => setReviewText(e.target.value)} placeholder="Share your experience with this app..." rows={3} className="w-full px-3 py-2.5 bg-[#faf9f8] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg text-sm text-[#242424] dark:text-[#e0e0e0] placeholder-[#b9bbbe] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/50 transition-all resize-none" />
+          <textarea value={reviewText} onChange={e => setReviewText(e.target.value)} placeholder={t('appStore.reviews.placeholder')} rows={3} className="w-full px-3 py-2.5 bg-[#faf9f8] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg text-sm text-[#242424] dark:text-[#e0e0e0] placeholder-[#b9bbbe] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/50 transition-all resize-none" />
           <div className="flex items-center justify-between mt-2">
             {submitted ? (
-              <span className="text-xs text-[#237b4b] dark:text-[#57ab5a] font-medium flex items-center gap-1"><CheckCircle2 size={13} /> Review submitted!</span>
+              <span className="text-xs text-[#237b4b] dark:text-[#57ab5a] font-medium flex items-center gap-1"><CheckCircle2 size={13} /> {t('appStore.reviews.submitted')}</span>
             ) : (
-              <span className="text-[10px] text-[#8a8a8a]">{userRating > 0 ? `${userRating}/5 stars selected` : 'Select a rating'}</span>
+              <span className="text-[10px] text-[#8a8a8a]">{userRating > 0 ? t('appStore.reviews.selectedRating', { count: userRating }) : t('appStore.reviews.selectRating')}</span>
             )}
             <button onClick={handleSubmit} disabled={!userRating || !reviewText.trim()} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${userRating && reviewText.trim() ? 'bg-[#5b5fc7] hover:bg-[#4f52b5] text-white shadow-sm' : 'bg-[#f0f0f0] dark:bg-[#333] text-[#b9bbbe] cursor-not-allowed'}`}>
-              <Send size={13} /> Submit
+              <Send size={13} /> {t('common.submit')}
             </button>
           </div>
         </div>
@@ -190,7 +202,7 @@ function ReviewsSection({ app }: { app: AppIntegration }) {
               <p className="text-sm text-[#424242] dark:text-[#c8c8c8] ml-11">{review.comment}</p>
               <div className="ml-11 mt-2">
                 <button onClick={() => toggleHelpful(review.id)} className={`flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full transition-colors ${helpfulIds.has(review.id) ? 'bg-[#5b5fc7]/10 text-[#5b5fc7] dark:bg-[#5b5fc7]/20 dark:text-[#a6a9dc]' : 'text-[#8a8a8a] hover:bg-[#f0f0f0] dark:hover:bg-[#333] hover:text-[#424242] dark:hover:text-[#c8c8c8]'}`}>
-                  <ThumbsUp size={11} /> Helpful ({review.helpful})
+                  <ThumbsUp size={11} /> {t('appStore.reviews.helpful', { count: review.helpful })}
                 </button>
               </div>
             </div>
@@ -203,6 +215,7 @@ function ReviewsSection({ app }: { app: AppIntegration }) {
 
 // ─── Help Section Component ───
 function HelpSection({ app }: { app: AppIntegration }) {
+  const { t } = useI18n();
   const faqs = useMemo(() => getMockFAQs(app.id), [app.id]);
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const [helpQuestion, setHelpQuestion] = useState('');
@@ -220,13 +233,13 @@ function HelpSection({ app }: { app: AppIntegration }) {
       <div className="px-5 py-4 border-b border-[#f0f0f0] dark:border-[#333] bg-[#faf9f8] dark:bg-[#1e1f22]">
         <h3 className="font-semibold text-sm text-[#242424] dark:text-[#f0f0f0] flex items-center gap-2">
           <HelpCircle size={15} className="text-[#0078d4]" />
-          Help & Support
+          {t('appStore.help.title')}
         </h3>
       </div>
       <div className="p-5 space-y-6">
         {/* FAQ */}
         <div>
-          <h4 className="text-sm font-medium text-[#242424] dark:text-[#f0f0f0] mb-3">Frequently Asked Questions</h4>
+          <h4 className="text-sm font-medium text-[#242424] dark:text-[#f0f0f0] mb-3">{t('appStore.help.faqTitle')}</h4>
           <div className="space-y-1">
             {faqs.map((faq, i) => (
               <div key={i} className="border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg overflow-hidden">
@@ -245,17 +258,17 @@ function HelpSection({ app }: { app: AppIntegration }) {
         </div>
         {/* Ask for Help */}
         <div className="border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-xl p-4">
-          <h4 className="text-sm font-medium text-[#242424] dark:text-[#f0f0f0] mb-1">Need more help?</h4>
-          <p className="text-xs text-[#8a8a8a] mb-3">Ask a question and our support team will get back to you.</p>
-          <textarea value={helpQuestion} onChange={e => setHelpQuestion(e.target.value)} placeholder="Describe your issue or question..." rows={3} className="w-full px-3 py-2.5 bg-[#faf9f8] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg text-sm text-[#242424] dark:text-[#e0e0e0] placeholder-[#b9bbbe] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/50 transition-all resize-none" />
+          <h4 className="text-sm font-medium text-[#242424] dark:text-[#f0f0f0] mb-1">{t('appStore.help.needMore')}</h4>
+          <p className="text-xs text-[#8a8a8a] mb-3">{t('appStore.help.askDesc')}</p>
+          <textarea value={helpQuestion} onChange={e => setHelpQuestion(e.target.value)} placeholder={t('appStore.help.placeholder')} rows={3} className="w-full px-3 py-2.5 bg-[#faf9f8] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg text-sm text-[#242424] dark:text-[#e0e0e0] placeholder-[#b9bbbe] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/50 transition-all resize-none" />
           <div className="flex items-center justify-between mt-2">
             {helpSubmitted ? (
-              <span className="text-xs text-[#237b4b] dark:text-[#57ab5a] font-medium flex items-center gap-1"><CheckCircle2 size={13} /> Question submitted! We'll respond shortly.</span>
+              <span className="text-xs text-[#237b4b] dark:text-[#57ab5a] font-medium flex items-center gap-1"><CheckCircle2 size={13} /> {t('appStore.help.submitted')}</span>
             ) : (
-              <span className="text-[10px] text-[#8a8a8a]">Typically responds within 24 hours</span>
+              <span className="text-[10px] text-[#8a8a8a]">{t('appStore.help.responseTime')}</span>
             )}
             <button onClick={handleAskHelp} disabled={!helpQuestion.trim()} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${helpQuestion.trim() ? 'bg-[#0078d4] hover:bg-[#006abc] text-white shadow-sm' : 'bg-[#f0f0f0] dark:bg-[#333] text-[#b9bbbe] cursor-not-allowed'}`}>
-              <Send size={13} /> Ask
+              <Send size={13} /> {t('appStore.help.ask')}
             </button>
           </div>
         </div>
@@ -263,15 +276,15 @@ function HelpSection({ app }: { app: AppIntegration }) {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <a href="#" className="flex items-center gap-3 px-4 py-3 rounded-lg border border-[#e1dfdd] dark:border-[#3d3d3d] hover:border-[#5b5fc7]/30 hover:bg-[#faf9f8] dark:hover:bg-[#2a2a2a] transition-all group">
             <div className="w-8 h-8 rounded-lg bg-[#ecf5fe] dark:bg-[#0078d4]/15 flex items-center justify-center"><ExternalLink size={14} className="text-[#0078d4]" /></div>
-            <div><p className="text-xs font-medium text-[#242424] dark:text-[#e0e0e0] group-hover:text-[#5b5fc7] transition-colors">Documentation</p><p className="text-[10px] text-[#8a8a8a]">Full setup guides</p></div>
+            <div><p className="text-xs font-medium text-[#242424] dark:text-[#e0e0e0] group-hover:text-[#5b5fc7] transition-colors">{t('appStore.help.links.docs')}</p><p className="text-[10px] text-[#8a8a8a]">{t('appStore.help.links.docsDesc')}</p></div>
           </a>
           <a href="#" className="flex items-center gap-3 px-4 py-3 rounded-lg border border-[#e1dfdd] dark:border-[#3d3d3d] hover:border-[#5b5fc7]/30 hover:bg-[#faf9f8] dark:hover:bg-[#2a2a2a] transition-all group">
             <div className="w-8 h-8 rounded-lg bg-[#eeeef8] dark:bg-[#5b5fc7]/15 flex items-center justify-center"><MessageCircle size={14} className="text-[#5b5fc7]" /></div>
-            <div><p className="text-xs font-medium text-[#242424] dark:text-[#e0e0e0] group-hover:text-[#5b5fc7] transition-colors">Community</p><p className="text-[10px] text-[#8a8a8a]">Forum & discussions</p></div>
+            <div><p className="text-xs font-medium text-[#242424] dark:text-[#e0e0e0] group-hover:text-[#5b5fc7] transition-colors">{t('appStore.help.links.community')}</p><p className="text-[10px] text-[#8a8a8a]">{t('appStore.help.links.communityDesc')}</p></div>
           </a>
           <a href="#" className="flex items-center gap-3 px-4 py-3 rounded-lg border border-[#e1dfdd] dark:border-[#3d3d3d] hover:border-[#5b5fc7]/30 hover:bg-[#faf9f8] dark:hover:bg-[#2a2a2a] transition-all group">
             <div className="w-8 h-8 rounded-lg bg-[#fef7ec] dark:bg-[#d4820c]/15 flex items-center justify-center"><HelpCircle size={14} className="text-[#d4820c]" /></div>
-            <div><p className="text-xs font-medium text-[#242424] dark:text-[#e0e0e0] group-hover:text-[#5b5fc7] transition-colors">Contact Dev</p><p className="text-[10px] text-[#8a8a8a]">{app.developer}</p></div>
+            <div><p className="text-xs font-medium text-[#242424] dark:text-[#e0e0e0] group-hover:text-[#5b5fc7] transition-colors">{t('appStore.help.links.contact')}</p><p className="text-[10px] text-[#8a8a8a]">{app.developer}</p></div>
           </a>
         </div>
       </div>
@@ -281,6 +294,7 @@ function HelpSection({ app }: { app: AppIntegration }) {
 
 // ─── App Card ───
 function AppCard({ app, onClick }: { app: AppIntegration; onClick: () => void }) {
+  const { t } = useI18n();
   const installedIn = getInstalledSpaces(app.id);
   const cat = catColors[app.category];
 
@@ -306,7 +320,7 @@ function AppCard({ app, onClick }: { app: AppIntegration; onClick: () => void })
 
       <div className="flex items-center justify-between">
         <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${cat.bg} ${cat.text}`}>
-          {app.category}
+          {t(`appStore.category.${categoryKeyMap[app.category]}`)}
         </span>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1">
@@ -319,7 +333,7 @@ function AppCard({ app, onClick }: { app: AppIntegration; onClick: () => void })
           </div>
           {installedIn.length > 0 && (
             <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[#edf7f0] dark:bg-[#237b4b]/15 text-[#237b4b] dark:text-[#57ab5a]">
-              Installed · {installedIn.length}
+              {t('appStore.installedCount', { count: installedIn.length })}
             </span>
           )}
         </div>
@@ -330,6 +344,7 @@ function AppCard({ app, onClick }: { app: AppIntegration; onClick: () => void })
 
 // ─── App Detail View ───
 function AppDetailView({ app, onBack }: { app: AppIntegration; onBack: () => void }) {
+  const { t } = useI18n();
   const installedIn = getInstalledSpaces(app.id);
   const cat = catColors[app.category];
   const navigate = useNavigate();
@@ -343,7 +358,7 @@ function AppDetailView({ app, onBack }: { app: AppIntegration; onBack: () => voi
           className="flex items-center gap-1.5 text-sm text-[#616161] dark:text-[#8a8a8a] hover:text-[#5b5fc7] dark:hover:text-[#a6a9dc] transition-colors mb-3"
         >
           <ArrowLeft size={16} />
-          Back to App Store
+          {t('appStore.backToStore')}
         </button>
 
         <div className="flex items-start gap-4">
@@ -355,18 +370,18 @@ function AppDetailView({ app, onBack }: { app: AppIntegration; onBack: () => voi
               <h1 className="text-[20px] font-bold text-[#242424] dark:text-[#f0f0f0]">{app.name}</h1>
               {app.verified && (
                 <span className="flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#ecf5fe] dark:bg-[#0078d4]/15 text-[#0078d4] dark:text-[#6cb8f6]">
-                  <CheckCircle2 size={11} /> Verified
+                  <CheckCircle2 size={11} /> {t('appStore.verified')}
                 </span>
               )}
             </div>
             <p className="text-sm text-[#616161] dark:text-[#8a8a8a] mb-2">{app.developer} · v{app.version}</p>
             <div className="flex items-center gap-4">
-              <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${cat.bg} ${cat.text}`}>{app.category}</span>
+              <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${cat.bg} ${cat.text}`}>{t(`appStore.category.${categoryKeyMap[app.category]}`)}</span>
               <div className="flex items-center gap-1">
                 <Star size={13} className="text-[#d4820c] fill-[#d4820c]" />
                 <span className="text-sm text-[#424242] dark:text-[#c8c8c8] font-medium">{app.rating}</span>
               </div>
-              <span className="text-sm text-[#616161] dark:text-[#8a8a8a]">{formatInstalls(app.installs)} installs</span>
+              <span className="text-sm text-[#616161] dark:text-[#8a8a8a]">{t('appStore.installs', { count: formatInstalls(app.installs) })}</span>
             </div>
           </div>
         </div>
@@ -381,7 +396,7 @@ function AppDetailView({ app, onBack }: { app: AppIntegration; onBack: () => voi
               <div className="flex items-center gap-2 mb-2">
                 <CheckCircle2 size={16} className="text-[#237b4b] dark:text-[#57ab5a]" />
                 <span className="font-semibold text-sm text-[#237b4b] dark:text-[#57ab5a]">
-                  Installed in {installedIn.length} space{installedIn.length > 1 ? 's' : ''}
+                  {t('appStore.installedIn', { count: installedIn.length })}
                 </span>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -405,7 +420,7 @@ function AppDetailView({ app, onBack }: { app: AppIntegration; onBack: () => voi
 
           {/* Add to Space */}
           <div className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] p-4">
-            <h3 className="font-semibold text-sm text-[#242424] dark:text-[#f0f0f0] mb-3">Add to Space</h3>
+            <h3 className="font-semibold text-sm text-[#242424] dark:text-[#f0f0f0] mb-3">{t('appStore.addToSpace')}</h3>
             <div className="flex flex-wrap gap-2">
               {spaces.map(space => {
                 const isInstalled = installedIn.includes(space.id);
@@ -435,14 +450,14 @@ function AppDetailView({ app, onBack }: { app: AppIntegration; onBack: () => voi
 
           {/* Description */}
           <div className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] p-5">
-            <h3 className="font-semibold text-sm text-[#242424] dark:text-[#f0f0f0] mb-3">About</h3>
+            <h3 className="font-semibold text-sm text-[#242424] dark:text-[#f0f0f0] mb-3">{t('appStore.about')}</h3>
             <div className="text-sm text-[#424242] dark:text-[#c8c8c8] whitespace-pre-wrap">{app.longDescription}</div>
           </div>
 
           {/* Features + Permissions side by side */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] p-5">
-              <h3 className="font-semibold text-sm text-[#242424] dark:text-[#f0f0f0] mb-3">Features</h3>
+              <h3 className="font-semibold text-sm text-[#242424] dark:text-[#f0f0f0] mb-3">{t('appStore.features')}</h3>
               <ul className="space-y-2">
                 {app.features.map((f, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-[#424242] dark:text-[#c8c8c8]">
@@ -456,7 +471,7 @@ function AppDetailView({ app, onBack }: { app: AppIntegration; onBack: () => voi
             <div className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] p-5">
               <h3 className="font-semibold text-sm text-[#242424] dark:text-[#f0f0f0] mb-3 flex items-center gap-2">
                 <Shield size={14} className="text-[#d4820c] dark:text-[#f0b850]" />
-                Permissions Required
+                {t('appStore.permissions')}
               </h3>
               <ul className="space-y-2">
                 {app.permissions.map((p, i) => (
@@ -472,8 +487,8 @@ function AppDetailView({ app, onBack }: { app: AppIntegration; onBack: () => voi
           {/* Configuration Preview */}
           {app.configFields && app.configFields.length > 0 && (
             <div className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] p-5">
-              <h3 className="font-semibold text-sm text-[#242424] dark:text-[#f0f0f0] mb-1">Configuration Options</h3>
-              <p className="text-xs text-[#8a8a8a] dark:text-[#6d6f78] mb-3">These settings can be customized per space after installation.</p>
+              <h3 className="font-semibold text-sm text-[#242424] dark:text-[#f0f0f0] mb-1">{t('appStore.config.title')}</h3>
+              <p className="text-xs text-[#8a8a8a] dark:text-[#6d6f78] mb-3">{t('appStore.config.desc')}</p>
               <div className="space-y-3">
                 {app.configFields.map(f => (
                   <div key={f.id} className="flex items-center justify-between py-2 border-b border-[#f0f0f0] dark:border-[#333] last:border-0">
@@ -501,6 +516,7 @@ function AppDetailView({ app, onBack }: { app: AppIntegration; onBack: () => voi
 
 // ─── Main App Store Page ───
 export function AppStore() {
+  const { t } = useI18n();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<AppCategory | 'All'>('All');
   const [selectedApp, setSelectedApp] = useState<AppIntegration | null>(null);
@@ -528,8 +544,8 @@ export function AppStore() {
               <Puzzle size={18} className="text-white" />
             </div>
             <div>
-              <h1 className="text-[20px] font-bold text-[#242424] dark:text-[#f0f0f0]">App Store</h1>
-              <p className="text-xs text-[#616161] dark:text-[#8a8a8a]">{appCatalog.length} integrations available</p>
+              <h1 className="text-[20px] font-bold text-[#242424] dark:text-[#f0f0f0]">{t('appStore.title')}</h1>
+              <p className="text-xs text-[#616161] dark:text-[#8a8a8a]">{t('appStore.integrationsAvailable', { count: appCatalog.length })}</p>
             </div>
           </div>
         </div>
@@ -542,7 +558,7 @@ export function AppStore() {
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search apps..."
+              placeholder={t('appStore.searchPlaceholder')}
               className="w-full pl-9 pr-8 py-2 bg-[#f0f0f0] dark:bg-[#1e1f22] rounded-lg text-sm text-[#242424] dark:text-[#e0e0e0] placeholder-[#8a8a8a] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/50 transition-all"
             />
             {search && (
@@ -577,7 +593,7 @@ export function AppStore() {
                 : 'text-[#616161] dark:text-[#8a8a8a] hover:bg-[#e8e8e8] dark:hover:bg-[#333]'
             }`}
           >
-            All
+            {t('common.all')}
           </button>
           {appCategories.map(cat => {
             const count = appCatalog.filter(a => a.category === cat).length;
@@ -591,7 +607,7 @@ export function AppStore() {
                     : 'text-[#616161] dark:text-[#8a8a8a] hover:bg-[#e8e8e8] dark:hover:bg-[#333]'
                 }`}
               >
-                {cat} <span className="opacity-60">({count})</span>
+                {t(`appStore.category.${categoryKeyMap[cat]}`)} <span className="opacity-60">({count})</span>
               </button>
             );
           })}
@@ -603,8 +619,8 @@ export function AppStore() {
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Search size={32} className="text-[#d1d1d1] dark:text-[#3d3d3d] mb-3" />
-            <p className="text-[#242424] dark:text-[#f0f0f0] font-medium mb-1">No apps found</p>
-            <p className="text-sm text-[#616161] dark:text-[#8a8a8a]">Try a different search term or category.</p>
+            <p className="text-[#242424] dark:text-[#f0f0f0] font-medium mb-1">{t('appStore.emptyTitle')}</p>
+            <p className="text-sm text-[#616161] dark:text-[#8a8a8a]">{t('appStore.emptySubtitle')}</p>
           </div>
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -630,7 +646,7 @@ export function AppStore() {
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-sm text-[#242424] dark:text-[#f0f0f0] group-hover:text-[#5b5fc7] dark:group-hover:text-[#a6a9dc] transition-colors">{app.name}</span>
                       {app.verified && <CheckCircle2 size={12} className="text-[#0078d4]" />}
-                      <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${cat.bg} ${cat.text}`}>{app.category}</span>
+                      <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${cat.bg} ${cat.text}`}>{t(`appStore.category.${categoryKeyMap[app.category]}`)}</span>
                     </div>
                     <p className="text-xs text-[#8a8a8a] dark:text-[#6d6f78] truncate">{app.shortDescription}</p>
                   </div>
@@ -642,7 +658,7 @@ export function AppStore() {
                     <span className="text-xs text-[#616161] dark:text-[#8a8a8a]">{formatInstalls(app.installs)}</span>
                     {installedIn.length > 0 && (
                       <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[#edf7f0] dark:bg-[#237b4b]/15 text-[#237b4b] dark:text-[#57ab5a]">
-                        Installed
+                        {t('appStore.installed')}
                       </span>
                     )}
                     <ChevronRight size={14} className="text-[#d1d1d1] dark:text-[#3d3d3d]" />

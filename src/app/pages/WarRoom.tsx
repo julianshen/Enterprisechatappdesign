@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import { cn } from "@/lib/utils";
 import { MarkdownContent } from '@/components/ui';
+import { useI18n } from '../context/I18nContext';
 
 // ─── Types ───
 
@@ -283,11 +284,11 @@ const severityConfig: Record<Severity, { bg: string; text: string; border: strin
   P4: { bg: 'bg-[#616161]', text: 'text-white', border: 'border-[#616161]' },
 };
 
-const statusConfig: Record<IncidentStatus, { bg: string; text: string; label: string }> = {
-  INVESTIGATING: { bg: 'bg-[#fef7ec] dark:bg-[#d4820c]/20', text: 'text-[#d4820c] dark:text-[#f0b850]', label: 'INVESTIGATING' },
-  IDENTIFIED: { bg: 'bg-[#ecf5fe] dark:bg-[#0078d4]/20', text: 'text-[#0078d4] dark:text-[#6cb8f6]', label: 'IDENTIFIED' },
-  MONITORING: { bg: 'bg-[#edf7f0] dark:bg-[#237b4b]/20', text: 'text-[#237b4b] dark:text-[#57ab5a]', label: 'MONITORING' },
-  RESOLVED: { bg: 'bg-[#edf7f0] dark:bg-[#237b4b]/20', text: 'text-[#237b4b] dark:text-[#57ab5a]', label: 'RESOLVED' },
+const statusConfig: Record<IncidentStatus, { bg: string; text: string }> = {
+  INVESTIGATING: { bg: 'bg-[#fef7ec] dark:bg-[#d4820c]/20', text: 'text-[#d4820c] dark:text-[#f0b850]' },
+  IDENTIFIED: { bg: 'bg-[#ecf5fe] dark:bg-[#0078d4]/20', text: 'text-[#0078d4] dark:text-[#6cb8f6]' },
+  MONITORING: { bg: 'bg-[#edf7f0] dark:bg-[#237b4b]/20', text: 'text-[#237b4b] dark:text-[#57ab5a]' },
+  RESOLVED: { bg: 'bg-[#edf7f0] dark:bg-[#237b4b]/20', text: 'text-[#237b4b] dark:text-[#57ab5a]' },
 };
 
 const healthColors: Record<ServiceHealth, { bg: string; text: string; border: string }> = {
@@ -355,6 +356,7 @@ function ResponderAvatars({ count }: { count: number }) {
 // ─── Main Component ───
 
 export function WarRoom() {
+  const { t } = useI18n();
   const [selectedIncidentId, setSelectedIncidentId] = useState(mockIncidents[0].id);
   const [showIncidentPicker, setShowIncidentPicker] = useState(false);
   const [activeTimelineTab, setActiveTimelineTab] = useState<'timeline' | 'actions'>('timeline');
@@ -404,6 +406,29 @@ export function WarRoom() {
 
   const sev = severityConfig[incident.severity];
   const stat = statusConfig[incident.status];
+  const statusLabelMap: Record<IncidentStatus, string> = {
+    INVESTIGATING: t('warRoom.status.investigating'),
+    IDENTIFIED: t('warRoom.status.identified'),
+    MONITORING: t('warRoom.status.monitoring'),
+    RESOLVED: t('warRoom.status.resolved'),
+  };
+  const healthLabelMap: Record<ServiceHealth, string> = {
+    HEALTHY: t('warRoom.health.healthy'),
+    RECOVERING: t('warRoom.health.recovering'),
+    WARNING: t('warRoom.health.warning'),
+    DOWN: t('warRoom.health.down'),
+  };
+  const hypothesisLabelMap: Record<Incident['hypothesis']['status'], string> = {
+    CONFIRMED: t('warRoom.hypothesis.confirmed'),
+    TESTING: t('warRoom.hypothesis.testing'),
+    REJECTED: t('warRoom.hypothesis.rejected'),
+  };
+  const channelLabelMap: Record<string, string> = {
+    command: t('warRoom.channel.command'),
+    technical: t('warRoom.channel.technical'),
+    comms: t('warRoom.channel.comms'),
+    timeline: t('warRoom.channel.timeline'),
+  };
 
   const slashCommands = ['/status', '/page', '/runbook', '/escalate'];
 
@@ -423,7 +448,7 @@ export function WarRoom() {
             <div className="flex items-center gap-2 mb-0.5">
               <span className="text-[12px] text-[#8a8a8a] dark:text-[#8a8d9e] font-mono">{incident.code}</span>
               <span className={cn('px-2 py-0.5 rounded text-[10px] font-bold tracking-wider', stat.bg, stat.text)}>
-                {stat.label}
+                {statusLabelMap[incident.status]}
               </span>
             </div>
             <h1 className="text-[16px] font-bold text-[#242424] dark:text-[#f0f0f0] truncate">{incident.title}</h1>
@@ -431,14 +456,14 @@ export function WarRoom() {
 
           {/* Incident switcher */}
           <div className="relative" ref={pickerRef}>
-            <button
-              onClick={() => setShowIncidentPicker(!showIncidentPicker)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#f5f5f5] dark:bg-[#2a2a2a] border border-[#e1dfdd] dark:border-[#3d3d3d] hover:border-[#5b5fc7]/40 text-[11px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:text-[#242424] dark:hover:text-[#f0f0f0] transition-all"
-            >
-              <Radio size={12} />
-              Switch Incident
-              <ChevronDown size={12} />
-            </button>
+              <button
+                onClick={() => setShowIncidentPicker(!showIncidentPicker)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#f5f5f5] dark:bg-[#2a2a2a] border border-[#e1dfdd] dark:border-[#3d3d3d] hover:border-[#5b5fc7]/40 text-[11px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:text-[#242424] dark:hover:text-[#f0f0f0] transition-all"
+              >
+                <Radio size={12} />
+                {t('warRoom.switchIncident')}
+                <ChevronDown size={12} />
+              </button>
             <AnimatePresence>
               {showIncidentPicker && (
                 <motion.div
@@ -449,7 +474,7 @@ export function WarRoom() {
                   className="absolute right-0 top-full mt-1 w-[360px] bg-white dark:bg-[#252525] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-xl shadow-2xl z-50 overflow-hidden"
                 >
                   <div className="px-3 py-2 border-b border-[#e1dfdd] dark:border-[#3d3d3d]">
-                    <span className="text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider">Active Incidents</span>
+                    <span className="text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider">{t('warRoom.activeIncidents')}</span>
                   </div>
                   {mockIncidents.map(inc => {
                     const s = severityConfig[inc.severity];
@@ -472,10 +497,12 @@ export function WarRoom() {
                           <p className="text-[12px] font-medium text-[#242424] dark:text-[#f0f0f0] truncate">{inc.title}</p>
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] font-mono">{inc.code}</span>
-                            <span className={cn('text-[9px] font-bold', st.text)}>{st.label}</span>
+                            <span className={cn('text-[9px] font-bold', st.text)}>{statusLabelMap[inc.status]}</span>
                           </div>
                         </div>
-                        <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78]">{inc.affectedCount} affected</span>
+                        <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78]">
+                          {t('warRoom.affectedCount', { count: inc.affectedCount })}
+                        </span>
                       </button>
                     );
                   })}
@@ -487,19 +514,19 @@ export function WarRoom() {
           {/* Key stats */}
           <div className="flex items-center gap-5 shrink-0 ml-2">
             <div className="text-center">
-              <p className="text-[9px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider">Duration</p>
+              <p className="text-[9px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider">{t('warRoom.duration')}</p>
               <p className="text-[20px] font-mono font-bold text-[#d4820c] dark:text-[#fbbf24] tabular-nums">{formatDuration(duration)}</p>
             </div>
             <div className="text-center">
-              <p className="text-[9px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider">Responders</p>
+              <p className="text-[9px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider">{t('warRoom.responders')}</p>
               <p className="text-[20px] font-bold text-[#242424] dark:text-[#f0f0f0]">{incident.respondersCount}</p>
             </div>
             <div className="text-center">
-              <p className="text-[9px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider">Actions</p>
+              <p className="text-[9px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider">{t('warRoom.actions')}</p>
               <p className="text-[20px] font-bold text-[#242424] dark:text-[#f0f0f0]">{incident.actionsCount}</p>
             </div>
             <div className="text-center">
-              <p className="text-[9px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider">Affected</p>
+              <p className="text-[9px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider">{t('warRoom.affected')}</p>
               <p className="text-[20px] font-bold text-[#c4314b] dark:text-[#f47067]">{incident.affectedCount}</p>
             </div>
           </div>
@@ -507,7 +534,7 @@ export function WarRoom() {
 
         {/* Affected services row */}
         <div className="px-4 pb-2.5 pt-1.5 flex items-center gap-2 bg-white dark:bg-[#252525]">
-          <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider font-semibold shrink-0">Affected:</span>
+          <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider font-semibold shrink-0">{t('warRoom.affectedLabel')}</span>
           <div className="flex items-center gap-1.5 flex-wrap">
             {incident.affectedServices.map(svc => (
               <span key={svc} className="px-2 py-0.5 rounded bg-[#fdf0f2] dark:bg-[#c4314b]/20 text-[#c4314b] dark:text-[#f47067] text-[11px] font-medium border border-[#c4314b]/20 dark:border-[#c4314b]/30">
@@ -540,7 +567,7 @@ export function WarRoom() {
                     : 'text-[#8a8a8a] dark:text-[#6d6f78] border-transparent hover:text-[#616161] dark:hover:text-[#b9bbbe]'
                 )}
               >
-                {tab}
+                {tab === 'timeline' ? t('warRoom.tab.timeline') : t('warRoom.tab.actions')}
               </button>
             ))}
           </div>
@@ -595,7 +622,7 @@ export function WarRoom() {
               {/* 5XX Error Rate */}
               <div className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] p-3">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider font-semibold">5xx Error Rate</span>
+                  <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider font-semibold">{t('warRoom.metrics.errorRate')}</span>
                   <div className="w-2 h-2 rounded-full bg-[#d4820c] animate-pulse" />
                 </div>
                 <div className="flex items-baseline gap-2">
@@ -613,7 +640,7 @@ export function WarRoom() {
               {/* P95 Latency */}
               <div className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] p-3">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider font-semibold">P95 Latency</span>
+                  <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider font-semibold">{t('warRoom.metrics.p95Latency')}</span>
                   <div className="w-2 h-2 rounded-full bg-[#d4820c] animate-pulse" />
                 </div>
                 <div className="flex items-baseline gap-2">
@@ -631,7 +658,7 @@ export function WarRoom() {
               {/* Orders/Min */}
               <div className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] p-3">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider font-semibold">Orders/Min</span>
+                  <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider font-semibold">{t('warRoom.metrics.ordersPerMin')}</span>
                   <Activity size={12} className="text-[#237b4b] dark:text-[#57ab5a]" />
                 </div>
                 <div className="flex items-baseline gap-2">
@@ -646,7 +673,7 @@ export function WarRoom() {
               {/* Active Pods */}
               <div className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] p-3">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider font-semibold">Active Pods</span>
+                  <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider font-semibold">{t('warRoom.metrics.activePods')}</span>
                   <Shield size={12} className="text-[#237b4b] dark:text-[#57ab5a]" />
                 </div>
                 <div className="flex items-baseline gap-2">
@@ -654,10 +681,10 @@ export function WarRoom() {
                     {incident.metrics.activePods.current}/{incident.metrics.activePods.total}
                   </span>
                   {incident.metrics.activePods.recovering && (
-                    <span className="text-[10px] text-[#d4820c] dark:text-[#f0b850]">recovering</span>
+                    <span className="text-[10px] text-[#d4820c] dark:text-[#f0b850]">{t('warRoom.metrics.recovering')}</span>
                   )}
                   {!incident.metrics.activePods.recovering && incident.metrics.activePods.current === incident.metrics.activePods.total && (
-                    <span className="text-[10px] text-[#237b4b] dark:text-[#57ab5a]">all healthy</span>
+                    <span className="text-[10px] text-[#237b4b] dark:text-[#57ab5a]">{t('warRoom.metrics.allHealthy')}</span>
                   )}
                 </div>
               </div>
@@ -665,7 +692,7 @@ export function WarRoom() {
 
             {/* Service Map */}
             <div className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] p-3">
-              <h3 className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider font-semibold mb-3">Service Map</h3>
+              <h3 className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider font-semibold mb-3">{t('warRoom.serviceMap')}</h3>
               <div className="flex flex-wrap gap-2">
                 {incident.serviceMap.map(svc => {
                   const h = healthColors[svc.status];
@@ -675,7 +702,7 @@ export function WarRoom() {
                       className={cn('px-3 py-2 rounded-lg border flex flex-col items-center gap-1 min-w-[100px]', h.bg, h.border)}
                     >
                       <span className="text-[11px] font-medium text-[#242424] dark:text-[#f0f0f0]">{svc.name}</span>
-                      <span className={cn('text-[9px] font-bold uppercase tracking-wider', h.text)}>{svc.status}</span>
+                      <span className={cn('text-[9px] font-bold uppercase tracking-wider', h.text)}>{healthLabelMap[svc.status]}</span>
                     </div>
                   );
                 })}
@@ -686,7 +713,7 @@ export function WarRoom() {
             <div className="grid grid-cols-2 gap-2.5">
               {/* Hypothesis */}
               <div className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] p-3">
-                <h3 className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider font-semibold mb-2">Hypothesis</h3>
+                <h3 className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider font-semibold mb-2">{t('warRoom.hypothesis')}</h3>
                 <div className="flex items-start gap-2">
                   <div className={cn(
                     'shrink-0 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase mt-0.5',
@@ -696,7 +723,7 @@ export function WarRoom() {
                   )}>
                     <div className="flex items-center gap-1">
                       <Lightbulb size={9} />
-                      {incident.hypothesis.status}
+                      {hypothesisLabelMap[incident.hypothesis.status]}
                     </div>
                   </div>
                 </div>
@@ -707,7 +734,7 @@ export function WarRoom() {
 
               {/* Runbook */}
               <div className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] p-3">
-                <h3 className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider font-semibold mb-2">Runbook</h3>
+                <h3 className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider font-semibold mb-2">{t('warRoom.runbook')}</h3>
                 <div className="flex items-center gap-1.5 mb-2">
                   <BookOpen size={12} className="text-[#0078d4] dark:text-[#6cb8f6]" />
                   <span className="text-[12px] font-medium text-[#0078d4] dark:text-[#6cb8f6]">{incident.runbook.title}</span>
@@ -744,7 +771,7 @@ export function WarRoom() {
 
             {/* Responders */}
             <div className="bg-white dark:bg-[#252525] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] p-3">
-              <h3 className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider font-semibold mb-2">Responders</h3>
+              <h3 className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider font-semibold mb-2">{t('warRoom.responders')}</h3>
               <ResponderAvatars count={incident.respondersCount} />
             </div>
           </div>
@@ -765,7 +792,7 @@ export function WarRoom() {
                     : 'text-[#8a8a8a] dark:text-[#6d6f78] hover:text-[#616161] dark:hover:text-[#b9bbbe]'
                 )}
               >
-                {ch.label}
+                {channelLabelMap[ch.id] || ch.label}
                 {ch.hasActivity && activeChatChannel !== ch.id && (
                   <div className="absolute top-2 right-1 w-2 h-2 rounded-full bg-[#237b4b] dark:bg-[#57ab5a]" />
                 )}
@@ -786,7 +813,7 @@ export function WarRoom() {
               <Hash size={14} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
               <span className="text-[13px] font-semibold text-[#242424] dark:text-[#f0f0f0]">#inc-247-{channel?.name}</span>
               <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78]">·</span>
-              <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78]">{channel?.messages.length} messages</span>
+              <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78]">{t('warRoom.messagesCount', { count: channel?.messages.length ?? 0 })}</span>
               <div className="ml-auto">
                 <ResponderAvatars count={Math.min(incident.respondersCount, 4)} />
               </div>
@@ -808,7 +835,7 @@ export function WarRoom() {
                     <span className="text-[13px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{msg.user}</span>
                     <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78]">{msg.time}</span>
                     {msg.isBot && (
-                      <span className="px-1.5 py-px rounded text-[8px] font-bold bg-[#eeeef8] dark:bg-[#5b5fc7]/20 text-[#5b5fc7] dark:text-[#a6a9dc] uppercase">Bot</span>
+                      <span className="px-1.5 py-px rounded text-[8px] font-bold bg-[#eeeef8] dark:bg-[#5b5fc7]/20 text-[#5b5fc7] dark:text-[#a6a9dc] uppercase">{t('warRoom.bot')}</span>
                     )}
                   </div>
                   <div className="text-[13px] text-[#616161] dark:text-[#b9bbbe] leading-relaxed">
@@ -841,7 +868,7 @@ export function WarRoom() {
                   value={chatInput}
                   onChange={e => setChatInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') handleSendChat(); }}
-                  placeholder={`Message #inc-247-${channel?.name}...`}
+                  placeholder={t('warRoom.messagePlaceholder', { channel: channel?.name ?? '' })}
                   className="w-full px-3 py-2 bg-white dark:bg-[#2a2a2a] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg text-[13px] text-[#242424] dark:text-[#f0f0f0] placeholder-[#b9bbbe] dark:placeholder-[#5a5a5a] focus:outline-none focus:ring-1 focus:ring-[#5b5fc7]/50 transition-all"
                 />
               </div>

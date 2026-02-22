@@ -5,6 +5,7 @@ import {  X, Play, Pause, Volume2, VolumeX, Maximize, Minimize,
   SkipBack, SkipForward, Film, Download,
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
+import { useI18n } from '../context/I18nContext';
 
 interface VideoPlayerViewerProps {
   posterUrl?: string;
@@ -23,6 +24,7 @@ export function VideoPlayerViewer({
   duration,
   onClose,
 }: VideoPlayerViewerProps) {
+  const { t } = useI18n();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [totalDuration, setTotalDuration] = useState(0);
@@ -358,11 +360,11 @@ export function VideoPlayerViewer({
         animate={{ opacity: showControls ? 1 : 0 }}
         className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4 text-[10px] text-white/30"
       >
-        <span>Space: Play/Pause</span>
-        <span>← →: Seek 10s</span>
-        <span>M: Mute</span>
-        <span>F: Fullscreen</span>
-        <span>Esc: Close</span>
+        <span>{t('video.shortcuts.playPause')}</span>
+        <span>{t('video.shortcuts.seek')}</span>
+        <span>{t('video.shortcuts.mute')}</span>
+        <span>{t('video.shortcuts.fullscreen')}</span>
+        <span>{t('video.shortcuts.close')}</span>
       </motion.div>
     </motion.div>
   );

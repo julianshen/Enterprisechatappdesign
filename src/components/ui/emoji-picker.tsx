@@ -2,6 +2,7 @@ import { Popover, PopoverTrigger, PopoverContent, Button, Input } from "@/compon
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { cn } from "@/lib/utils";
 import data from '@emoji-mart/data';
+import { useI18n } from '@/app/context/I18nContext';
 
 const EMOJI_DATA = data as any;
 const EMOJI_CATEGORIES = EMOJI_DATA?.categories ?? [];
@@ -18,12 +19,12 @@ const CATEGORY_ICONS: Record<string, string> = {
   'flags': '🏳️',
 };
 const SKIN_TONES = [
-  { label: 'Default', mod: '' },
-  { label: 'Light', mod: '🏻' },
-  { label: 'Medium-Light', mod: '🏼' },
-  { label: 'Medium', mod: '🏽' },
-  { label: 'Medium-Dark', mod: '🏾' },
-  { label: 'Dark', mod: '🏿' },
+  { key: 'emoji.skin.default', mod: '' },
+  { key: 'emoji.skin.light', mod: '🏻' },
+  { key: 'emoji.skin.mediumLight', mod: '🏼' },
+  { key: 'emoji.skin.medium', mod: '🏽' },
+  { key: 'emoji.skin.mediumDark', mod: '🏾' },
+  { key: 'emoji.skin.dark', mod: '🏿' },
 ];
 const RECENT_EMOJI_KEY = 'rich_message_recent_emojis';
 const FREQUENT_EMOJI_KEY = 'rich_message_frequent_emojis';
@@ -44,6 +45,7 @@ export function EmojiPickerPopover({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
+  const { t } = useI18n();
   const [emojiQuery, setEmojiQuery] = useState('');
   const [recentEmojis, setRecentEmojis] = useState<string[]>([]);
   const [frequentMap, setFrequentMap] = useState<Record<string, number>>({});
@@ -121,6 +123,16 @@ export function EmojiPickerPopover({
 
   const searchResults = emojiQuery ? filteredEmojis() : [];
   const selectedCategory = EMOJI_CATEGORIES.find((c: any) => c.id === selectedCategoryId) || EMOJI_CATEGORIES[0];
+  const categoryNameMap: Record<string, string> = {
+    people: t('emoji.category.people'),
+    nature: t('emoji.category.nature'),
+    foods: t('emoji.category.foods'),
+    activity: t('emoji.category.activity'),
+    places: t('emoji.category.places'),
+    objects: t('emoji.category.objects'),
+    symbols: t('emoji.category.symbols'),
+    flags: t('emoji.category.flags'),
+  };
   const categoryEmojis = (selectedCategory?.emojis || [])
     .map((id: string) => EMOJI_BY_ID[id])
     .filter(Boolean);
@@ -150,19 +162,19 @@ export function EmojiPickerPopover({
         <Input
           value={emojiQuery}
           onChange={e => setEmojiQuery(e.target.value)}
-          placeholder="Search emoji..."
+          placeholder={t('emoji.searchPlaceholder')}
           className="h-8 mb-2"
         />
 
         <div className="flex items-center gap-1.5 mb-2">
           {SKIN_TONES.map((tone, idx) => (
             <Button
-              key={tone.label}
+              key={tone.key}
               variant="ghost"
               size="icon"
               className={cn('h-7 w-7 text-xs', selectedToneIndex === idx && 'bg-muted')}
               onClick={() => setSelectedToneIndex(idx)}
-              title={tone.label}
+              title={t(tone.key)}
             >
               {tone.mod ? `👍${tone.mod}` : '👍'}
             </Button>
@@ -173,7 +185,7 @@ export function EmojiPickerPopover({
           <>
             <div className="flex items-center justify-between px-1 mb-1.5">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                {emojiSort === 'recent' ? 'Recent' : 'Frequent'}
+                {emojiSort === 'recent' ? t('emoji.recent') : t('emoji.frequent')}
               </p>
               <div className="flex items-center gap-1">
                 <Button
@@ -182,7 +194,7 @@ export function EmojiPickerPopover({
                   className={cn('h-6 px-2 text-[10px]', emojiSort === 'recent' && 'bg-muted')}
                   onClick={() => setEmojiSort('recent')}
                 >
-                  Recent
+                  {t('emoji.recent')}
                 </Button>
                 <Button
                   variant="ghost"
@@ -190,7 +202,7 @@ export function EmojiPickerPopover({
                   className={cn('h-6 px-2 text-[10px]', emojiSort === 'frequent' && 'bg-muted')}
                   onClick={() => setEmojiSort('frequent')}
                 >
-                  Frequent
+                  {t('emoji.frequent')}
                 </Button>
               </div>
             </div>
@@ -210,7 +222,7 @@ export function EmojiPickerPopover({
           </>
         )}
 
-        <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1 px-1">Categories</p>
+        <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1 px-1">{t('emoji.categories')}</p>
         <div className="flex flex-wrap items-center gap-1 pb-2 mb-2 max-w-full border-b border-border">
           {EMOJI_CATEGORIES.map((cat: any) => (
             <Button
@@ -227,13 +239,13 @@ export function EmojiPickerPopover({
               }}
             >
               <span className="text-base">{CATEGORY_ICONS[cat.id] || '⭐'}</span>
-              <span>{cat.name}</span>
+              <span>{categoryNameMap[cat.id] || cat.name}</span>
             </Button>
           ))}
         </div>
 
         <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5 px-1">
-          {emojiQuery ? 'Results' : (selectedCategory?.name || 'Emoji')}
+          {emojiQuery ? t('emoji.results') : (categoryNameMap[selectedCategory?.id] || selectedCategory?.name || t('emoji.title'))}
         </p>
         <div className="grid grid-cols-5 gap-1">
           {(emojiQuery ? searchResults : pagedCategoryEmojis).map((emoji: any) => {
@@ -261,10 +273,10 @@ export function EmojiPickerPopover({
               onClick={() => setEmojiPage(p => Math.max(0, p - 1))}
               disabled={currentPage === 0}
             >
-              Prev
+              {t('emoji.prev')}
             </Button>
             <span className="text-[10px] text-muted-foreground">
-              Page {currentPage + 1} / {pageCount}
+              {t('emoji.page', { current: currentPage + 1, total: pageCount })}
             </span>
             <Button
               variant="ghost"
@@ -273,13 +285,13 @@ export function EmojiPickerPopover({
               onClick={() => setEmojiPage(p => Math.min(pageCount - 1, p + 1))}
               disabled={currentPage >= pageCount - 1}
             >
-              Next
+              {t('emoji.next')}
             </Button>
           </div>
         )}
 
         {emojiQuery && searchResults.length === 0 && (
-          <p className="text-xs text-muted-foreground text-center py-2">No results</p>
+          <p className="text-xs text-muted-foreground text-center py-2">{t('emoji.noResults')}</p>
         )}
       </PopoverContent>
     </Popover>
