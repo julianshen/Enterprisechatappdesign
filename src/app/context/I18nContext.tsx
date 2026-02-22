@@ -962,6 +962,112 @@ const translations: Record<LanguageCode, Record<string, string>> = {
     'teamDashboard.membersCount': '{count} members',
     'teamDashboard.notFoundTitle': 'Dashboard not found',
     'teamDashboard.notFoundSubtitle': "The dashboard you're looking for doesn't exist.",
+    'assistant.title': 'AI Assistant',
+    'assistant.greetingTitle': 'How can I help today?',
+    'assistant.greetingSubtitle': 'I can summarize, search, draft, and translate across your workspace.',
+    'assistant.contextAware': 'Context aware',
+    'assistant.togglePreview': 'Toggle preview',
+    'assistant.clearChat': 'Clear chat',
+    'assistant.placeholder': 'Ask anything...',
+    'assistant.sendMessage': 'Send message',
+    'assistant.markdownHelp': 'Markdown supported · Shift+Enter for new line',
+    'assistant.preview': 'Preview',
+    'assistant.helpDesk.title': 'Help Desk Assistant',
+    'assistant.helpDesk.subtitle': 'Get quick help, triage tickets, and find answers.',
+    'assistant.format.bold': 'Bold',
+    'assistant.format.italic': 'Italic',
+    'assistant.format.strikethrough': 'Strikethrough',
+    'assistant.format.inlineCode': 'Inline code',
+    'assistant.format.bulletList': 'Bullet list',
+    'assistant.format.numberedList': 'Numbered list',
+    'assistant.format.blockquote': 'Blockquote',
+    'assistant.format.link': 'Link',
+    'assistant.slash.title': 'Slash commands',
+    'assistant.slash.summarize': 'Summarize current context',
+    'assistant.slash.search': 'Search across workspace content',
+    'assistant.slash.create': 'Create a task, doc, or item',
+    'assistant.slash.draft': 'Draft a message',
+    'assistant.slash.analyze': 'Analyze trends and metrics',
+    'assistant.slash.translate': 'Translate text',
+    'assistant.context.workspace': 'Workspace',
+    'assistant.context.recent': 'Recent',
+    'assistant.context.inbox': 'Inbox',
+    'assistant.context.apps': 'Apps',
+    'assistant.context.chat': 'Chat',
+    'assistant.context.spaceApps': '{spaceName} · Apps',
+    'assistant.context.spaceAppDetail': '{spaceName} · App Details',
+    'assistant.context.spaceDocs': '{spaceName} · Documents',
+    'assistant.context.spaceFiles': '{spaceName} · Files',
+    'assistant.context.spaceTasks': '{spaceName} · Tasks',
+    'assistant.context.spaceDashboard': '{spaceName} · Dashboard',
+    'assistant.context.spaceChannel': '{spaceName} · #{channelName}',
+    'assistant.prompt.default.help': 'What can you help me with right now?',
+    'assistant.prompt.default.search': 'Find messages about deployment blockers',
+    'assistant.prompt.default.summary': 'Summarize what happened today',
+    'assistant.prompt.default.draft': 'Draft a status update for my team',
+    'assistant.prompt.recent.focus': 'What should I focus on first?',
+    'assistant.prompt.recent.unread': 'Summarize my unread activity',
+    'assistant.prompt.recent.approvals': 'Show items that need approval',
+    'assistant.prompt.recent.meetings': 'Give me a quick meeting recap',
+    'assistant.prompt.inbox.triage': 'Triage my inbox by priority',
+    'assistant.prompt.inbox.urgent': 'What is urgent right now?',
+    'assistant.prompt.inbox.markAll': 'What can I safely mark as read?',
+    'assistant.prompt.inbox.actionRequired': 'Show messages requiring action',
+    'assistant.prompt.chat.draft': 'Draft a reply for this conversation',
+    'assistant.prompt.chat.summarize': 'Summarize this conversation',
+    'assistant.prompt.chat.schedule': 'Suggest a meeting time for this thread',
+    'assistant.prompt.chat.findFiles': 'Find files shared in this chat',
+    'assistant.prompt.apps.recommend': 'Recommend apps for this workspace',
+    'assistant.prompt.apps.compare': 'Compare the top app options',
+    'assistant.prompt.apps.trending': 'What apps are trending now?',
+    'assistant.prompt.apps.verified': 'Show verified apps only',
+    'assistant.prompt.channel.summarize': 'Summarize key points in #{channelName}',
+    'assistant.prompt.channel.decisions': 'List decisions made recently',
+    'assistant.prompt.channel.actionItems': 'Extract action items from this channel',
+    'assistant.prompt.channel.mostActive': 'Who is most active in #{channelName}?',
+    'assistant.prompt.docs.recent': 'Show recently edited documents',
+    'assistant.prompt.docs.create': 'Create a new doc outline',
+    'assistant.prompt.docs.review': 'Review this document for clarity',
+    'assistant.prompt.docs.changes': 'Summarize recent document changes',
+    'assistant.prompt.files.large': 'Find large files to clean up',
+    'assistant.prompt.files.topUploader': 'Who uploaded the most files?',
+    'assistant.prompt.files.search': 'Search files by keyword',
+    'assistant.prompt.files.external': 'Show externally shared files',
+    'assistant.prompt.tasks.overdue': 'Show overdue tasks',
+    'assistant.prompt.tasks.assigned': 'List tasks assigned to me',
+    'assistant.prompt.tasks.create': 'Create a task from this discussion',
+    'assistant.prompt.tasks.burndown': 'How is sprint burndown trending?',
+    'assistant.prompt.dashboard.explain': 'Explain this dashboard trend',
+    'assistant.prompt.dashboard.attention': 'What needs attention on this dashboard?',
+    'assistant.prompt.dashboard.compare': 'Compare with last period',
+    'assistant.prompt.dashboard.report': 'Draft an executive summary',
+    'assistant.prompt.spaceApps.updates': 'Show recent app updates',
+    'assistant.prompt.spaceApps.usage': 'Which apps are used most?',
+    'assistant.prompt.spaceApps.recommend': 'Recommend apps for this space',
+    'assistant.prompt.spaceApps.health': 'Check app connection health',
+    'assistant.prompt.appDetail.activity': 'Summarize this app activity',
+    'assistant.prompt.appDetail.connection': 'Check this app connection status',
+    'assistant.prompt.appDetail.diagnostic': 'Run a quick integration diagnostic',
+    'assistant.prompt.appDetail.configure': 'Show key configuration options',
+    'message.addReaction': 'Add reaction',
+    'message.replyInThread': 'Reply in thread',
+    'message.pin': 'Pin message',
+    'message.unpin': 'Unpin message',
+    'message.pinned': 'Pinned message',
+    'message.translate': 'Translate',
+    'message.edit': 'Edit',
+    'message.delete': 'Delete',
+    'message.editHint': 'Press Enter to save, Esc to cancel',
+    'message.threadReplies': '{count} replies',
+    'message.seenBy': 'Seen by',
+    'message.seenByCount': 'Seen by {count}',
+    'message.noReadReceipts': 'No read receipts yet',
+    'message.translation.translating': 'Translating...',
+    'message.translation.translatingMessage': 'Translating message...',
+    'message.translation.translatedTo': 'Translated to {language}',
+    'message.translation.showOriginal': 'Show original',
+    'message.translation.detected': 'Detected: {language} (auto)',
+    'message.translation.english': 'English',
   },
   'zh-Hant': {
     'profile.title': '個人資料與設定',
@@ -7685,23 +7791,28 @@ interface I18nContextValue {
 const I18nContext = createContext<I18nContextValue | null>(null);
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
+  const isLanguageCode = (value: string): value is LanguageCode =>
+    LANGUAGES.some((language) => language.code === value);
+
   const [lang, setLangState] = useState<LanguageCode>(() => {
     if (typeof window === 'undefined') return 'en';
-    const stored = localStorage.getItem('app_language') as LanguageCode | null;
-    return stored || 'en';
+    const stored = localStorage.getItem('app_language');
+    return stored && isLanguageCode(stored) ? stored : 'en';
   });
 
   const setLang = useCallback((next: LanguageCode) => {
-    setLangState(next);
+    const safeNext = isLanguageCode(next) ? next : 'en';
+    setLangState(safeNext);
     try {
-      localStorage.setItem('app_language', next);
+      localStorage.setItem('app_language', safeNext);
     } catch {
       // ignore storage errors
     }
   }, []);
 
   const t = useCallback((key: string, vars?: Record<string, string | number>) => {
-    const raw = translations[lang]?.[key] || translations.en[key] || key;
+    const activeLang = translations[lang] ? lang : 'en';
+    const raw = translations[activeLang]?.[key] || translations.en[key] || key;
     if (!vars) return raw;
     return Object.keys(vars).reduce((acc, k) => acc.replaceAll(`{${k}}`, String(vars[k])), raw);
   }, [lang]);
