@@ -1,7 +1,8 @@
 import { useParams, Link } from 'react-router';
 import {
   BarChart3, Rocket, Shield, GitPullRequest, Layers, Target, Calendar, Megaphone,
-  Users, BookOpen, TrendingUp, TrendingDown, Minus, ExternalLink, ChevronLeft,
+  Users, BookOpen, TrendingUp, TrendingDown, Minus, ExternalLink,
+  PenLine,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -13,7 +14,8 @@ import {
   type MembersData,
   type LinksData,
 } from '../data/mockData';
-import { useI18n } from '../context/I18nContext';
+import { getCustomDashboardsForSpace, MY_SPACE_ID } from '../data/customDashboards';
+import { renderMyWidget, isMyWidgetType } from '../components/MyWidgets';
 
 // ─── Icon mapping ───
 const dashboardIcons: Record<string, LucideIcon> = {
@@ -91,14 +93,13 @@ function MetricWidget({ widget }: { widget: DashboardWidget }) {
 }
 
 function ListWidget({ widget }: { widget: DashboardWidget }) {
-  const { t } = useI18n();
   const data = widget.data as ListData;
   const c = colorMap[widget.color];
   return (
     <div className={`bg-white dark:bg-[#252525] rounded-xl border ${c.border} shadow-sm overflow-hidden ${widget.wide ? 'lg:col-span-2 xl:col-span-3' : ''}`}>
       <div className={`px-4 py-3 border-b border-[#f0f0f0] dark:border-[#333] flex items-center justify-between ${c.light}`}>
         <h3 className="font-semibold text-[13px] text-[#242424] dark:text-[#f0f0f0]">{widget.title}</h3>
-        <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">{t('teamDashboard.itemsCount', { count: data.items.length })}</span>
+        <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">{data.items.length} items</span>
       </div>
       <div className="divide-y divide-[#f0f0f0] dark:divide-[#333]">
         {data.items.map((item) => (
@@ -161,7 +162,6 @@ function ProgressWidget({ widget }: { widget: DashboardWidget }) {
 }
 
 function MembersWidget({ widget }: { widget: DashboardWidget }) {
-  const { t } = useI18n();
   const data = widget.data as MembersData;
   const c = colorMap[widget.color];
   const statusDot: Record<string, string> = {
@@ -174,7 +174,7 @@ function MembersWidget({ widget }: { widget: DashboardWidget }) {
     <div className={`bg-white dark:bg-[#252525] rounded-xl border ${c.border} shadow-sm overflow-hidden ${widget.wide ? 'lg:col-span-2 xl:col-span-3' : ''}`}>
       <div className={`px-4 py-3 border-b border-[#f0f0f0] dark:border-[#333] flex items-center justify-between ${c.light}`}>
         <h3 className="font-semibold text-[13px] text-[#242424] dark:text-[#f0f0f0]">{widget.title}</h3>
-        <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">{t('teamDashboard.membersCount', { count: data.members.length })}</span>
+        <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">{data.members.length} members</span>
       </div>
       <div className="divide-y divide-[#f0f0f0] dark:divide-[#333]">
         {data.members.map((m, i) => (
@@ -230,8 +230,27 @@ function LinksWidget({ widget }: { widget: DashboardWidget }) {
   );
 }
 
+// ─── "My" widget wrapper ───
+function MyWidgetCard({ widget }: { widget: DashboardWidget }) {
+  const c = colorMap[widget.color];
+  return (
+    <div className={`bg-white dark:bg-[#252525] rounded-xl border ${c.border} shadow-sm overflow-hidden ${widget.wide ? 'lg:col-span-2 xl:col-span-3' : ''}`}>
+      <div className={`px-4 py-3 border-b border-[#f0f0f0] dark:border-[#333] flex items-center gap-2.5 ${c.light}`}>
+        <h3 className="font-semibold text-[13px] text-[#242424] dark:text-[#f0f0f0]">{widget.title}</h3>
+      </div>
+      <div className="flex-1 overflow-hidden">
+        {renderMyWidget(widget.type)}
+      </div>
+    </div>
+  );
+}
+
 // ─── Widget factory ───
-function WidgetRenderer({ widget }: { widget: DashboardWidget }) {
+export function WidgetRenderer({ widget }: { widget: DashboardWidget }) {
+  // Handle "my-*" specialized widget types
+  if (isMyWidgetType(widget.type)) {
+    return <MyWidgetCard widget={widget} />;
+  }
   switch (widget.type) {
     case 'metric': return <MetricWidget widget={widget} />;
     case 'list': return <ListWidget widget={widget} />;
@@ -244,38 +263,59 @@ function WidgetRenderer({ widget }: { widget: DashboardWidget }) {
 
 // ─── Main Page ───
 export function TeamDashboard() {
-  const { t } = useI18n();
   const { spaceId, dashboardId } = useParams();
 
-  const space = spaces.find(s => s.id === spaceId);
-  const dashboard = space?.dashboards.find(d => d.id === dashboardId);
+  const isMyDashboard = spaceId === MY_SPACE_ID;
+  const space = isMyDashboard ? null : spaces.find(s => s.id === spaceId);
 
-  if (!space || !dashboard) {
+  // Prefer custom (edited) version over built-in
+  const dashboard = spaceId
+    ? getCustomDashboardsForSpace(spaceId).find(d => d.id === dashboardId)
+      || space?.dashboards.find(d => d.id === dashboardId)
+    : undefined;
+
+  if ((!space && !isMyDashboard) || !dashboard) {
     return (
       <div className="flex-1 flex items-center justify-center bg-white dark:bg-[#1f1f1f]">
         <div className="text-center">
-          <p className="text-[#242424] dark:text-[#f0f0f0] font-medium mb-1">{t('teamDashboard.notFoundTitle')}</p>
-          <p className="text-sm text-[#616161] dark:text-[#8a8a8a]">{t('teamDashboard.notFoundSubtitle')}</p>
+          <p className="text-[#242424] dark:text-[#f0f0f0] font-medium mb-1">Dashboard not found</p>
+          <p className="text-sm text-[#616161] dark:text-[#8a8a8a]">The dashboard you're looking for doesn't exist.</p>
         </div>
       </div>
     );
   }
 
   const DashIcon = dashboardIcons[dashboard.icon] || BarChart3;
+  const editUrl = isMyDashboard
+    ? `/my/dashboard/${dashboardId}/edit`
+    : `/space/${spaceId}/dashboard/${dashboardId}/edit`;
+  const breadcrumbLink = isMyDashboard
+    ? '/recent'
+    : `/space/${spaceId}/${space!.channels[0]?.id}`;
+  const breadcrumbLabel = isMyDashboard ? 'My' : space!.name;
 
   return (
     <div className="flex-1 flex flex-col bg-[#faf9f8] dark:bg-[#1f1f1f] overflow-hidden">
       {/* Header */}
       <div className="shrink-0 px-6 pt-5 pb-4 bg-white dark:bg-[#252525] border-b border-[#e1dfdd] dark:border-[#3d3d3d]">
-        <div className="flex items-center gap-2 text-xs text-[#8a8a8a] dark:text-[#6d6f78] mb-3">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2 text-xs text-[#8a8a8a] dark:text-[#6d6f78]">
+            <Link
+              to={breadcrumbLink}
+              className="hover:text-[#5b5fc7] dark:hover:text-[#a6a9dc] transition-colors"
+            >
+              {breadcrumbLabel}
+            </Link>
+            <span className="text-[#d1d1d1] dark:text-[#3d3d3d]">/</span>
+            <span className="text-[#424242] dark:text-[#c8c8c8]">{dashboard.name}</span>
+          </div>
           <Link
-            to={`/space/${spaceId}/${space.channels[0]?.id}`}
-            className="hover:text-[#5b5fc7] dark:hover:text-[#a6a9dc] transition-colors"
+            to={editUrl}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#616161] dark:text-[#999] hover:bg-[#f0f0f0] dark:hover:bg-[#333] rounded-lg transition-colors"
           >
-            {space.name}
+            <PenLine size={13} />
+            Edit Dashboard
           </Link>
-          <span className="text-[#d1d1d1] dark:text-[#3d3d3d]">/</span>
-          <span className="text-[#424242] dark:text-[#c8c8c8]">{dashboard.name}</span>
         </div>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#5b5fc7] to-[#7b7dd8] flex items-center justify-center shrink-0 shadow-sm">

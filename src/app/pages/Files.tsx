@@ -13,6 +13,7 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { SecurityBadge } from '../components/SecurityBadge';
 import { AccessBadge, LockedOverlay, RequestAccessModal, AccessRequestsPanel } from '../components/AccessControl';
 import { canRoleAccess } from '../data/accessPermissions';
+import { useI18n } from '../context/I18nContext';
 
 // File type icon mapping
 function FileIcon({ type, size = 28 }: { type: string; size?: number }) {
@@ -79,6 +80,7 @@ function ViewAsRolePicker({
   activeRole: string;
   onChangeRole: (role: string) => void;
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const currentLabel = PREVIEW_ROLES.find(r => r.slug === activeRole)?.label || 'Admin';
 
@@ -93,7 +95,7 @@ function ViewAsRolePicker({
         }`}
       >
         <Eye size={13} />
-        {activeRole ? `Viewing as: ${currentLabel}` : 'View as…'}
+        {activeRole ? t('access.preview.viewingAs', { role: currentLabel }) : t('access.preview.viewAs')}
       </button>
       <AnimatePresence>
         {open && (
@@ -105,7 +107,7 @@ function ViewAsRolePicker({
             className="absolute right-0 top-full mt-1 bg-white dark:bg-[#2b2b2b] rounded-xl border border-[#e8e8e8] dark:border-[#3d3d3d] shadow-xl z-30 py-1.5 min-w-[220px]"
           >
             <p className="px-3 py-1 text-[10px] font-semibold text-[#999] dark:text-[#666] uppercase tracking-wider">
-              Preview access as role
+              {t('access.preview.title')}
             </p>
             {PREVIEW_ROLES.map(role => (
               <button
@@ -130,6 +132,7 @@ function ViewAsRolePicker({
 }
 
 export function Files() {
+  const { t } = useI18n();
   const { spaceId } = useParams();
   const currentSpace = spaces.find(s => s.id === spaceId);
 
@@ -282,7 +285,7 @@ export function Files() {
         <div className="h-[52px] px-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <FolderOpen size={18} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
-            <h2 className="text-[16px] font-semibold text-[#242424] dark:text-[#f0f0f0]">Files</h2>
+            <h2 className="text-[16px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('files.title')}</h2>
             <span className="text-[13px] text-[#999] dark:text-[#666]">· {currentSpace.name}</span>
           </div>
 
@@ -318,9 +321,9 @@ export function Files() {
                     className="absolute right-0 top-full mt-1 bg-white dark:bg-[#2b2b2b] rounded-lg border border-[#e8e8e8] dark:border-[#3d3d3d] shadow-xl z-20 py-1 min-w-[160px]"
                   >
                     {([
-                      ['name', 'Name'],
-                      ['date', 'Date uploaded'],
-                      ['size', 'Size'],
+                      ['name', t('files.sort.name')],
+                      ['date', t('files.sort.date')],
+                      ['size', t('files.sort.size')],
                     ] as [SortKey, string][]).map(([key, label]) => (
                       <button
                         key={key}
@@ -364,12 +367,12 @@ export function Files() {
 
             <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-[#616161] dark:text-[#999] hover:bg-[#f5f5f5] dark:hover:bg-[#2a2a2a] border border-[#e8e8e8] dark:border-[#333] transition-colors">
               <FolderPlus size={14} />
-              New Folder
+              {t('files.newFolder')}
             </button>
 
             <button className="flex items-center gap-1.5 bg-[#5b5fc7] hover:bg-[#5254b5] text-white px-3.5 py-1.5 rounded-lg text-[12px] font-semibold transition-colors shadow-sm">
               <Upload size={14} />
-              Upload
+              {t('files.upload')}
             </button>
           </div>
         </div>
@@ -388,7 +391,7 @@ export function Files() {
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#aaa] dark:text-[#666]" />
                 <input
                   type="text"
-                  placeholder="Search all files..."
+                  placeholder={t('files.searchAll')}
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   autoFocus
@@ -410,7 +413,7 @@ export function Files() {
             }`}
           >
             <FolderOpen size={14} />
-            All Files
+            {t('files.allFiles')}
           </button>
           {breadcrumbs.map((folder) => (
             <div key={folder.id} className="flex items-center gap-1">
@@ -430,12 +433,12 @@ export function Files() {
           ))}
           {!searchQuery && (
             <span className="text-[12px] text-[#ccc] dark:text-[#555] ml-2">
-              {totalItems} item{totalItems !== 1 ? 's' : ''}
+              {t('files.itemsCount', { count: totalItems })}
             </span>
           )}
           {searchQuery && (
             <span className="text-[12px] text-[#ccc] dark:text-[#555] ml-2">
-              Showing results for "{searchQuery}"
+              {t('files.showingResults', { query: searchQuery })}
             </span>
           )}
         </div>
@@ -448,8 +451,8 @@ export function Files() {
           <div className="flex items-center justify-between px-5 py-2 bg-[#d4820c]/10 dark:bg-[#d4820c]/15 border-b border-[#d4820c]/20">
             <div className="flex items-center gap-2 text-[12px] text-[#d4820c] dark:text-[#f5a623]">
               <Eye size={14} />
-              <span className="font-semibold">Preview Mode</span>
-              <span className="text-[#d4820c]/70 dark:text-[#f5a623]/70">— Viewing access as <strong>{PREVIEW_ROLES.find(r => r.slug === previewRole)?.label}</strong>. Restricted files will appear locked.</span>
+              <span className="font-semibold">{t('access.preview.mode')}</span>
+              <span className="text-[#d4820c]/70 dark:text-[#f5a623]/70">{t('access.preview.filesBanner', { role: PREVIEW_ROLES.find(r => r.slug === previewRole)?.label || 'Admin' })}</span>
             </div>
             <button
               onClick={() => setPreviewRole('')}
@@ -467,7 +470,7 @@ export function Files() {
               className="flex items-center gap-2 px-3 py-2 mb-4 rounded-lg text-[13px] text-[#616161] dark:text-[#999] hover:bg-[#f5f5f5] dark:hover:bg-[#2a2a2a] transition-colors"
             >
               <ArrowLeft size={14} />
-              Back to {currentFolder.parentId ? folders.find(f => f.id === currentFolder.parentId)?.name : 'All Files'}
+              {t('files.backTo', { name: currentFolder.parentId ? folders.find(f => f.id === currentFolder.parentId)?.name || t('files.allFiles') : t('files.allFiles') })}
             </button>
           )}
 
@@ -619,8 +622,8 @@ export function Files() {
               {searchQuery && childFiles.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
                   <Search size={40} className="text-[#ddd] dark:text-[#444] mb-4" />
-                  <h3 className="text-[16px] font-medium text-[#242424] dark:text-[#f0f0f0] mb-1">No files found</h3>
-                  <p className="text-[14px] text-[#999] dark:text-[#666]">Try a different search term</p>
+                  <h3 className="text-[16px] font-medium text-[#242424] dark:text-[#f0f0f0] mb-1">{t('files.noFilesFound')}</h3>
+                  <p className="text-[14px] text-[#999] dark:text-[#666]">{t('files.tryDifferentSearch')}</p>
                 </div>
               )}
             </div>
@@ -773,7 +776,7 @@ export function Files() {
           >
             {/* Panel header */}
             <div className="h-[52px] px-4 flex items-center justify-between border-b border-[#e8e8e8] dark:border-[#333] flex-shrink-0">
-              <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">File Details</h3>
+              <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('files.details')}</h3>
               <button
                 onClick={() => setSelectedFileId(null)}
                 className="p-1.5 rounded-md text-[#999] hover:text-[#242424] dark:text-[#666] dark:hover:text-[#f0f0f0] hover:bg-[#f5f5f5] dark:hover:bg-[#333] transition-colors"
@@ -811,18 +814,18 @@ export function Files() {
                   }`}>
                     <Lock size={20} className={getFileAccessLevel(selectedFile) === 'confidential' ? 'text-[#c4314b]' : 'text-[#d4820c]'} />
                   </div>
-                  <p className="text-[13px] font-semibold text-[#242424] dark:text-[#e0e0e0] mb-1">Access Required</p>
-                  <p className="text-[11px] text-[#8a8a8a] mb-4">Your role doesn't have access to this file.</p>
+                  <p className="text-[13px] font-semibold text-[#242424] dark:text-[#e0e0e0] mb-1">{t('access.file.requiredTitle')}</p>
+                  <p className="text-[11px] text-[#8a8a8a] mb-4">{t('access.file.requiredDesc')}</p>
                   {hasPendingFileRequest(selectedFile.id) ? (
                     <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#d4820c]/10 text-[11px] font-medium text-[#d4820c]">
-                      <Clock size={12} /> Request pending
+                      <Clock size={12} /> {t('access.locked.pending')}
                     </div>
                   ) : (
                     <button
                       onClick={() => setShowRequestModal(true)}
                       className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#5b5fc7] hover:bg-[#4a4eb5] text-white text-[11px] font-semibold transition-colors"
                     >
-                      <Send size={12} /> Request Temporary Access
+                      <Send size={12} /> {t('access.locked.requestTemp')}
                     </button>
                   )}
                 </div>
@@ -830,11 +833,11 @@ export function Files() {
                 <>
                   {/* Meta info */}
                   <div className="space-y-3">
-                    <MetaRow label="Size" value={selectedFile.size} />
-                    <MetaRow label="Type" value={selectedFile.type.toUpperCase()} />
-                    <MetaRow label="Uploaded" value={format(selectedFile.uploadedAt, 'MMM d, yyyy \'at\' h:mm a')} />
+                    <MetaRow label={t('files.meta.size')} value={selectedFile.size} />
+                    <MetaRow label={t('files.meta.type')} value={selectedFile.type.toUpperCase()} />
+                    <MetaRow label={t('files.meta.uploaded')} value={format(selectedFile.uploadedAt, 'MMM d, yyyy \'at\' h:mm a')} />
                     <MetaRow
-                      label="Uploaded by"
+                      label={t('files.meta.uploadedBy')}
                       value={
                         <div className="flex items-center gap-2">
                           {selectedFile.uploadedByAvatar && (
@@ -846,14 +849,14 @@ export function Files() {
                     />
                     {selectedFile.folderId && (
                       <MetaRow
-                        label="Location"
+                        label={t('files.meta.location')}
                         value={
                           <button
                             onClick={() => { navigateToFolder(selectedFile.folderId); setSelectedFileId(null); }}
                             className="flex items-center gap-1.5 text-[#5b5fc7] dark:text-[#a6a9dc] hover:underline"
                           >
                             <FolderIcon size={12} />
-                            {folders.find(f => f.id === selectedFile.folderId)?.name || 'Unknown'}
+                            {folders.find(f => f.id === selectedFile.folderId)?.name || t('files.unknown')}
                           </button>
                         }
                       />
@@ -863,12 +866,12 @@ export function Files() {
                   {/* Actions */}
                   <div className="mt-6 space-y-1.5">
                     {getFileAccessLevel(selectedFile) !== 'public' && (
-                      <FileAction icon={<Shield size={14} />} label="Access Requests" onClick={() => setShowAccessPanel(true)} />
+                      <FileAction icon={<Shield size={14} />} label={t('access.panel.title')} onClick={() => setShowAccessPanel(true)} />
                     )}
-                    <FileAction icon={<Download size={14} />} label="Download" />
-                    <FileAction icon={<Copy size={14} />} label="Copy link" />
-                    <FileAction icon={<Eye size={14} />} label="Preview" />
-                    <FileAction icon={<Trash2 size={14} />} label="Delete" danger />
+                    <FileAction icon={<Download size={14} />} label={t('files.action.download')} />
+                    <FileAction icon={<Copy size={14} />} label={t('files.action.copyLink')} />
+                    <FileAction icon={<Eye size={14} />} label={t('files.action.preview')} />
+                    <FileAction icon={<Trash2 size={14} />} label={t('files.action.delete')} danger />
                   </div>
                 </>
               )}
@@ -932,19 +935,20 @@ function FileAction({ icon, label, danger, onClick }: { icon: React.ReactNode; l
 }
 
 function EmptyState({ onUpload }: { onUpload: () => void }) {
+  const { t } = useI18n();
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       <div className="w-16 h-16 rounded-2xl bg-[#f7f6f3] dark:bg-[#2a2a2a] flex items-center justify-center mb-4">
         <Upload size={28} className="text-[#ccc] dark:text-[#555]" />
       </div>
-      <h3 className="text-[16px] font-medium text-[#242424] dark:text-[#f0f0f0] mb-1">This folder is empty</h3>
-      <p className="text-[14px] text-[#999] dark:text-[#666] mb-4">Drop files here or click Upload to add files</p>
+      <h3 className="text-[16px] font-medium text-[#242424] dark:text-[#f0f0f0] mb-1">{t('files.emptyTitle')}</h3>
+      <p className="text-[14px] text-[#999] dark:text-[#666] mb-4">{t('files.emptySubtitle')}</p>
       <button
         onClick={onUpload}
         className="flex items-center gap-2 bg-[#5b5fc7] hover:bg-[#5254b5] text-white px-4 py-2 rounded-lg text-[13px] font-medium transition-colors"
       >
         <Upload size={14} />
-        Upload Files
+        {t('files.uploadFiles')}
       </button>
     </div>
   );

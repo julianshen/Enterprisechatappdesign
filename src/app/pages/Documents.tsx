@@ -13,6 +13,7 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { SecurityBadge } from '../components/SecurityBadge';
 import { AccessBadge, LockedOverlay, RequestAccessModal, AccessRequestsPanel } from '../components/AccessControl';
 import { canRoleAccess } from '../data/accessPermissions';
+import { useI18n } from '../context/I18nContext';
 
 // Notion-style callout colors
 const CALLOUT_COLORS: Record<string, { bg: string; border: string }> = {
@@ -322,6 +323,7 @@ function ViewAsRolePicker({
   activeRole: string;
   onChangeRole: (role: string) => void;
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const currentLabel = PREVIEW_ROLES.find(r => r.slug === activeRole)?.label || 'Admin';
 
@@ -336,7 +338,7 @@ function ViewAsRolePicker({
         }`}
       >
         <Eye size={13} />
-        {activeRole ? `Viewing as: ${currentLabel}` : 'View as…'}
+        {activeRole ? t('access.preview.viewingAs', { role: currentLabel }) : t('access.preview.viewAs')}
       </button>
       <AnimatePresence>
         {open && (
@@ -348,7 +350,7 @@ function ViewAsRolePicker({
             className="absolute right-0 top-full mt-1 bg-white dark:bg-[#2b2b2b] rounded-xl border border-[#e8e8e8] dark:border-[#3d3d3d] shadow-xl z-30 py-1.5 min-w-[220px]"
           >
             <p className="px-3 py-1 text-[10px] font-semibold text-[#999] dark:text-[#666] uppercase tracking-wider">
-              Preview access as role
+              {t('access.preview.title')}
             </p>
             {PREVIEW_ROLES.map(role => (
               <button
@@ -382,6 +384,7 @@ function ShareToHomeDialog({
   spaceId: string;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [message, setMessage] = useState('');
   const [posting, setPosting] = useState(false);
@@ -467,8 +470,8 @@ function ShareToHomeDialog({
               <Share2 size={16} className="text-white" />
             </div>
             <div>
-              <h3 className="text-[15px] font-semibold text-[#242424] dark:text-[#f0f0f0]">Post to Home</h3>
-              <p className="text-[12px] text-[#999] dark:text-[#666]">Share this document with your team</p>
+              <h3 className="text-[15px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('documents.postToHome')}</h3>
+              <p className="text-[12px] text-[#999] dark:text-[#666]">{t('documents.shareWithTeam')}</p>
             </div>
           </div>
           <button
@@ -485,7 +488,7 @@ function ShareToHomeDialog({
           {spacesWithHome.length > 1 && (
             <div>
               <label className="text-[12px] font-medium text-[#999] dark:text-[#666] uppercase tracking-wider block mb-1.5">
-                Post to
+                {t('documents.postTo')}
               </label>
               <div className="flex gap-2">
                 {spacesWithHome.map(sp => (
@@ -509,13 +512,13 @@ function ShareToHomeDialog({
           {/* Message */}
           <div>
             <label className="text-[12px] font-medium text-[#999] dark:text-[#666] uppercase tracking-wider block mb-1.5">
-              Message (optional)
+              {t('documents.messageOptional')}
             </label>
             <textarea
               ref={textareaRef}
               value={message}
               onChange={e => setMessage(e.target.value)}
-              placeholder="Add a message about this document..."
+              placeholder={t('documents.messagePlaceholder')}
               rows={3}
               className="w-full text-[14px] bg-[#f5f5f5] dark:bg-[#1e1f22] text-[#242424] dark:text-[#f0f0f0] placeholder-[#aaa] dark:placeholder-[#555] rounded-lg px-3 py-2.5 outline-none border border-[#e8e8e8] dark:border-[#333] focus:border-[#5b5fc7]/40 transition-colors resize-none leading-relaxed"
             />
@@ -553,14 +556,14 @@ function ShareToHomeDialog({
         <div className="flex items-center justify-between px-5 py-3.5 border-t border-[#f0f0f0] dark:border-[#333] bg-[#faf9f8] dark:bg-[#252525]">
           <div className="flex items-center gap-1.5 text-[12px] text-[#999] dark:text-[#666]">
             <Home size={13} />
-            Posting to {targetSpace?.name || 'Home'}
+            {t('documents.postingTo', { name: targetSpace?.name || t('documents.home') })}
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={onClose}
               className="px-3.5 py-1.5 text-[13px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#333] rounded-lg transition-colors"
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               onClick={handlePost}
@@ -570,7 +573,7 @@ function ShareToHomeDialog({
               {posted ? (
                 <>
                   <Check size={14} />
-                  Posted!
+                  {t('documents.posted')}
                 </>
               ) : posting ? (
                 <>
@@ -579,12 +582,12 @@ function ShareToHomeDialog({
                     transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                     className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full"
                   />
-                  Posting...
+                  {t('documents.posting')}
                 </>
               ) : (
                 <>
                   <Send size={14} />
-                  Post
+                  {t('common.post')}
                 </>
               )}
             </button>
@@ -596,6 +599,7 @@ function ShareToHomeDialog({
 }
 
 export function Documents() {
+  const { t } = useI18n();
   const { spaceId } = useParams();
   const currentSpace = spaces.find(s => s.id === spaceId);
   const [selectedDocId, setSelectedDocId] = useState<string | null>('doc-1');
@@ -764,7 +768,7 @@ export function Documents() {
                 <input
                   ref={searchRef}
                   type="text"
-                  placeholder="Search pages..."
+                  placeholder={t('documents.searchPages')}
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="w-full pl-8 pr-3 py-1.5 text-[13px] bg-white dark:bg-[#2a2a2a] text-[#37352f] dark:text-[#e0e0e0] placeholder-[#aaa] dark:placeholder-[#555] rounded-md border border-[#e0e0e0] dark:border-[#3d3d3d] outline-none focus:border-[#5b5fc7]/40 transition-colors"
@@ -786,7 +790,7 @@ export function Documents() {
                     </button>
                   ))}
                   {filteredDocs.length === 0 && (
-                    <p className="text-[12px] text-[#aaa] dark:text-[#666] px-2 py-2">No results</p>
+                    <p className="text-[12px] text-[#aaa] dark:text-[#666] px-2 py-2">{t('documents.noResults')}</p>
                   )}
                 </div>
               )}
@@ -800,7 +804,7 @@ export function Documents() {
           {favDocs.length > 0 && (
             <div className="mb-3">
               <p className="px-2 py-1.5 text-[11px] font-semibold text-[#999] dark:text-[#666] uppercase tracking-wider">
-                Favorites
+                {t('documents.favorites')}
               </p>
               {favDocs.map(doc => (
                 <button
@@ -832,7 +836,7 @@ export function Documents() {
           {/* All pages */}
           <div>
             <p className="px-2 py-1.5 text-[11px] font-semibold text-[#999] dark:text-[#666] uppercase tracking-wider">
-              Pages
+              {t('documents.pages')}
             </p>
             {topLevelDocs.map(doc => (
               <SidebarDocItem
@@ -851,13 +855,13 @@ export function Documents() {
           {/* New page button */}
           <button className="mt-3 w-full flex items-center gap-2 px-2 py-2 rounded-md text-[13px] text-[#aaa] dark:text-[#666] hover:bg-[#f5f5f5] dark:hover:bg-[#2a2a2a] hover:text-[#616161] dark:hover:text-[#999] transition-colors">
             <Plus size={14} />
-            New page
+            {t('documents.newPage')}
           </button>
         </div>
 
         {/* Sidebar footer — recently edited */}
         <div className="border-t border-[#e8e8e8] dark:border-[#2e2e2e] px-3 py-2.5">
-          <p className="text-[11px] font-semibold text-[#999] dark:text-[#666] uppercase tracking-wider mb-1.5">Recently Edited</p>
+          <p className="text-[11px] font-semibold text-[#999] dark:text-[#666] uppercase tracking-wider mb-1.5">{t('documents.recentlyEdited')}</p>
           {recentDocs.slice(0, 3).map(doc => (
             <button
               key={doc.id}
@@ -881,8 +885,8 @@ export function Documents() {
           <div className="flex items-center justify-between px-4 py-2 bg-[#d4820c]/10 dark:bg-[#d4820c]/15 border-b border-[#d4820c]/20 flex-shrink-0">
             <div className="flex items-center gap-2 text-[12px] text-[#d4820c] dark:text-[#f5a623]">
               <Eye size={14} />
-              <span className="font-semibold">Preview Mode</span>
-              <span className="text-[#d4820c]/70 dark:text-[#f5a623]/70">— Viewing access as <strong>{PREVIEW_ROLES.find(r => r.slug === previewRole)?.label}</strong>. Restricted content will appear locked.</span>
+              <span className="font-semibold">{t('access.preview.mode')}</span>
+              <span className="text-[#d4820c]/70 dark:text-[#f5a623]/70">{t('access.preview.docsBanner', { role: PREVIEW_ROLES.find(r => r.slug === previewRole)?.label || 'Admin' })}</span>
             </div>
             <button
               onClick={() => setPreviewRole('')}
@@ -934,7 +938,7 @@ export function Documents() {
                     className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] text-[#616161] dark:text-[#999] hover:bg-[#5b5fc7]/10 dark:hover:bg-[#5b5fc7]/15 hover:text-[#5b5fc7] dark:hover:text-[#a6a9dc] transition-colors"
                   >
                     <Share2 size={13} />
-                    Post to Home
+                    {t('documents.postToHome')}
                   </button>
                 )}
                 <button className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] text-[#616161] dark:text-[#999] hover:bg-[#f5f5f5] dark:hover:bg-[#2a2a2a] transition-colors">
@@ -1018,7 +1022,7 @@ export function Documents() {
                   {childPages.length > 0 && (
                     <div className="mt-10 pl-8">
                       <div className="border-t border-[#e8e8e8] dark:border-[#2e2e2e] pt-4">
-                        <p className="text-[11px] font-semibold text-[#999] dark:text-[#666] uppercase tracking-wider mb-2">Sub-pages</p>
+                        <p className="text-[11px] font-semibold text-[#999] dark:text-[#666] uppercase tracking-wider mb-2">{t('documents.subPages')}</p>
                         <div className="space-y-1">
                           {childPages.map(child => (
                             <button
@@ -1057,8 +1061,8 @@ export function Documents() {
               <div className="w-16 h-16 rounded-2xl bg-[#f7f6f3] dark:bg-[#2a2a2a] flex items-center justify-center mx-auto mb-4">
                 <FileText size={28} className="text-[#ccc] dark:text-[#555]" />
               </div>
-              <h3 className="text-[16px] font-medium text-[#242424] dark:text-[#f0f0f0] mb-1">Select a page</h3>
-              <p className="text-[14px] text-[#999] dark:text-[#666]">Choose a page from the sidebar to start reading or editing</p>
+              <h3 className="text-[16px] font-medium text-[#242424] dark:text-[#f0f0f0] mb-1">{t('documents.selectPage')}</h3>
+              <p className="text-[14px] text-[#999] dark:text-[#666]">{t('documents.selectPageDesc')}</p>
             </div>
           </div>
         )}

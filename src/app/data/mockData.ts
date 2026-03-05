@@ -165,11 +165,11 @@ export interface SpaceDashboard {
 
 export interface DashboardWidget {
   id: string;
-  type: 'metric' | 'list' | 'progress' | 'members' | 'links';
+  type: 'metric' | 'list' | 'progress' | 'members' | 'links' | 'my-calendar' | 'my-meetings' | 'my-services' | 'my-requests' | 'my-approvals' | 'my-unread' | 'my-threads';
   title: string;
   color: 'purple' | 'blue' | 'green' | 'orange' | 'red' | 'gray';
   wide?: boolean;
-  data: MetricData | ListData | ProgressData | MembersData | LinksData;
+  data: MetricData | ListData | ProgressData | MembersData | LinksData | null;
 }
 
 export interface MetricData {

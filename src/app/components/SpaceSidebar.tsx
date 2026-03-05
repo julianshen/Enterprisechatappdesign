@@ -6,11 +6,12 @@ import {
   LifeBuoy, Siren, Gauge,
   type LucideIcon
 } from 'lucide-react';
+import { AnimatePresence } from 'motion/react';
 import { spaces, directMessages, groupChats, currentUser, notifications, type Space } from '../data/mockData';
 import { useAIAssistant } from '../context/AIAssistantContext';
 import { useTheme } from '../context/ThemeContext';
 import { useDrag, useDrop } from 'react-dnd';
-import { useI18n } from '../context/I18nContext';
+import { CreateSpaceModal } from './CreateSpaceModal';
 
 const spaceIconMap: Record<string, LucideIcon> = {
   general: Building2,
@@ -25,6 +26,13 @@ const statusColors: Record<string, string> = {
   away: 'bg-[#d4820c]',
   busy: 'bg-[#c4314b]',
   offline: 'bg-[#8a8a8a]',
+};
+
+const statusLabels: Record<string, string> = {
+  online: 'Available',
+  away: 'Away',
+  busy: 'Busy',
+  offline: 'Offline',
 };
 
 const SPACE_DND_TYPE = 'SIDEBAR_SPACE';
@@ -136,8 +144,8 @@ export function SpaceSidebar() {
   const navigate = useNavigate();
   const { activePanel, toggleCopilot, toggleHelpDesk } = useAIAssistant();
   const { theme, toggleTheme } = useTheme();
-  const { t } = useI18n();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showCreateSpace, setShowCreateSpace] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const isChatActive = location.pathname.startsWith('/chat');
@@ -196,14 +204,8 @@ export function SpaceSidebar() {
     }
   }, [showUserMenu]);
 
-  const statusLabels: Record<string, string> = {
-    online: t('sidebar.status.available'),
-    away: t('sidebar.status.away'),
-    busy: t('sidebar.status.busy'),
-    offline: t('sidebar.status.offline'),
-  };
-
   return (
+    <>
     <div className="w-[68px] bg-[#f3f2f1] dark:bg-[#202020] flex flex-col items-center py-2 gap-0.5 border-r border-[#e1dfdd] dark:border-[#292929]">
       {/* Recent/Activity Button */}
       <Link
@@ -213,10 +215,10 @@ export function SpaceSidebar() {
             ? 'bg-[#e8e8f8] dark:bg-[#5b5fc7]/20 text-[#5b5fc7] dark:text-[#a6a9dc]'
             : 'text-[#424242] dark:text-[#e0e0e0] hover:bg-[#e8e8e8] dark:hover:bg-[#292929]'
         }`}
-        title={t('sidebar.activity')}
+        title="Activity"
       >
         <Activity size={20} strokeWidth={1.5} />
-        <span className="text-[10px] font-medium">{t('sidebar.my')}</span>
+        <span className="text-[10px] font-medium">My</span>
         {isRecentActive && (
           <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full bg-[#5b5fc7]" />
         )}
@@ -230,7 +232,7 @@ export function SpaceSidebar() {
             ? 'bg-[#e8e8f8] dark:bg-[#5b5fc7]/20 text-[#5b5fc7] dark:text-[#a6a9dc]'
             : 'text-[#424242] dark:text-[#e0e0e0] hover:bg-[#e8e8e8] dark:hover:bg-[#292929]'
         }`}
-        title={t('sidebar.inbox')}
+        title="Inbox"
       >
         <div className="relative">
           <Bell size={20} strokeWidth={1.5} />
@@ -240,7 +242,7 @@ export function SpaceSidebar() {
             </span>
           )}
         </div>
-        <span className="text-[10px] font-medium">{t('sidebar.inbox')}</span>
+        <span className="text-[10px] font-medium">Inbox</span>
         {isInboxActive && (
           <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full bg-[#5b5fc7]" />
         )}
@@ -254,7 +256,7 @@ export function SpaceSidebar() {
             ? 'bg-[#e8e8f8] dark:bg-[#5b5fc7]/20 text-[#5b5fc7] dark:text-[#a6a9dc]'
             : 'text-[#424242] dark:text-[#e0e0e0] hover:bg-[#e8e8e8] dark:hover:bg-[#292929]'
         }`}
-        title={t('sidebar.chat')}
+        title="Chat"
       >
         <div className="relative">
           <MessageSquare size={20} strokeWidth={1.5} />
@@ -264,7 +266,7 @@ export function SpaceSidebar() {
             </span>
           )}
         </div>
-        <span className="text-[10px] font-medium">{t('sidebar.chat')}</span>
+        <span className="text-[10px] font-medium">Chat</span>
         {isChatActive && (
           <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full bg-[#5b5fc7]" />
         )}
@@ -278,10 +280,10 @@ export function SpaceSidebar() {
             ? 'bg-[#e8e8f8] dark:bg-[#5b5fc7]/20 text-[#5b5fc7] dark:text-[#a6a9dc]'
             : 'text-[#424242] dark:text-[#e0e0e0] hover:bg-[#e8e8e8] dark:hover:bg-[#292929]'
         }`}
-        title={t('sidebar.apps')}
+        title="Apps"
       >
         <Puzzle size={20} strokeWidth={1.5} />
-        <span className="text-[10px] font-medium">{t('sidebar.apps')}</span>
+        <span className="text-[10px] font-medium">Apps</span>
         {isAppsActive && (
           <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full bg-[#5b5fc7]" />
         )}
@@ -295,13 +297,13 @@ export function SpaceSidebar() {
             ? 'bg-[#c4314b]/15 dark:bg-[#c4314b]/20 text-[#c4314b] dark:text-[#f87171]'
             : 'text-[#424242] dark:text-[#e0e0e0] hover:bg-[#e8e8e8] dark:hover:bg-[#292929]'
         }`}
-        title={t('sidebar.warRoom')}
+        title="War Room"
       >
         <div className="relative">
           <Siren size={20} strokeWidth={1.5} />
           <div className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-[#c4314b] animate-pulse" />
         </div>
-        <span className="text-[9px] font-medium">{t('sidebar.warRoom')}</span>
+        <span className="text-[9px] font-medium">War Room</span>
         {isWarRoomActive && (
           <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full bg-[#c4314b]" />
         )}
@@ -322,13 +324,14 @@ export function SpaceSidebar() {
 
       {/* Add Space Button */}
       <button
+        onClick={() => setShowCreateSpace(true)}
         className="w-[56px] h-[48px] flex flex-col items-center justify-center gap-0.5 text-[#424242] dark:text-[#e0e0e0] hover:bg-[#e8e8e8] dark:hover:bg-[#292929] rounded-lg transition-all group relative"
-        title={t('sidebar.addTeam')}
+        title="Add Team"
       >
         <div className="w-5 h-5 border-[1.5px] border-current rounded flex items-center justify-center">
           <Plus size={14} strokeWidth={1.5} />
         </div>
-        <span className="text-[9px] font-medium">{t('sidebar.addSpace')}</span>
+        <span className="text-[9px] font-medium">Add space</span>
       </button>
 
       {/* Spacer to push bottom items down */}
@@ -342,7 +345,7 @@ export function SpaceSidebar() {
             ? 'bg-gradient-to-br from-[#5b5fc7]/20 to-[#7b4db8]/20 text-[#5b5fc7] dark:text-[#a6a9dc]'
             : 'text-[#424242] dark:text-[#e0e0e0] hover:bg-[#e8e8e8] dark:hover:bg-[#292929]'
         }`}
-        title={t('sidebar.copilot')}
+        title="Copilot"
       >
         <div className={`relative ${activePanel === 'copilot' ? '' : 'group-hover:scale-110 transition-transform'}`}>
           <Sparkles size={20} strokeWidth={1.5} />
@@ -350,7 +353,7 @@ export function SpaceSidebar() {
             <div className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-gradient-to-r from-[#5b5fc7] to-[#7b4db8] shadow-sm" />
           )}
         </div>
-        <span className="text-[9px] font-medium">{t('sidebar.copilot')}</span>
+        <span className="text-[9px] font-medium">Copilot</span>
         {activePanel === 'copilot' && (
           <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full bg-gradient-to-b from-[#5b5fc7] to-[#7b4db8]" />
         )}
@@ -364,12 +367,12 @@ export function SpaceSidebar() {
             ? 'bg-gradient-to-br from-[#5b5fc7]/20 to-[#7b4db8]/20 text-[#5b5fc7] dark:text-[#a6a9dc]'
             : 'text-[#424242] dark:text-[#e0e0e0] hover:bg-[#e8e8e8] dark:hover:bg-[#292929]'
         }`}
-        title={t('sidebar.helpDesk')}
+        title="Help Desk"
       >
         <div className={`relative ${activePanel === 'helpdesk' ? '' : 'group-hover:scale-110 transition-transform'}`}>
           <LifeBuoy size={20} strokeWidth={1.5} />
         </div>
-        <span className="text-[9px] font-medium">{t('sidebar.help')}</span>
+        <span className="text-[9px] font-medium">Help</span>
         {activePanel === 'helpdesk' && (
           <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full bg-gradient-to-b from-[#5b5fc7] to-[#7b4db8]" />
         )}
@@ -422,7 +425,7 @@ export function SpaceSidebar() {
 
             {/* Status */}
             <div className="px-3 py-2 border-b border-[#f0f0f0] dark:border-[#333]">
-              <p className="text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider px-1 mb-1.5">{t('sidebar.status')}</p>
+              <p className="text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider px-1 mb-1.5">Status</p>
               <div className="grid grid-cols-2 gap-1">
                 {(['online', 'busy', 'away', 'offline'] as const).map(s => (
                   <button
@@ -450,7 +453,7 @@ export function SpaceSidebar() {
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-[13px] text-[#242424] dark:text-[#e0e0e0] hover:bg-[#f5f5f5] dark:hover:bg-[#2a2a2a] transition-colors"
               >
                 <User size={16} className="text-[#616161] dark:text-[#b9bbbe]" />
-                <span className="flex-1">{t('sidebar.viewProfile')}</span>
+                <span className="flex-1">View Profile</span>
                 <ChevronRight size={14} className="text-[#d1d1d1] dark:text-[#5a5a5a]" />
               </button>
               <button
@@ -461,7 +464,7 @@ export function SpaceSidebar() {
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-[13px] text-[#242424] dark:text-[#e0e0e0] hover:bg-[#f5f5f5] dark:hover:bg-[#2a2a2a] transition-colors"
               >
                 <Settings size={16} className="text-[#616161] dark:text-[#b9bbbe]" />
-                <span className="flex-1">{t('sidebar.settings')}</span>
+                <span className="flex-1">Settings</span>
                 <ChevronRight size={14} className="text-[#d1d1d1] dark:text-[#5a5a5a]" />
               </button>
             </div>
@@ -477,7 +480,7 @@ export function SpaceSidebar() {
                 ) : (
                   <Sun size={16} className="text-[#616161] dark:text-[#b9bbbe]" />
                 )}
-                <span className="flex-1">{theme === 'light' ? t('sidebar.darkMode') : t('sidebar.lightMode')}</span>
+                <span className="flex-1">{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
                 <div className={`relative w-8 h-[18px] rounded-full transition-colors ${theme === 'dark' ? 'bg-[#5b5fc7]' : 'bg-[#d1d1d1]'}`}>
                   <div className={`absolute top-[2px] w-[14px] h-[14px] rounded-full bg-white shadow-sm transition-transform ${theme === 'dark' ? 'left-[16px]' : 'left-[2px]'}`} />
                 </div>
@@ -488,12 +491,20 @@ export function SpaceSidebar() {
             <div className="border-t border-[#f0f0f0] dark:border-[#333] py-1">
               <button className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-[13px] text-[#c4314b] dark:text-[#f47067] hover:bg-[#fdf0f2] dark:hover:bg-[#c4314b]/5 transition-colors">
                 <LogOut size={16} />
-                <span>{t('sidebar.signOut')}</span>
+                <span>Sign Out</span>
               </button>
             </div>
           </div>
         )}
       </div>
     </div>
+
+      {/* Create Space Modal */}
+      <AnimatePresence>
+        {showCreateSpace && (
+          <CreateSpaceModal onClose={() => setShowCreateSpace(false)} />
+        )}
+      </AnimatePresence>
+    </>
   );
 }

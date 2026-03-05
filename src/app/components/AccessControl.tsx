@@ -10,23 +10,31 @@ import {
 } from '../data/mockData';
 import { canRoleAccess, type AccessLevel } from '../data/accessPermissions';
 import { formatDistanceToNow } from 'date-fns';
+import { useI18n } from '../context/I18nContext';
 
 // ─── Duration Labels ──────────────────────────────────────────────────────────
 
-const DURATION_OPTIONS: { id: AccessDuration; label: string; description: string }[] = [
-  { id: '24h', label: '24 hours', description: 'Quick review' },
-  { id: '3d', label: '3 days', description: 'Short task' },
-  { id: '7d', label: '7 days', description: 'Sprint-length' },
-  { id: '30d', label: '30 days', description: 'Extended project' },
-];
+const DURATION_OPTIONS: AccessDuration[] = ['24h', '3d', '7d', '30d'];
 
 // ─── Access Level Configs ─────────────────────────────────────────────────────
 
-const ACCESS_LEVEL_DISPLAY: Record<string, { label: string; icon: React.ElementType; color: string; bgColor: string }> = {
-  public:       { label: 'Public',       icon: Globe,       color: 'text-[#237b4b] dark:text-[#6fcf97]', bgColor: 'bg-[#237b4b]/10 dark:bg-[#237b4b]/20' },
-  restricted:   { label: 'Restricted',   icon: KeyRound,    color: 'text-[#d4820c] dark:text-[#f5a623]', bgColor: 'bg-[#d4820c]/10 dark:bg-[#d4820c]/20' },
-  confidential: { label: 'Confidential', icon: ShieldAlert, color: 'text-[#c4314b] dark:text-[#f47067]', bgColor: 'bg-[#c4314b]/10 dark:bg-[#c4314b]/20' },
+const ACCESS_LEVEL_DISPLAY: Record<string, { icon: React.ElementType; color: string; bgColor: string }> = {
+  public:       { icon: Globe,       color: 'text-[#237b4b] dark:text-[#6fcf97]', bgColor: 'bg-[#237b4b]/10 dark:bg-[#237b4b]/20' },
+  restricted:   { icon: KeyRound,    color: 'text-[#d4820c] dark:text-[#f5a623]', bgColor: 'bg-[#d4820c]/10 dark:bg-[#d4820c]/20' },
+  confidential: { icon: ShieldAlert, color: 'text-[#c4314b] dark:text-[#f47067]', bgColor: 'bg-[#c4314b]/10 dark:bg-[#c4314b]/20' },
 };
+
+function getDurationLabel(t: (key: string, vars?: Record<string, string | number>) => string, id: AccessDuration): string {
+  return t(`access.duration.${id}.label`);
+}
+
+function getDurationDescription(t: (key: string, vars?: Record<string, string | number>) => string, id: AccessDuration): string {
+  return t(`access.duration.${id}.desc`);
+}
+
+function getAccessLevelLabel(t: (key: string, vars?: Record<string, string | number>) => string, level: string): string {
+  return t(`access.level.${level}`);
+}
 
 // ─── Role Badge ───────────────────────────────────────────────────────────────
 
@@ -45,26 +53,28 @@ function RoleBadge({ roleSlug, size = 'sm' }: { roleSlug: string; size?: 'sm' | 
 // ─── Access Badge (inline usage) ──────────────────────────────────────────────
 
 export function AccessBadge({ level, variant = 'compact' }: { level: string; variant?: 'compact' | 'full' | 'dot' }) {
+  const { t } = useI18n();
   const cfg = ACCESS_LEVEL_DISPLAY[level];
   if (!cfg || level === 'public') return null;
   const Icon = cfg.icon;
+  const label = getAccessLevelLabel(t, level);
 
   if (variant === 'dot') {
     return (
       <span className={`w-2 h-2 rounded-full flex-shrink-0 ${level === 'restricted' ? 'bg-[#d4820c]' : 'bg-[#c4314b]'}`}
-        title={`${cfg.label} access`} />
+        title={t('access.badge.title', { level: label })} />
     );
   }
   if (variant === 'full') {
     return (
       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${cfg.color} ${cfg.bgColor}`}>
-        <Icon size={12} /> {cfg.label}
+        <Icon size={12} /> {label}
       </span>
     );
   }
   return (
-    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold ${cfg.color} ${cfg.bgColor}`} title={`${cfg.label} access`}>
-      <Icon size={10} /> {cfg.label}
+    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold ${cfg.color} ${cfg.bgColor}`} title={t('access.badge.title', { level: label })}>
+      <Icon size={10} /> {label}
     </span>
   );
 }
@@ -84,9 +94,10 @@ export function LockedOverlay({
   hasExistingRequest: boolean;
   onRequestAccess: () => void;
 }) {
+  const { t } = useI18n();
   const isConfidential = accessLevel === 'confidential';
   const cfg = ACCESS_LEVEL_DISPLAY[accessLevel];
-  const roleCfg = roleDisplayConfig[userRole];
+  const accessLabel = getAccessLevelLabel(t, accessLevel);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex items-center justify-center p-8">
@@ -105,28 +116,28 @@ export function LockedOverlay({
         </motion.div>
 
         <h3 className="text-[17px] font-bold text-[#242424] dark:text-[#f0f0f0] mb-2">
-          {isConfidential ? 'Confidential Content' : 'Restricted Access'}
+          {isConfidential ? t('access.locked.confidentialTitle') : t('access.locked.restrictedTitle')}
         </h3>
         <p className="text-[13px] text-[#616161] dark:text-[#8a8a8a] mb-3">
-          You don't have permission to view <span className="font-semibold text-[#242424] dark:text-[#e0e0e0]">"{resourceName}"</span>
+          {t('access.locked.noPermission', { resource: resourceName })}
         </p>
 
         {/* Role explanation */}
         <div className="flex items-center justify-center gap-2 mb-2">
-          <span className="text-[12px] text-[#8a8a8a]">Your role:</span>
+          <span className="text-[12px] text-[#8a8a8a]">{t('access.locked.yourRole')}</span>
           <RoleBadge roleSlug={userRole} size="md" />
         </div>
         <p className="text-[12px] text-[#999] dark:text-[#666] mb-2">
-          This content requires the <span className={`font-semibold ${cfg?.color || ''}`}>"{cfg?.label}"</span> access permission which is not granted to your role.
+          {t('access.locked.requiresLevel', { level: accessLabel })}
         </p>
         <p className="text-[11px] text-[#aaa] dark:text-[#555] mb-5">
-          Contact a space admin to update role permissions, or request temporary access below.
+          {t('access.locked.contactAdmin')}
         </p>
 
         {hasExistingRequest ? (
           <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#d4820c]/8 dark:bg-[#d4820c]/15 border border-[#d4820c]/20">
             <Clock size={14} className="text-[#d4820c] dark:text-[#f5a623]" />
-            <span className="text-[13px] font-medium text-[#d4820c] dark:text-[#f5a623]">Access request pending review</span>
+            <span className="text-[13px] font-medium text-[#d4820c] dark:text-[#f5a623]">{t('access.locked.pending')}</span>
           </div>
         ) : (
           <button
@@ -134,7 +145,7 @@ export function LockedOverlay({
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#5b5fc7] hover:bg-[#4a4eb5] text-white text-[13px] font-semibold transition-colors shadow-sm"
           >
             <Timer size={14} />
-            Request Temporary Access
+            {t('access.locked.requestTemp')}
           </button>
         )}
       </div>
@@ -157,6 +168,7 @@ export function RequestAccessModal({
   onSubmit: (reason: string, duration: AccessDuration) => void;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
   const [reason, setReason] = useState('');
   const [duration, setDuration] = useState<AccessDuration>('7d');
 
@@ -174,7 +186,7 @@ export function RequestAccessModal({
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#e1dfdd] dark:border-[#3d3d3d] bg-gradient-to-r from-[#5b5fc7] to-[#7b4db8]">
           <div className="flex items-center gap-2 text-white">
             <Timer size={18} />
-            <span className="text-[14px] font-bold">Request Temporary Access</span>
+            <span className="text-[14px] font-bold">{t('access.modal.requestTitle')}</span>
           </div>
           <button onClick={onClose} className="text-white/70 hover:text-white transition-colors"><X size={18} /></button>
         </div>
@@ -186,7 +198,7 @@ export function RequestAccessModal({
             <div>
               <p className="text-[13px] font-semibold text-[#242424] dark:text-[#e0e0e0]">{resourceName}</p>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-[11px] text-[#8a8a8a]">Your role:</span>
+                <span className="text-[11px] text-[#8a8a8a]">{t('access.locked.yourRole')}</span>
                 <RoleBadge roleSlug={userRole} />
               </div>
             </div>
@@ -195,7 +207,7 @@ export function RequestAccessModal({
           {/* Duration selector */}
           <div>
             <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-2">
-              Access Duration
+              {t('access.modal.duration')}
             </label>
             <div className="grid grid-cols-2 gap-2">
               {DURATION_OPTIONS.map(opt => (
@@ -210,9 +222,9 @@ export function RequestAccessModal({
                   <Timer size={14} className={duration === opt.id ? 'text-[#5b5fc7] dark:text-[#a6a9dc]' : 'text-[#8a8a8a]'} />
                   <div>
                     <span className={`text-[12px] font-semibold block ${duration === opt.id ? 'text-[#5b5fc7] dark:text-[#a6a9dc]' : 'text-[#242424] dark:text-[#e0e0e0]'}`}>
-                      {opt.label}
+                      {getDurationLabel(t, opt)}
                     </span>
-                    <span className="text-[10px] text-[#8a8a8a]">{opt.description}</span>
+                    <span className="text-[10px] text-[#8a8a8a]">{getDurationDescription(t, opt)}</span>
                   </div>
                   {duration === opt.id && <Check size={14} className="text-[#5b5fc7] dark:text-[#a6a9dc] ml-auto" />}
                 </button>
@@ -223,12 +235,12 @@ export function RequestAccessModal({
           {/* Reason */}
           <div>
             <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-1.5">
-              Reason for access
+              {t('access.modal.reason')}
             </label>
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Explain why you need temporary access..."
+              placeholder={t('access.modal.reasonPlaceholder')}
               rows={3}
               className="w-full bg-[#f0f0f0] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg px-3 py-2.5 text-[13px] text-[#242424] dark:text-[#e0e0e0] placeholder-[#8a8a8a] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/40 resize-none"
               autoFocus
@@ -238,19 +250,19 @@ export function RequestAccessModal({
           {/* Warning */}
           <div className="flex items-start gap-2 p-2.5 bg-[#d4820c]/5 dark:bg-[#d4820c]/10 rounded-lg text-[11px] text-[#d4820c] dark:text-[#f5a623]">
             <Clock size={13} className="mt-0.5 shrink-0" />
-            <span>Access will automatically expire after <strong>{DURATION_OPTIONS.find(d => d.id === duration)?.label}</strong>. You can request an extension if needed.</span>
+            <span>{t('access.modal.expiryHelp', { duration: getDurationLabel(t, duration) })}</span>
           </div>
 
           <div className="flex justify-end gap-2 pt-1">
             <button onClick={onClose} className="px-4 py-2 text-[12px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#3d3d3d] rounded-lg transition-colors">
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               onClick={() => { onSubmit(reason, duration); onClose(); }}
               disabled={!reason.trim()}
               className="flex items-center gap-1.5 px-4 py-2 bg-[#5b5fc7] hover:bg-[#4a4eb5] disabled:opacity-50 disabled:cursor-not-allowed text-white text-[12px] font-semibold rounded-lg transition-colors shadow-sm"
             >
-              <Send size={13} /> Send Request
+              <Send size={13} /> {t('access.modal.sendRequest')}
             </button>
           </div>
         </div>
@@ -280,6 +292,7 @@ export function AccessRequestsPanel({
   isOpen: boolean;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
   const allRequests = useMemo(() =>
     accessRequests.filter(r => r.resourceId === resourceId).sort((a, b) => b.requestedAt.getTime() - a.requestedAt.getTime()),
     [accessRequests, resourceId]
@@ -303,7 +316,7 @@ export function AccessRequestsPanel({
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#e1dfdd] dark:border-[#3d3d3d] bg-gradient-to-r from-[#5b5fc7] to-[#7b4db8] shrink-0">
           <div className="flex items-center gap-2 text-white">
             <Timer size={18} />
-            <span className="text-[14px] font-bold">Access Requests</span>
+            <span className="text-[14px] font-bold">{t('access.panel.title')}</span>
             {pendingCount > 0 && (
               <span className="px-1.5 py-0.5 text-[10px] font-bold bg-white/20 rounded-full">{pendingCount}</span>
             )}
@@ -314,7 +327,7 @@ export function AccessRequestsPanel({
         {/* Resource info */}
         <div className="px-5 py-3 border-b border-[#e1dfdd] dark:border-[#3d3d3d] bg-[#faf9f8] dark:bg-[#252525] shrink-0">
           <p className="text-[13px] font-semibold text-[#242424] dark:text-[#f2f3f5]">{resourceName}</p>
-          <p className="text-[11px] text-[#8a8a8a]">{resourceType === 'document' ? 'Document' : 'File'} · Temporary access requests</p>
+          <p className="text-[11px] text-[#8a8a8a]">{t('access.panel.resourceLine', { resourceType: resourceType === 'document' ? t('access.resource.document') : t('access.resource.file') })}</p>
         </div>
 
         {/* Content */}
@@ -322,8 +335,8 @@ export function AccessRequestsPanel({
           {allRequests.length === 0 ? (
             <div className="text-center py-10">
               <Timer size={32} className="mx-auto text-[#d1d1d1] dark:text-[#4a4a4a] mb-2" />
-              <p className="text-[13px] font-medium text-[#242424] dark:text-[#e0e0e0] mb-1">No access requests</p>
-              <p className="text-[12px] text-[#8a8a8a]">Users whose role doesn't grant access can request temporary access here.</p>
+              <p className="text-[13px] font-medium text-[#242424] dark:text-[#e0e0e0] mb-1">{t('access.panel.noneTitle')}</p>
+              <p className="text-[12px] text-[#8a8a8a]">{t('access.panel.noneDesc')}</p>
             </div>
           ) : (
             allRequests.map(req => (
@@ -341,13 +354,13 @@ export function AccessRequestsPanel({
                       <span className="text-[13px] font-semibold text-[#242424] dark:text-[#e0e0e0]">{req.requesterName}</span>
                       <RoleBadge roleSlug={req.requesterRole} />
                       {req.status === 'pending' && (
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#d4820c]/15 text-[#d4820c] dark:text-[#f5a623]">PENDING</span>
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#d4820c]/15 text-[#d4820c] dark:text-[#f5a623]">{t('access.status.pending').toUpperCase()}</span>
                       )}
                       {req.status === 'approved' && (
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#237b4b]/15 text-[#237b4b] dark:text-[#6fcf97]">APPROVED</span>
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#237b4b]/15 text-[#237b4b] dark:text-[#6fcf97]">{t('access.status.approved').toUpperCase()}</span>
                       )}
                       {req.status === 'denied' && (
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#c4314b]/15 text-[#c4314b] dark:text-[#f47067]">DENIED</span>
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#c4314b]/15 text-[#c4314b] dark:text-[#f47067]">{t('access.status.denied').toUpperCase()}</span>
                       )}
                     </div>
 
@@ -356,14 +369,14 @@ export function AccessRequestsPanel({
                     {/* Duration & meta info */}
                     <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                       <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#5b5fc7] dark:text-[#a6a9dc] bg-[#5b5fc7]/8 px-1.5 py-0.5 rounded">
-                        <Timer size={10} /> {DURATION_OPTIONS.find(d => d.id === req.requestedDuration)?.label ?? req.requestedDuration}
+                        <Timer size={10} /> {getDurationLabel(t, req.requestedDuration)}
                       </span>
                       <span className="text-[10px] text-[#999] dark:text-[#666]">
                         {formatDistanceToNow(req.requestedAt, { addSuffix: true })}
                       </span>
                       {req.respondedBy && (
                         <span className="text-[10px] text-[#999] dark:text-[#666]">
-                          · by {users.find(u => u.id === req.respondedBy)?.name || 'Unknown'}
+                          {t('access.panel.respondedBy', { user: users.find(u => u.id === req.respondedBy)?.name || t('files.unknown') })}
                         </span>
                       )}
                       {req.expiresAt && req.status === 'approved' && (
@@ -372,7 +385,9 @@ export function AccessRequestsPanel({
                             ? 'text-[#c4314b] dark:text-[#f47067]'
                             : 'text-[#237b4b] dark:text-[#6fcf97]'
                         }`}>
-                          {req.expiresAt.getTime() < Date.now() ? '· Expired' : `· Expires ${formatDistanceToNow(req.expiresAt, { addSuffix: true })}`}
+                          {req.expiresAt.getTime() < Date.now()
+                            ? t('access.panel.expired')
+                            : t('access.panel.expires', { time: formatDistanceToNow(req.expiresAt, { addSuffix: true }) })}
                         </span>
                       )}
                     </div>
@@ -382,11 +397,11 @@ export function AccessRequestsPanel({
                       <div className="flex items-center gap-2 mt-3">
                         <button onClick={() => onApproveRequest(req.id)}
                           className="flex items-center gap-1.5 px-3 py-1.5 bg-[#237b4b] hover:bg-[#1a6b3e] text-white text-[11px] font-semibold rounded-lg transition-colors">
-                          <Check size={12} /> Approve ({DURATION_OPTIONS.find(d => d.id === req.requestedDuration)?.label})
+                          <Check size={12} /> {t('access.panel.approveWithDuration', { duration: getDurationLabel(t, req.requestedDuration) })}
                         </button>
                         <button onClick={() => onDenyRequest(req.id)}
                           className="flex items-center gap-1.5 px-3 py-1.5 bg-[#f0f0f0] dark:bg-[#3d3d3d] hover:bg-[#e8e8e8] dark:hover:bg-[#444] text-[#616161] dark:text-[#b9bbbe] text-[11px] font-semibold rounded-lg transition-colors">
-                          <X size={12} /> Deny
+                          <X size={12} /> {t('access.panel.deny')}
                         </button>
                       </div>
                     )}
@@ -400,10 +415,10 @@ export function AccessRequestsPanel({
         {/* Footer */}
         <div className="flex items-center justify-between px-5 py-3 border-t border-[#e1dfdd] dark:border-[#3d3d3d] shrink-0 bg-[#faf9f8] dark:bg-[#252525]">
           <p className="text-[11px] text-[#8a8a8a]">
-            Role-level access is managed in Space Permissions → Permissions tab
+            {t('access.panel.footerHint')}
           </p>
           <button onClick={onClose} className="px-4 py-2 text-[12px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:bg-[#e8e8e8] dark:hover:bg-[#3d3d3d] rounded-lg transition-colors">
-            Done
+            {t('common.close')}
           </button>
         </div>
       </motion.div>

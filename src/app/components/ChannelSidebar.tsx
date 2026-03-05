@@ -1,10 +1,10 @@
 import { Link, useParams } from 'react-router';
-import { Hash, Lock, Volume2, ChevronDown, Plus, FileText, FolderOpen, CheckSquare, ChevronRight, MessageSquare, Users, BarChart3, Rocket, Shield, GitPullRequest, Layers, Target, Calendar, Megaphone, BookOpen, LayoutDashboard, Puzzle, Home, Settings, type LucideIcon } from 'lucide-react';
+import { Hash, Lock, Volume2, ChevronDown, Plus, FileText, FolderOpen, CheckSquare, ChevronRight, MessageSquare, Users, BarChart3, Rocket, Shield, GitPullRequest, Layers, Target, Calendar, Megaphone, BookOpen, LayoutDashboard, Puzzle, Home, Settings, PenLine, type LucideIcon } from 'lucide-react';
 import { spaces, directMessages, groupChats, users } from '../data/mockData';
 import { getAppsForSpace } from '../data/appData';
 import { useState, useEffect, useCallback } from 'react';
 import { getNewPostCount } from '../pages/SpaceHome';
-import { useI18n } from '../context/I18nContext';
+import { getCustomDashboardsForSpace, subscribeCustomDashboards } from '../data/customDashboards';
 
 const dashboardIconMap: Record<string, LucideIcon> = {
   'bar-chart': BarChart3,
@@ -21,12 +21,23 @@ const dashboardIconMap: Record<string, LucideIcon> = {
 
 export function ChannelSidebar() {
   const { spaceId, channelId, dashboardId, appId } = useParams();
-  const { t } = useI18n();
   const [channelsExpanded, setChannelsExpanded] = useState(true);
   const [dashboardsExpanded, setDashboardsExpanded] = useState(true);
   const [appsExpanded, setAppsExpanded] = useState(true);
   const [dmsExpanded, setDmsExpanded] = useState(true);
   const [groupsExpanded, setGroupsExpanded] = useState(true);
+  const [customDashboards, setCustomDashboards] = useState(() =>
+    spaceId ? getCustomDashboardsForSpace(spaceId) : []
+  );
+
+  // Subscribe to custom dashboard changes
+  useEffect(() => {
+    const update = () => {
+      if (spaceId) setCustomDashboards(getCustomDashboardsForSpace(spaceId));
+    };
+    update();
+    return subscribeCustomDashboards(update);
+  }, [spaceId]);
 
   
   const currentSpace = spaces.find(s => s.id === spaceId);
@@ -34,6 +45,8 @@ export function ChannelSidebar() {
   const isOnAppsPage = window.location.pathname.includes('/apps');
   const isOnHomePage = window.location.pathname.includes('/home');
   const isOnPermissionsPage = window.location.pathname.includes('/permissions');
+  const isOnMembersPage = window.location.pathname.includes('/members');
+  const isOnManagementPage = isOnPermissionsPage || isOnMembersPage;
   
   // Track new post count for badge
   const [newPostCount, setNewPostCount] = useState(0);
@@ -87,7 +100,7 @@ export function ChannelSidebar() {
       <div className="w-[280px] bg-gradient-to-b from-[#faf9f8] to-[#f3f2f1] dark:from-[#2b2d31] dark:to-[#1e1f22] border-r border-[#e1dfdd] dark:border-[#3d3d3d] flex flex-col">
         {/* Header */}
         <div className="h-[60px] px-4 flex items-center justify-between border-b border-[#e1dfdd] dark:border-[#3d3d3d] shadow-sm">
-          <h2 className="font-bold text-[#242424] dark:text-[#f2f3f5] text-[16px] tracking-tight">{t('channel.chatTitle')}</h2>
+          <h2 className="font-bold text-[#242424] dark:text-[#f2f3f5] text-[16px] tracking-tight">Chat</h2>
           <button className="text-[#616161] dark:text-[#b9bbbe] hover:text-[#242424] dark:hover:text-[#f2f3f5] transition-all hover:bg-[#e8e8f8] dark:hover:bg-[#3d3d3d] p-1.5 rounded-md">
             <Plus size={18} />
           </button>
@@ -98,7 +111,7 @@ export function ChannelSidebar() {
           <div className="relative">
             <input
               type="text"
-              placeholder={t('channel.searchMessages')}
+              placeholder="Search messages"
               className="w-full bg-[#e8e8e8] dark:bg-[#1e1f22] border-0 rounded-md px-3 py-2 text-sm text-[#242424] dark:text-[#dbdee1] placeholder-[#616161] dark:placeholder-[#6d6f78] focus:outline-none focus:ring-2 focus:ring-[#6264a7] transition-all shadow-inner"
             />
           </div>
@@ -116,7 +129,7 @@ export function ChannelSidebar() {
                 size={14}
                 className={`transition-transform duration-200 ${dmsExpanded ? 'rotate-90' : ''}`}
               />
-              {t('channel.directMessages')}
+              Direct Messages
             </button>
             
             {dmsExpanded && (
@@ -169,7 +182,7 @@ export function ChannelSidebar() {
                 size={14}
                 className={`transition-transform duration-200 ${groupsExpanded ? 'rotate-90' : ''}`}
               />
-              {t('channel.groupChats')}
+              Group Chats
             </button>
             
             {groupsExpanded && (
@@ -244,7 +257,7 @@ export function ChannelSidebar() {
               }`}
             >
               <Home size={20} />
-              <span className="flex-1">{t('channel.home')}</span>
+              <span className="flex-1">Home</span>
               {!isOnHomePage && newPostCount > 0 && (
                 <span className="bg-gradient-to-r from-[#5b5fc7] to-[#7b4db8] text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] text-center font-bold shadow-sm">
                   {newPostCount > 9 ? '9+' : newPostCount}
@@ -261,7 +274,7 @@ export function ChannelSidebar() {
             }`}
           >
             <FileText size={20} />
-            <span>{t('channel.documents')}</span>
+            <span>Documents</span>
           </Link>
           <Link
             to={`/space/${spaceId}/files`}
@@ -272,7 +285,7 @@ export function ChannelSidebar() {
             }`}
           >
             <FolderOpen size={20} />
-            <span>{t('channel.files')}</span>
+            <span>Files</span>
           </Link>
           <Link
             to={`/space/${spaceId}/tasks`}
@@ -283,7 +296,7 @@ export function ChannelSidebar() {
             }`}
           >
             <CheckSquare size={20} />
-            <span>{t('channel.tasks')}</span>
+            <span>Tasks</span>
           </Link>
         </div>
 
@@ -299,32 +312,45 @@ export function ChannelSidebar() {
               size={14}
               className={`transition-transform duration-200 ${dashboardsExpanded ? 'rotate-90' : ''}`}
             />
-            {t('channel.dashboards')}
+            Dashboards
           </button>
           
           {dashboardsExpanded && (
             <div className="mt-1 space-y-0.5">
-              {currentSpace.dashboards.map((dashboard) => {
-                const Icon = dashboardIconMap[dashboard.icon] || LayoutDashboard;
-                return (
-                  <Link
-                    key={dashboard.id}
-                    to={`/space/${spaceId}/dashboard/${dashboard.id}`}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-md text-[14px] font-medium transition-all group ${
-                      dashboardId === dashboard.id
-                        ? 'bg-gradient-to-r from-[#e8e8f8] to-[#e0e0f5] dark:from-[#404249] dark:to-[#35373c] text-[#6264a7] dark:text-[#949cf7] shadow-sm'
-                        : 'text-[#4e5058] dark:text-[#96989d] hover:bg-[#e8e8f8] dark:hover:bg-[#35373c] hover:text-[#242424] dark:hover:text-[#dbdee1]'
-                    }`}
-                  >
-                    <Icon size={20} />
-                    <span className="flex-1 truncate">{dashboard.name}</span>
-                  </Link>
-                );
-              })}
-              <button className="flex items-center gap-3 px-3 py-2 rounded-md text-[14px] text-[#616161] dark:text-[#96989d] hover:text-[#242424] dark:hover:text-[#dbdee1] hover:bg-[#e8e8f8] dark:hover:bg-[#35373c] w-full transition-all">
+              {/* Merge built-in dashboards with custom overrides; custom wins by ID, order preserved */}
+              {(() => {
+                const customMap = new Map(customDashboards.map(d => [d.id, d]));
+                // Built-in dashboards, replaced by custom override if one exists
+                const merged = currentSpace.dashboards.map(d => customMap.get(d.id) || d);
+                // Truly new custom dashboards (IDs not in built-in)
+                const builtInIds = new Set(currentSpace.dashboards.map(d => d.id));
+                const brandNew = customDashboards.filter(d => !builtInIds.has(d.id));
+                const allDashboards = [...merged, ...brandNew];
+                return allDashboards.map((dashboard) => {
+                  const Icon = dashboardIconMap[dashboard.icon] || LayoutDashboard;
+                  return (
+                    <Link
+                      key={dashboard.id}
+                      to={`/space/${spaceId}/dashboard/${dashboard.id}`}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-md text-[14px] font-medium transition-all group ${
+                        dashboardId === dashboard.id
+                          ? 'bg-gradient-to-r from-[#e8e8f8] to-[#e0e0f5] dark:from-[#404249] dark:to-[#35373c] text-[#6264a7] dark:text-[#949cf7] shadow-sm'
+                          : 'text-[#4e5058] dark:text-[#96989d] hover:bg-[#e8e8f8] dark:hover:bg-[#35373c] hover:text-[#242424] dark:hover:text-[#dbdee1]'
+                      }`}
+                    >
+                      <Icon size={20} />
+                      <span className="flex-1 truncate">{dashboard.name}</span>
+                    </Link>
+                  );
+                });
+              })()}
+              <Link
+                to={`/space/${spaceId}/dashboard/new`}
+                className="flex items-center gap-3 px-3 py-2 rounded-md text-[14px] text-[#616161] dark:text-[#96989d] hover:text-[#242424] dark:hover:text-[#dbdee1] hover:bg-[#e8e8f8] dark:hover:bg-[#35373c] w-full transition-all"
+              >
                 <Plus size={16} />
-                <span>{t('channel.addDashboard')}</span>
-              </button>
+                <span>Add dashboard</span>
+              </Link>
             </div>
           )}
         </div>
@@ -341,7 +367,7 @@ export function ChannelSidebar() {
               size={14}
               className={`transition-transform duration-200 ${appsExpanded ? 'rotate-90' : ''}`}
             />
-            {t('channel.apps')}
+            Apps
           </button>
           
           {appsExpanded && (
@@ -369,7 +395,7 @@ export function ChannelSidebar() {
                 }`}
               >
                 <Puzzle size={16} />
-                <span>{t('channel.manageApps')}</span>
+                <span>Manage apps</span>
               </Link>
             </div>
           )}
@@ -387,7 +413,7 @@ export function ChannelSidebar() {
               size={14}
               className={`transition-transform duration-200 ${channelsExpanded ? 'rotate-90' : ''}`}
             />
-            {t('channel.channels')}
+            Channels
           </button>
           
           {channelsExpanded && (
@@ -413,25 +439,25 @@ export function ChannelSidebar() {
               ))}
               <button className="flex items-center gap-3 px-3 py-2 rounded-md text-[14px] text-[#616161] dark:text-[#96989d] hover:text-[#242424] dark:hover:text-[#dbdee1] hover:bg-[#e8e8f8] dark:hover:bg-[#35373c] w-full transition-all">
                 <Plus size={16} />
-                <span>{t('channel.addChannel')}</span>
+                <span>Add channel</span>
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Permissions - Admin only */}
+      {/* Space Management - Admin only */}
       <div className="px-2 py-2 border-t border-[#e1dfdd] dark:border-[#3d3d3d]">
         <Link
           to={`/space/${spaceId}/permissions`}
           className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-[13px] font-medium transition-all ${
-            isOnPermissionsPage
+            isOnManagementPage
               ? 'bg-gradient-to-r from-[#e8e8f8] to-[#e0e0f5] dark:from-[#404249] dark:to-[#35373c] text-[#6264a7] dark:text-[#949cf7] shadow-sm'
               : 'text-[#616161] dark:text-[#96989d] hover:bg-[#e8e8f8] dark:hover:bg-[#35373c] hover:text-[#6264a7] dark:hover:text-[#dbdee1]'
           }`}
         >
           <Settings size={16} />
-          <span className="flex-1">Permissions</span>
+          <span className="flex-1">Space Management</span>
           <span className="text-[9px] bg-[#5b5fc7]/10 dark:bg-[#5b5fc7]/20 text-[#5b5fc7] dark:text-[#a6a9dc] px-1.5 py-0.5 rounded font-semibold">ADMIN</span>
         </Link>
       </div>

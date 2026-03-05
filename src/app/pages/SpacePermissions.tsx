@@ -14,6 +14,7 @@ import {
 import { spaces, users, currentUser } from '../data/mockData';
 import { updateAccessPermission } from '../data/accessPermissions';
 import { Switch } from '../../components/ui/switch';
+import { useI18n } from '../context/I18nContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -493,6 +494,7 @@ interface RoleFormData {
 const emptyRoleForm: RoleFormData = { id: '', label: '', description: '', colorIdx: 0, iconIdx: 0, baseRole: 'member' };
 
 export function SpacePermissions() {
+  const { t } = useI18n();
   const { spaceId } = useParams();
   const space = spaces.find(s => s.id === spaceId);
   const [activeTab, setActiveTab] = useState<PermTab>('members');
@@ -815,11 +817,11 @@ export function SpacePermissions() {
   }, [space, members, permCategories, channelOverrides, allRoleConfig, allRoleKeys]);
 
   const tabs: { id: PermTab; label: string; icon: LucideIcon }[] = [
-    { id: 'members', label: 'Members', icon: Users },
-    { id: 'roles', label: 'Roles', icon: Crown },
-    { id: 'permissions', label: 'Permissions', icon: Shield },
-    { id: 'channels', label: 'Channels', icon: Layers },
-    { id: 'audit', label: 'Audit Log', icon: Eye },
+    { id: 'members', label: t('spacePermissions.tab.members'), icon: Users },
+    { id: 'roles', label: t('spacePermissions.tab.roles'), icon: Crown },
+    { id: 'permissions', label: t('spacePermissions.tab.permissions'), icon: Shield },
+    { id: 'channels', label: t('spacePermissions.tab.channels'), icon: Layers },
+    { id: 'audit', label: t('spacePermissions.tab.audit'), icon: Eye },
   ];
 
   const auditLog = [
@@ -854,22 +856,22 @@ export function SpacePermissions() {
             <Shield size={18} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
           </div>
           <div>
-            <h1 className="text-[15px] font-bold text-[#242424] dark:text-[#f2f3f5]">{space.name} — Permissions</h1>
-            <p className="text-[11px] text-[#616161] dark:text-[#8a8a8a]">Manage roles, members, and access controls</p>
+            <h1 className="text-[15px] font-bold text-[#242424] dark:text-[#f2f3f5]">{t('spacePermissions.title', { space: space.name })}</h1>
+            <p className="text-[11px] text-[#616161] dark:text-[#8a8a8a]">{t('spacePermissions.subtitle')}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={handleExportReport}
             className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#616161] dark:text-[#b9bbbe] bg-[#f0f0f0] dark:bg-[#252525] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg hover:bg-[#e8e8e8] dark:hover:bg-[#2a2a2a] hover:border-[#5b5fc7]/30 transition-colors"
-            title="Export permissions report as CSV"
+            title={t('spacePermissions.exportTitle')}
           >
-            <Download size={13} /> Export Report
+            <Download size={13} /> {t('spacePermissions.exportReport')}
           </button>
           <AnimatePresence>
             {pendingChanges > 0 && (
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="flex items-center gap-2">
-                <span className="text-[11px] text-[#d4820c] dark:text-[#f5a623] font-medium">{pendingChanges} unsaved change{pendingChanges > 1 ? 's' : ''}</span>
-                <button onClick={handleSaveChanges} className="px-3 py-1.5 bg-[#5b5fc7] hover:bg-[#4a4eb5] text-white text-[12px] font-semibold rounded-lg transition-colors shadow-sm">Save Changes</button>
+                <span className="text-[11px] text-[#d4820c] dark:text-[#f5a623] font-medium">{t('spacePermissions.unsavedCount', { count: pendingChanges })}</span>
+                <button onClick={handleSaveChanges} className="px-3 py-1.5 bg-[#5b5fc7] hover:bg-[#4a4eb5] text-white text-[12px] font-semibold rounded-lg transition-colors shadow-sm">{t('spacePermissions.saveChanges')}</button>
               </motion.div>
             )}
           </AnimatePresence>
@@ -914,7 +916,7 @@ export function SpacePermissions() {
                   <button onClick={() => setShowRoleFilter(!showRoleFilter)}
                     className="flex items-center gap-2 px-3 py-2 bg-[#f0f0f0] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg text-[12px] text-[#424242] dark:text-[#e0e0e0] hover:border-[#5b5fc7]/40 transition-colors">
                     <Users size={13} />
-                    {roleFilter === 'all' ? 'All roles' : (allRoleConfig[roleFilter]?.label || roleFilter)}
+                    {roleFilter === 'all' ? t('spacePermissions.allRoles') : (allRoleConfig[roleFilter]?.label || roleFilter)}
                     <ChevronDown size={12} />
                   </button>
                   <AnimatePresence>
@@ -923,7 +925,7 @@ export function SpacePermissions() {
                         className="absolute left-0 top-full mt-1 w-[180px] bg-white dark:bg-[#2b2d31] rounded-lg border border-[#e1dfdd] dark:border-[#3d3d3d] shadow-xl z-50 py-1 max-h-[260px] overflow-y-auto">
                         <button onClick={() => { setRoleFilter('all'); setShowRoleFilter(false); }}
                           className={`w-full flex items-center gap-2 px-3 py-2 text-[12px] transition-colors ${roleFilter === 'all' ? 'bg-[#5b5fc7]/8 text-[#5b5fc7]' : 'text-[#424242] dark:text-[#e0e0e0] hover:bg-[#f5f5f5] dark:hover:bg-[#35373c]'}`}>
-                          <Users size={13} /> All ({roleCounts.all})
+                          <Users size={13} /> {t('spacePermissions.all', { count: roleCounts.all })}
                           {roleFilter === 'all' && <Check size={13} className="ml-auto" />}
                         </button>
                         {allRoleKeys.map(r => {
@@ -944,7 +946,7 @@ export function SpacePermissions() {
                 </div>
                 <button onClick={() => setShowInviteModal(true)}
                   className="flex items-center gap-2 px-4 py-2 bg-[#5b5fc7] hover:bg-[#4a4eb5] text-white text-[12px] font-semibold rounded-lg transition-colors shadow-sm ml-auto">
-                  <UserPlus size={14} /> Invite Member
+                  <UserPlus size={14} /> {t('spacePermissions.inviteMember')}
                 </button>
               </div>
 
@@ -974,7 +976,7 @@ export function SpacePermissions() {
                 {filteredMembers.length === 0 && (
                   <div className="py-12 text-center">
                     <Users size={32} className="mx-auto text-[#d1d1d1] dark:text-[#4a4a4a] mb-2" />
-                    <p className="text-[13px] text-[#8a8a8a] dark:text-[#6d6f78]">No members found</p>
+                    <p className="text-[13px] text-[#8a8a8a] dark:text-[#6d6f78]">{t('spacePermissions.noMembers')}</p>
                   </div>
                 )}
               </div>

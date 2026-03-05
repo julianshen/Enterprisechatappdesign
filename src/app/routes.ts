@@ -11,9 +11,11 @@ import { TeamDashboard } from './pages/TeamDashboard';
 import { AppStore } from './pages/AppStore';
 import { SpaceApps } from './pages/SpaceApps';
 import { SpacePermissions } from './pages/SpacePermissions';
+
 import { ProfileSettings } from './pages/ProfileSettings';
 import { WarRoom } from './pages/WarRoom';
 import { SpaceHome } from './pages/SpaceHome';
+import { DashboardEditor } from './pages/DashboardEditor';
 
 export const router = createBrowserRouter([
   {
@@ -44,6 +46,7 @@ export const router = createBrowserRouter([
         path: 'space/:spaceId/home',
         Component: SpaceHome,
       },
+
       {
         path: 'space/:spaceId/:channelId',
         Component: ChatRoom,
@@ -59,6 +62,14 @@ export const router = createBrowserRouter([
       {
         path: 'space/:spaceId/tasks',
         Component: Tasks,
+      },
+      {
+        path: 'space/:spaceId/dashboard/new',
+        Component: DashboardEditor,
+      },
+      {
+        path: 'space/:spaceId/dashboard/:dashboardId/edit',
+        Component: DashboardEditor,
       },
       {
         path: 'space/:spaceId/dashboard/:dashboardId',
@@ -77,6 +88,14 @@ export const router = createBrowserRouter([
         Component: SpacePermissions,
       },
       {
+        path: 'my/dashboard/new',
+        Component: DashboardEditor,
+      },
+      {
+        path: 'my/dashboard/:dashboardId/edit',
+        Component: DashboardEditor,
+      },
+      {
         path: 'profile',
         Component: ProfileSettings,
       },
@@ -87,6 +106,10 @@ export const router = createBrowserRouter([
       {
         path: 'warroom/:incidentId',
         Component: WarRoom,
+      },
+      {
+        path: '*',
+        Component: Recent,
       },
     ],
   },
