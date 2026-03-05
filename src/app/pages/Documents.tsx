@@ -6,11 +6,13 @@ import {
   MoreHorizontal, FileText, Hash, MessageSquare, Copy,
   Trash2, ArrowUpRight, Sparkles, Check, Square, CheckSquare,
   Quote, Code, Table, Minus, AlertCircle, List, Share2, Send,
-  X, Home,
+  X, Home, Lock, Shield, Eye,
 } from 'lucide-react';
-import { spaces, documents, users, currentUser, type Document, type DocumentBlock } from '../data/mockData';
+import { spaces, documents, users, currentUser, initialAccessRequests, memberRoles, roleDisplayConfig, type Document, type DocumentBlock, type AccessRequest, type AccessDuration } from '../data/mockData';
+import { format, formatDistanceToNow } from 'date-fns';
 import { SecurityBadge } from '../components/SecurityBadge';
-import { type LanguageCode, useI18n } from '../context/I18nContext';
+import { AccessBadge, LockedOverlay, RequestAccessModal, AccessRequestsPanel } from '../components/AccessControl';
+import { canRoleAccess } from '../data/accessPermissions';
 
 // Notion-style callout colors
 const CALLOUT_COLORS: Record<string, { bg: string; border: string }> = {
@@ -21,22 +23,6 @@ const CALLOUT_COLORS: Record<string, { bg: string; border: string }> = {
   purple: { bg: 'bg-[#ede7f6] dark:bg-[#241a36]', border: 'border-[#d1c4e9] dark:border-[#3a2a50]' },
   gray: { bg: 'bg-[#f1f3f4] dark:bg-[#2a2a2a]', border: 'border-[#dadce0] dark:border-[#404040]' },
 };
-
-const LOCALE_MAP: Record<LanguageCode, string> = {
-  en: 'en-US',
-  'zh-Hant': 'zh-TW',
-  'zh-Hans': 'zh-CN',
-  ja: 'ja-JP',
-  de: 'de-DE',
-  es: 'es-ES',
-  fr: 'fr-FR',
-  hi: 'hi-IN',
-  pl: 'pl-PL',
-};
-
-function getLocaleForLanguage(language: LanguageCode) {
-  return LOCALE_MAP[language] || 'en-US';
-}
 
 // Render inline markdown (bold, italic, inline code, links)
 function renderInlineMarkdown(text: string): React.ReactNode[] {
@@ -71,24 +57,6 @@ function renderInlineMarkdown(text: string): React.ReactNode[] {
     parts.push(text.slice(lastIndex));
   }
   return parts;
-}
-
-function formatRelativeTime(date: Date, locale: string, style: 'short' | 'long' = 'short') {
-  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto', style });
-  const diff = date.getTime() - Date.now();
-  const seconds = Math.round(diff / 1000);
-  const absSeconds = Math.abs(seconds);
-  if (absSeconds < 60) return rtf.format(seconds, 'second');
-  const minutes = Math.round(seconds / 60);
-  if (Math.abs(minutes) < 60) return rtf.format(minutes, 'minute');
-  const hours = Math.round(minutes / 60);
-  if (Math.abs(hours) < 24) return rtf.format(hours, 'hour');
-  const days = Math.round(hours / 24);
-  if (Math.abs(days) < 30) return rtf.format(days, 'day');
-  const months = Math.round(days / 30);
-  if (Math.abs(months) < 12) return rtf.format(months, 'month');
-  const years = Math.round(months / 12);
-  return rtf.format(years, 'year');
 }
 
 function BlockRenderer({ block, numberIndex }: { block: DocumentBlock; numberIndex?: number }) {
@@ -300,6 +268,9 @@ function SidebarDocItem({
         <span className={`text-[13px] truncate flex-1 ${isSelected ? 'font-medium' : ''}`}>
           {doc.title}
         </span>
+        {doc.accessLevel && doc.accessLevel !== 'public' && (
+          <AccessBadge level={doc.accessLevel} variant="dot" />
+        )}
         {doc.securityLevel && (
           <SecurityBadge level={doc.securityLevel} variant="dot" />
         )}
@@ -335,6 +306,72 @@ function SidebarDocItem({
   );
 }
 
+// ─── View As Role Picker ──────────────────────────────────────────────────────
+const PREVIEW_ROLES = [
+  { slug: '', label: 'Your role (Admin)', description: 'Default view' },
+  { slug: 'member', label: 'Member', description: 'Standard member access' },
+  { slug: 'guest', label: 'Guest', description: 'Limited external access' },
+  { slug: 'custom-contributor', label: 'Contributor', description: 'Custom role' },
+  { slug: 'custom-reviewer', label: 'External Reviewer', description: 'Custom role' },
+];
+
+function ViewAsRolePicker({
+  activeRole,
+  onChangeRole,
+}: {
+  activeRole: string;
+  onChangeRole: (role: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const currentLabel = PREVIEW_ROLES.find(r => r.slug === activeRole)?.label || 'Admin';
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-medium transition-colors ${
+          activeRole
+            ? 'bg-[#d4820c]/10 text-[#d4820c] dark:text-[#f5a623] border border-[#d4820c]/30'
+            : 'text-[#616161] dark:text-[#999] hover:bg-[#f5f5f5] dark:hover:bg-[#2a2a2a]'
+        }`}
+      >
+        <Eye size={13} />
+        {activeRole ? `Viewing as: ${currentLabel}` : 'View as…'}
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -4, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.95 }}
+            transition={{ duration: 0.12 }}
+            className="absolute right-0 top-full mt-1 bg-white dark:bg-[#2b2b2b] rounded-xl border border-[#e8e8e8] dark:border-[#3d3d3d] shadow-xl z-30 py-1.5 min-w-[220px]"
+          >
+            <p className="px-3 py-1 text-[10px] font-semibold text-[#999] dark:text-[#666] uppercase tracking-wider">
+              Preview access as role
+            </p>
+            {PREVIEW_ROLES.map(role => (
+              <button
+                key={role.slug}
+                onClick={() => { onChangeRole(role.slug); setOpen(false); }}
+                className={`w-full text-left px-3 py-2 text-[13px] hover:bg-[#f5f5f5] dark:hover:bg-[#333] transition-colors flex items-center justify-between gap-2 ${
+                  activeRole === role.slug ? 'text-[#5b5fc7] dark:text-[#a6a9dc]' : 'text-[#424242] dark:text-[#d1d1d1]'
+                }`}
+              >
+                <div>
+                  <span className="font-medium">{role.label}</span>
+                  <span className="text-[11px] text-[#999] dark:text-[#666] ml-1.5">{role.description}</span>
+                </div>
+                {activeRole === role.slug && <Check size={14} className="text-[#5b5fc7] dark:text-[#a6a9dc] shrink-0" />}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // Share to Home dialog
 function ShareToHomeDialog({
   doc,
@@ -345,9 +382,6 @@ function ShareToHomeDialog({
   spaceId: string;
   onClose: () => void;
 }) {
-  const { t, language } = useI18n();
-  const locale = getLocaleForLanguage(language);
-  const dateFormatter = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', year: 'numeric' });
   const navigate = useNavigate();
   const [message, setMessage] = useState('');
   const [posting, setPosting] = useState(false);
@@ -433,8 +467,8 @@ function ShareToHomeDialog({
               <Share2 size={16} className="text-white" />
             </div>
             <div>
-              <h3 className="text-[15px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('documents.postToHome')}</h3>
-              <p className="text-[12px] text-[#999] dark:text-[#666]">{t('documents.shareWithTeam')}</p>
+              <h3 className="text-[15px] font-semibold text-[#242424] dark:text-[#f0f0f0]">Post to Home</h3>
+              <p className="text-[12px] text-[#999] dark:text-[#666]">Share this document with your team</p>
             </div>
           </div>
           <button
@@ -451,7 +485,7 @@ function ShareToHomeDialog({
           {spacesWithHome.length > 1 && (
             <div>
               <label className="text-[12px] font-medium text-[#999] dark:text-[#666] uppercase tracking-wider block mb-1.5">
-                {t('documents.postTo')}
+                Post to
               </label>
               <div className="flex gap-2">
                 {spacesWithHome.map(sp => (
@@ -475,13 +509,13 @@ function ShareToHomeDialog({
           {/* Message */}
           <div>
             <label className="text-[12px] font-medium text-[#999] dark:text-[#666] uppercase tracking-wider block mb-1.5">
-              {t('documents.messageOptional')}
+              Message (optional)
             </label>
             <textarea
               ref={textareaRef}
               value={message}
               onChange={e => setMessage(e.target.value)}
-              placeholder={t('documents.messagePlaceholder')}
+              placeholder="Add a message about this document..."
               rows={3}
               className="w-full text-[14px] bg-[#f5f5f5] dark:bg-[#1e1f22] text-[#242424] dark:text-[#f0f0f0] placeholder-[#aaa] dark:placeholder-[#555] rounded-lg px-3 py-2.5 outline-none border border-[#e8e8e8] dark:border-[#333] focus:border-[#5b5fc7]/40 transition-colors resize-none leading-relaxed"
             />
@@ -507,7 +541,7 @@ function ShareToHomeDialog({
                       </div>
                     )}
                     <span>·</span>
-                    <span>{dateFormatter.format(doc.lastModified)}</span>
+                    <span>{format(doc.lastModified, 'MMM d, yyyy')}</span>
                   </div>
                 </div>
               </div>
@@ -519,14 +553,14 @@ function ShareToHomeDialog({
         <div className="flex items-center justify-between px-5 py-3.5 border-t border-[#f0f0f0] dark:border-[#333] bg-[#faf9f8] dark:bg-[#252525]">
           <div className="flex items-center gap-1.5 text-[12px] text-[#999] dark:text-[#666]">
             <Home size={13} />
-            {t('documents.postingTo', { name: targetSpace?.name || t('documents.home') })}
+            Posting to {targetSpace?.name || 'Home'}
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={onClose}
               className="px-3.5 py-1.5 text-[13px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#333] rounded-lg transition-colors"
             >
-              {t('common.cancel')}
+              Cancel
             </button>
             <button
               onClick={handlePost}
@@ -536,7 +570,7 @@ function ShareToHomeDialog({
               {posted ? (
                 <>
                   <Check size={14} />
-                  {t('documents.posted')}
+                  Posted!
                 </>
               ) : posting ? (
                 <>
@@ -545,12 +579,12 @@ function ShareToHomeDialog({
                     transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                     className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full"
                   />
-                  {t('documents.posting')}
+                  Posting...
                 </>
               ) : (
                 <>
                   <Send size={14} />
-                  {t('common.post')}
+                  Post
                 </>
               )}
             </button>
@@ -562,9 +596,6 @@ function ShareToHomeDialog({
 }
 
 export function Documents() {
-  const { t, language } = useI18n();
-  const locale = getLocaleForLanguage(language);
-  const dateFormatter = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', year: 'numeric' });
   const { spaceId } = useParams();
   const currentSpace = spaces.find(s => s.id === spaceId);
   const [selectedDocId, setSelectedDocId] = useState<string | null>('doc-1');
@@ -572,7 +603,78 @@ export function Documents() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [showAccessPanel, setShowAccessPanel] = useState(false);
+  const [accessRequests, setAccessRequests] = useState<AccessRequest[]>(initialAccessRequests);
+  // Track temporary access grants per resource (userId → expiration)
+  const [tempAccessGrants, setTempAccessGrants] = useState<Record<string, Record<string, Date>>>({});
   const searchRef = useRef<HTMLInputElement>(null);
+  // "View as" role preview — lets admins simulate restricted roles
+  const [previewRole, setPreviewRole] = useState('');
+
+  const userRole = previewRole || (memberRoles[currentUser.id] || 'guest');
+
+  // Access control — level-based via Space Permissions matrix
+  const getDocAccessLevel = useCallback((doc: Document) => {
+    return (doc.accessLevel ?? 'public') as 'public' | 'restricted' | 'confidential';
+  }, []);
+
+  const hasAccess = useCallback((doc: Document) => {
+    const level = getDocAccessLevel(doc);
+    if (level === 'public') return true;
+    // Check role permissions from shared access matrix
+    if (canRoleAccess(userRole, level)) return true;
+    // Check temporary access grants
+    const grants = tempAccessGrants[doc.id];
+    if (grants && grants[currentUser.id]) {
+      return grants[currentUser.id].getTime() > Date.now();
+    }
+    return false;
+  }, [getDocAccessLevel, userRole, tempAccessGrants]);
+
+  const hasPendingRequest = useCallback((docId: string) => {
+    return accessRequests.some(r => r.resourceId === docId && r.requesterId === currentUser.id && r.status === 'pending');
+  }, [accessRequests]);
+
+  const handleRequestAccess = useCallback((docId: string, reason: string, duration: AccessDuration) => {
+    const doc = documents.find(d => d.id === docId);
+    if (!doc) return;
+    const newReq: AccessRequest = {
+      id: `ar-${Date.now()}`,
+      resourceType: 'document',
+      resourceId: docId,
+      resourceName: doc.title,
+      requesterId: currentUser.id,
+      requesterName: currentUser.name,
+      requesterAvatar: currentUser.avatar,
+      requesterRole: userRole,
+      reason,
+      requestedDuration: duration,
+      status: 'pending',
+      requestedAt: new Date(),
+    };
+    setAccessRequests(prev => [newReq, ...prev]);
+  }, [userRole]);
+
+  const durationMs = (d: AccessDuration) => ({ '24h': 86400000, '3d': 259200000, '7d': 604800000, '30d': 2592000000 }[d]);
+
+  const handleApproveRequest = useCallback((requestId: string) => {
+    setAccessRequests(prev => prev.map(r => {
+      if (r.id !== requestId) return r;
+      const expiresAt = new Date(Date.now() + durationMs(r.requestedDuration));
+      setTempAccessGrants(grants => ({
+        ...grants,
+        [r.resourceId]: { ...grants[r.resourceId], [r.requesterId]: expiresAt },
+      }));
+      return { ...r, status: 'approved' as const, respondedAt: new Date(), respondedBy: currentUser.id, expiresAt };
+    }));
+  }, []);
+
+  const handleDenyRequest = useCallback((requestId: string) => {
+    setAccessRequests(prev => prev.map(r =>
+      r.id === requestId ? { ...r, status: 'denied' as const, respondedAt: new Date(), respondedBy: currentUser.id } : r
+    ));
+  }, []);
 
   if (!currentSpace) return null;
 
@@ -662,7 +764,7 @@ export function Documents() {
                 <input
                   ref={searchRef}
                   type="text"
-                  placeholder={t('documents.searchPages')}
+                  placeholder="Search pages..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="w-full pl-8 pr-3 py-1.5 text-[13px] bg-white dark:bg-[#2a2a2a] text-[#37352f] dark:text-[#e0e0e0] placeholder-[#aaa] dark:placeholder-[#555] rounded-md border border-[#e0e0e0] dark:border-[#3d3d3d] outline-none focus:border-[#5b5fc7]/40 transition-colors"
@@ -684,7 +786,7 @@ export function Documents() {
                     </button>
                   ))}
                   {filteredDocs.length === 0 && (
-                    <p className="text-[12px] text-[#aaa] dark:text-[#666] px-2 py-2">{t('documents.noResults')}</p>
+                    <p className="text-[12px] text-[#aaa] dark:text-[#666] px-2 py-2">No results</p>
                   )}
                 </div>
               )}
@@ -698,7 +800,7 @@ export function Documents() {
           {favDocs.length > 0 && (
             <div className="mb-3">
               <p className="px-2 py-1.5 text-[11px] font-semibold text-[#999] dark:text-[#666] uppercase tracking-wider">
-                {t('documents.favorites')}
+                Favorites
               </p>
               {favDocs.map(doc => (
                 <button
@@ -730,7 +832,7 @@ export function Documents() {
           {/* All pages */}
           <div>
             <p className="px-2 py-1.5 text-[11px] font-semibold text-[#999] dark:text-[#666] uppercase tracking-wider">
-              {t('documents.pages')}
+              Pages
             </p>
             {topLevelDocs.map(doc => (
               <SidebarDocItem
@@ -749,13 +851,13 @@ export function Documents() {
           {/* New page button */}
           <button className="mt-3 w-full flex items-center gap-2 px-2 py-2 rounded-md text-[13px] text-[#aaa] dark:text-[#666] hover:bg-[#f5f5f5] dark:hover:bg-[#2a2a2a] hover:text-[#616161] dark:hover:text-[#999] transition-colors">
             <Plus size={14} />
-            {t('documents.newPage')}
+            New page
           </button>
         </div>
 
         {/* Sidebar footer — recently edited */}
         <div className="border-t border-[#e8e8e8] dark:border-[#2e2e2e] px-3 py-2.5">
-          <p className="text-[11px] font-semibold text-[#999] dark:text-[#666] uppercase tracking-wider mb-1.5">{t('documents.recentlyEdited')}</p>
+          <p className="text-[11px] font-semibold text-[#999] dark:text-[#666] uppercase tracking-wider mb-1.5">Recently Edited</p>
           {recentDocs.slice(0, 3).map(doc => (
             <button
               key={doc.id}
@@ -765,7 +867,7 @@ export function Documents() {
               <span className="text-[12px]">{doc.emoji}</span>
               <span className="text-[12px] text-[#616161] dark:text-[#999] truncate flex-1">{doc.title}</span>
               <span className="text-[10px] text-[#aaa] dark:text-[#555] flex-shrink-0">
-                {formatRelativeTime(doc.lastModified, locale, 'short')}
+                {formatDistanceToNow(doc.lastModified, { addSuffix: false })}
               </span>
             </button>
           ))}
@@ -774,6 +876,22 @@ export function Documents() {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Preview mode banner */}
+        {previewRole && (
+          <div className="flex items-center justify-between px-4 py-2 bg-[#d4820c]/10 dark:bg-[#d4820c]/15 border-b border-[#d4820c]/20 flex-shrink-0">
+            <div className="flex items-center gap-2 text-[12px] text-[#d4820c] dark:text-[#f5a623]">
+              <Eye size={14} />
+              <span className="font-semibold">Preview Mode</span>
+              <span className="text-[#d4820c]/70 dark:text-[#f5a623]/70">— Viewing access as <strong>{PREVIEW_ROLES.find(r => r.slug === previewRole)?.label}</strong>. Restricted content will appear locked.</span>
+            </div>
+            <button
+              onClick={() => setPreviewRole('')}
+              className="text-[11px] font-semibold text-[#d4820c] dark:text-[#f5a623] hover:underline"
+            >
+              Exit Preview
+            </button>
+          </div>
+        )}
         {selectedDoc ? (
           <>
             {/* Top bar */}
@@ -781,7 +899,7 @@ export function Documents() {
               {/* Breadcrumbs */}
               <div className="flex items-center gap-1 text-[13px] overflow-hidden">
                 {breadcrumbs.map((crumb, idx) => (
-                  <React.Fragment key={crumb.id}>
+                  <div key={crumb.id} className="flex items-center">
                     {idx > 0 && <ChevronRight size={12} className="text-[#ccc] dark:text-[#555] flex-shrink-0 mx-0.5" />}
                     <button
                       onClick={() => setSelectedDocId(crumb.id)}
@@ -794,26 +912,38 @@ export function Documents() {
                       <span className="text-[13px]">{crumb.emoji}</span>
                       <span className="truncate">{crumb.title}</span>
                     </button>
-                  </React.Fragment>
+                  </div>
                 ))}
               </div>
 
               {/* Actions */}
               <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setShowShareDialog(true)}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] text-[#616161] dark:text-[#999] hover:bg-[#5b5fc7]/10 dark:hover:bg-[#5b5fc7]/15 hover:text-[#5b5fc7] dark:hover:text-[#a6a9dc] transition-colors"
-                >
-                  <Share2 size={13} />
-                  {t('documents.postToHome')}
-                </button>
+                <ViewAsRolePicker activeRole={previewRole} onChangeRole={setPreviewRole} />
+                {getDocAccessLevel(selectedDoc) !== 'public' && (
+                  <button
+                    onClick={() => setShowAccessPanel(true)}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-medium text-[#d4820c] dark:text-[#f5a623] hover:bg-[#d4820c]/8 dark:hover:bg-[#d4820c]/15 transition-colors"
+                  >
+                    <Shield size={13} />
+                    Access Requests
+                  </button>
+                )}
+                {hasAccess(selectedDoc) && (
+                  <button
+                    onClick={() => setShowShareDialog(true)}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] text-[#616161] dark:text-[#999] hover:bg-[#5b5fc7]/10 dark:hover:bg-[#5b5fc7]/15 hover:text-[#5b5fc7] dark:hover:text-[#a6a9dc] transition-colors"
+                  >
+                    <Share2 size={13} />
+                    Post to Home
+                  </button>
+                )}
                 <button className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] text-[#616161] dark:text-[#999] hover:bg-[#f5f5f5] dark:hover:bg-[#2a2a2a] transition-colors">
                   <MessageSquare size={13} />
-                  {t('documents.comment')}
+                  Comment
                 </button>
                 <button className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] text-[#616161] dark:text-[#999] hover:bg-[#f5f5f5] dark:hover:bg-[#2a2a2a] transition-colors">
                   <Clock size={13} />
-                  {formatRelativeTime(selectedDoc.lastModified, locale, 'short')}
+                  {formatDistanceToNow(selectedDoc.lastModified, { addSuffix: true })}
                 </button>
                 <button className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] text-[#616161] dark:text-[#999] hover:bg-[#f5f5f5] dark:hover:bg-[#2a2a2a] transition-colors">
                   <Star size={13} className={selectedDoc.favorite ? 'text-[#eab308] fill-[#eab308]' : ''} />
@@ -825,83 +955,100 @@ export function Documents() {
             </div>
 
             {/* Document content */}
-            <div className="flex-1 overflow-y-auto scrollbar-on-hover">
-              <motion.div
-                key={selectedDoc.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2 }}
-                className="max-w-[740px] mx-auto px-16 py-10"
-              >
-                {/* Title area */}
-                <div className="mb-6">
-                  <span className="text-[48px] leading-none mb-2 block cursor-pointer hover:bg-[#f5f5f5] dark:hover:bg-[#2a2a2a] rounded-md inline-block px-1 -ml-1 transition-colors">
-                    {selectedDoc.emoji}
-                  </span>
-                  <h1 className="text-[40px] font-bold text-[#242424] dark:text-[#f0f0f0] leading-tight mt-2 mb-1 outline-none" tabIndex={0}>
-                    {selectedDoc.title}
-                  </h1>
-                  <div className="flex items-center gap-3 mt-3 text-[13px] text-[#999] dark:text-[#666]">
-                    {selectedDoc.securityLevel && (
-                      <SecurityBadge level={selectedDoc.securityLevel} variant="full" />
-                    )}
-                    {author && (
-                      <div className="flex items-center gap-1.5">
-                        <img src={author.avatar} alt={author.name} className="w-5 h-5 rounded-full" />
-                        <span>{author.name}</span>
-                      </div>
-                    )}
-                    <span>·</span>
-                    <span>{t('documents.edited', { time: formatRelativeTime(selectedDoc.lastModified, locale, 'short') })}</span>
-                    <span>·</span>
-                    <span>{t('documents.created', { date: dateFormatter.format(selectedDoc.createdAt) })}</span>
-                  </div>
-                </div>
-
-                {/* Content blocks */}
-                {selectedDoc.content && selectedDoc.content.length > 0 ? (
-                  <div className="pl-8">
-                    <BlockList blocks={selectedDoc.content} />
-                  </div>
-                ) : (
-                  <div className="pl-8 mt-4">
-                    <p className="text-[15px] text-[#ccc] dark:text-[#555]">
-                      {t('documents.emptyHint')}
-                    </p>
-                  </div>
-                )}
-
-                {/* Child pages */}
-                {childPages.length > 0 && (
-                  <div className="mt-10 pl-8">
-                    <div className="border-t border-[#e8e8e8] dark:border-[#2e2e2e] pt-4">
-                      <p className="text-[11px] font-semibold text-[#999] dark:text-[#666] uppercase tracking-wider mb-2">{t('documents.subPages')}</p>
-                      <div className="space-y-1">
-                        {childPages.map(child => (
-                          <button
-                            key={child.id}
-                            onClick={() => setSelectedDocId(child.id)}
-                            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-[#e8e8e8] dark:border-[#333] hover:bg-[#f7f6f3] dark:hover:bg-[#252525] transition-colors text-left group"
-                          >
-                            <span className="text-[20px]">{child.emoji}</span>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <p className="text-[14px] font-medium text-[#37352f] dark:text-[#e0e0e0] truncate">{child.title}</p>
-                                {child.securityLevel && (
-                                  <SecurityBadge level={child.securityLevel} variant="compact" />
-                                )}
-                              </div>
-                              <p className="text-[12px] text-[#999] dark:text-[#666]">{child.author} · {formatRelativeTime(child.lastModified, locale, 'short')}</p>
-                            </div>
-                            <ArrowUpRight size={14} className="text-[#ccc] dark:text-[#555] group-hover:text-[#5b5fc7] dark:group-hover:text-[#a6a9dc] transition-colors" />
-                          </button>
-                        ))}
-                      </div>
+            {!hasAccess(selectedDoc) ? (
+              /* Locked overlay for restricted documents */
+              <LockedOverlay
+                resourceName={selectedDoc.title}
+                accessLevel={getDocAccessLevel(selectedDoc)}
+                userRole={userRole}
+                hasExistingRequest={hasPendingRequest(selectedDoc.id)}
+                onRequestAccess={() => setShowRequestModal(true)}
+              />
+            ) : (
+              <div className="flex-1 overflow-y-auto scrollbar-on-hover">
+                <motion.div
+                  key={selectedDoc.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="max-w-[740px] mx-auto px-16 py-10"
+                >
+                  {/* Title area */}
+                  <div className="mb-6">
+                    <span className="text-[48px] leading-none mb-2 block cursor-pointer hover:bg-[#f5f5f5] dark:hover:bg-[#2a2a2a] rounded-md inline-block px-1 -ml-1 transition-colors">
+                      {selectedDoc.emoji}
+                    </span>
+                    <h1 className="text-[40px] font-bold text-[#242424] dark:text-[#f0f0f0] leading-tight mt-2 mb-1 outline-none" tabIndex={0}>
+                      {selectedDoc.title}
+                    </h1>
+                    <div className="flex items-center gap-3 mt-3 text-[13px] text-[#999] dark:text-[#666] flex-wrap">
+                      {getDocAccessLevel(selectedDoc) !== 'public' && (
+                        <AccessBadge level={getDocAccessLevel(selectedDoc)} variant="full" />
+                      )}
+                      {selectedDoc.securityLevel && (
+                        <SecurityBadge level={selectedDoc.securityLevel} variant="full" />
+                      )}
+                      {author && (
+                        <div className="flex items-center gap-1.5">
+                          <img src={author.avatar} alt={author.name} className="w-5 h-5 rounded-full" />
+                          <span>{author.name}</span>
+                        </div>
+                      )}
+                      <span>·</span>
+                      <span>Edited {formatDistanceToNow(selectedDoc.lastModified, { addSuffix: true })}</span>
+                      <span>·</span>
+                      <span>Created {format(selectedDoc.createdAt, 'MMM d, yyyy')}</span>
                     </div>
                   </div>
-                )}
-              </motion.div>
-            </div>
+
+                  {/* Content blocks */}
+                  {selectedDoc.content && selectedDoc.content.length > 0 ? (
+                    <div className="pl-8">
+                      <BlockList blocks={selectedDoc.content} />
+                    </div>
+                  ) : (
+                    <div className="pl-8 mt-4">
+                      <p className="text-[15px] text-[#ccc] dark:text-[#555]">
+                        Press Enter to start writing, or use / for commands...
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Child pages */}
+                  {childPages.length > 0 && (
+                    <div className="mt-10 pl-8">
+                      <div className="border-t border-[#e8e8e8] dark:border-[#2e2e2e] pt-4">
+                        <p className="text-[11px] font-semibold text-[#999] dark:text-[#666] uppercase tracking-wider mb-2">Sub-pages</p>
+                        <div className="space-y-1">
+                          {childPages.map(child => (
+                            <button
+                              key={child.id}
+                              onClick={() => setSelectedDocId(child.id)}
+                              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-[#e8e8e8] dark:border-[#333] hover:bg-[#f7f6f3] dark:hover:bg-[#252525] transition-colors text-left group"
+                            >
+                              <span className="text-[20px]">{child.emoji}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <p className="text-[14px] font-medium text-[#37352f] dark:text-[#e0e0e0] truncate">{child.title}</p>
+                                  {getDocAccessLevel(child) !== 'public' && (
+                                    <AccessBadge level={getDocAccessLevel(child)} variant="compact" />
+                                  )}
+                                  {child.securityLevel && (
+                                    <SecurityBadge level={child.securityLevel} variant="compact" />
+                                  )}
+                                </div>
+                                <p className="text-[12px] text-[#999] dark:text-[#666]">{child.author} · {formatDistanceToNow(child.lastModified, { addSuffix: true })}</p>
+                              </div>
+                              <ArrowUpRight size={14} className="text-[#ccc] dark:text-[#555] group-hover:text-[#5b5fc7] dark:group-hover:text-[#a6a9dc] transition-colors" />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              </div>
+            )}
           </>
         ) : (
           /* Empty state */
@@ -910,8 +1057,8 @@ export function Documents() {
               <div className="w-16 h-16 rounded-2xl bg-[#f7f6f3] dark:bg-[#2a2a2a] flex items-center justify-center mx-auto mb-4">
                 <FileText size={28} className="text-[#ccc] dark:text-[#555]" />
               </div>
-              <h3 className="text-[16px] font-medium text-[#242424] dark:text-[#f0f0f0] mb-1">{t('documents.selectPage')}</h3>
-              <p className="text-[14px] text-[#999] dark:text-[#666]">{t('documents.selectPageDesc')}</p>
+              <h3 className="text-[16px] font-medium text-[#242424] dark:text-[#f0f0f0] mb-1">Select a page</h3>
+              <p className="text-[14px] text-[#999] dark:text-[#666]">Choose a page from the sidebar to start reading or editing</p>
             </div>
           </div>
         )}
@@ -923,6 +1070,35 @@ export function Documents() {
               doc={selectedDoc}
               spaceId={spaceId}
               onClose={() => setShowShareDialog(false)}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Request Access Modal */}
+        <AnimatePresence>
+          {showRequestModal && selectedDoc && (
+            <RequestAccessModal
+              resourceName={selectedDoc.title}
+              resourceType="document"
+              userRole={userRole}
+              onSubmit={(reason, duration) => handleRequestAccess(selectedDoc.id, reason, duration)}
+              onClose={() => setShowRequestModal(false)}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Access Management Panel */}
+        <AnimatePresence>
+          {showAccessPanel && selectedDoc && (
+            <AccessRequestsPanel
+              resourceType="document"
+              resourceId={selectedDoc.id}
+              resourceName={selectedDoc.title}
+              accessRequests={accessRequests}
+              onApproveRequest={handleApproveRequest}
+              onDenyRequest={handleDenyRequest}
+              isOpen={showAccessPanel}
+              onClose={() => setShowAccessPanel(false)}
             />
           )}
         </AnimatePresence>

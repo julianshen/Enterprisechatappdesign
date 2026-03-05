@@ -10,6 +10,7 @@ import { Inbox } from './pages/Inbox';
 import { TeamDashboard } from './pages/TeamDashboard';
 import { AppStore } from './pages/AppStore';
 import { SpaceApps } from './pages/SpaceApps';
+import { SpacePermissions } from './pages/SpacePermissions';
 import { ProfileSettings } from './pages/ProfileSettings';
 import { WarRoom } from './pages/WarRoom';
 import { SpaceHome } from './pages/SpaceHome';
@@ -70,6 +71,10 @@ export const router = createBrowserRouter([
       {
         path: 'space/:spaceId/apps/:appId',
         Component: SpaceApps,
+      },
+      {
+        path: 'space/:spaceId/permissions',
+        Component: SpacePermissions,
       },
       {
         path: 'profile',

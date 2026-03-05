@@ -220,6 +220,7 @@ export interface Document {
   content?: DocumentBlock[];
   favorite?: boolean;
   securityLevel?: 'A' | 'B' | 'C';
+  accessLevel?: 'public' | 'restricted' | 'confidential';
 }
 
 export interface DocumentBlock {
@@ -243,7 +244,51 @@ export interface FileItem {
   type: string;
   folderId?: string;
   securityLevel?: 'A' | 'B' | 'C';
+  accessLevel?: 'public' | 'restricted' | 'confidential';
 }
+
+export type AccessDuration = '24h' | '3d' | '7d' | '30d';
+
+export interface AccessRequest {
+  id: string;
+  resourceType: 'document' | 'file';
+  resourceId: string;
+  resourceName: string;
+  requesterId: string;
+  requesterName: string;
+  requesterAvatar: string;
+  requesterRole: string;
+  reason: string;
+  requestedDuration: AccessDuration;
+  status: 'pending' | 'approved' | 'denied';
+  requestedAt: Date;
+  respondedAt?: Date;
+  respondedBy?: string;
+  expiresAt?: Date;
+}
+
+// Member role assignments (mirrors SpacePermissions mockMembers)
+export const memberRoles: Record<string, string> = {
+  'user-1': 'admin',
+  'user-owner': 'owner',
+  'user-2': 'admin',
+  'user-3': 'member',
+  'user-4': 'member',
+  'user-5': 'custom-contributor',
+  'user-6': 'member',
+  'user-7': 'custom-reviewer',
+  'user-8': 'guest',
+};
+
+// Role display config (so access control UI can render role badges)
+export const roleDisplayConfig: Record<string, { label: string; color: string; bgColor: string; darkColor: string; darkBgColor: string }> = {
+  owner:   { label: 'Owner',   color: 'text-[#d4820c]', bgColor: 'bg-[#d4820c]/10', darkColor: 'dark:text-[#f5a623]', darkBgColor: 'dark:bg-[#d4820c]/20' },
+  admin:   { label: 'Admin',   color: 'text-[#5b5fc7]', bgColor: 'bg-[#5b5fc7]/10', darkColor: 'dark:text-[#a6a9dc]', darkBgColor: 'dark:bg-[#5b5fc7]/20' },
+  member:  { label: 'Member',  color: 'text-[#237b4b]', bgColor: 'bg-[#237b4b]/10', darkColor: 'dark:text-[#6fcf97]', darkBgColor: 'dark:bg-[#237b4b]/20' },
+  guest:   { label: 'Guest',   color: 'text-[#8a8a8a]', bgColor: 'bg-[#8a8a8a]/10', darkColor: 'dark:text-[#b9bbbe]', darkBgColor: 'dark:bg-[#8a8a8a]/20' },
+  'custom-contributor': { label: 'Contributor', color: 'text-[#0d9488]', bgColor: 'bg-[#0d9488]/10', darkColor: 'dark:text-[#5eead4]', darkBgColor: 'dark:bg-[#0d9488]/20' },
+  'custom-reviewer':   { label: 'External Reviewer', color: 'text-[#6366f1]', bgColor: 'bg-[#6366f1]/10', darkColor: 'dark:text-[#a5b4fc]', darkBgColor: 'dark:bg-[#6366f1]/20' },
+};
 
 export interface Folder {
   id: string;
@@ -1772,6 +1817,7 @@ export const documents: Document[] = [
     emoji: '📊',
     author: 'Alice Williams',
     authorId: 'user-4',
+    accessLevel: 'restricted',
     lastModified: new Date('2026-02-18T08:45:00'),
     createdAt: new Date('2026-01-15T14:00:00'),
     type: 'sheet',
@@ -1854,6 +1900,7 @@ export const documents: Document[] = [
     emoji: '🏗️',
     author: 'Bob Johnson',
     authorId: 'user-3',
+    accessLevel: 'confidential',
     lastModified: new Date('2026-02-15T16:00:00'),
     createdAt: new Date('2025-10-15T08:00:00'),
     type: 'doc',
@@ -1924,6 +1971,7 @@ export const documents: Document[] = [
     emoji: '🎨',
     author: 'Alice Williams',
     authorId: 'user-4',
+    accessLevel: 'restricted',
     lastModified: new Date('2026-02-13T14:30:00'),
     createdAt: new Date('2025-12-15T10:00:00'),
     type: 'doc',
@@ -2049,6 +2097,7 @@ export const files: FileItem[] = [
     uploadedAt: new Date('2026-02-13T15:20:00'),
     type: 'pdf',
     securityLevel: 'A',
+    accessLevel: 'confidential',
   },
   {
     id: 'file-3',
@@ -2069,6 +2118,7 @@ export const files: FileItem[] = [
     uploadedAt: new Date('2026-02-11T09:45:00'),
     type: 'archive',
     securityLevel: 'A',
+    accessLevel: 'restricted',
   },
   {
     id: 'file-5',
@@ -2157,6 +2207,70 @@ export const files: FileItem[] = [
     type: 'presentation',
     folderId: 'folder-3',
     securityLevel: 'B',
+  },
+];
+
+export const initialAccessRequests: AccessRequest[] = [
+  {
+    id: 'ar-1',
+    resourceType: 'document',
+    resourceId: 'doc-6',
+    resourceName: 'Architecture Overview',
+    requesterId: 'user-5',
+    requesterName: 'Charlie Brown',
+    requesterAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie',
+    requesterRole: 'custom-contributor',
+    reason: 'Working on system design doc and need to reference the current architecture.',
+    requestedDuration: '7d',
+    status: 'pending',
+    requestedAt: new Date('2026-03-03T10:00:00'),
+  },
+  {
+    id: 'ar-2',
+    resourceType: 'file',
+    resourceId: 'file-2',
+    resourceName: 'budget-proposal.pdf',
+    requesterId: 'user-6',
+    requesterName: 'Diana Prince',
+    requesterAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Diana',
+    requesterRole: 'member',
+    reason: 'Preparing quarterly budget review presentation for leadership.',
+    requestedDuration: '3d',
+    status: 'pending',
+    requestedAt: new Date('2026-03-02T14:30:00'),
+  },
+  {
+    id: 'ar-3',
+    resourceType: 'document',
+    resourceId: 'doc-3',
+    resourceName: 'Engineering Team Metrics',
+    requesterId: 'user-8',
+    requesterName: 'Fiona Gallagher',
+    requesterAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Fiona',
+    requesterRole: 'guest',
+    reason: 'Need to audit team performance for external compliance review.',
+    requestedDuration: '24h',
+    status: 'approved',
+    requestedAt: new Date('2026-02-28T09:15:00'),
+    respondedAt: new Date('2026-02-28T11:00:00'),
+    respondedBy: 'user-2',
+    expiresAt: new Date('2026-03-01T11:00:00'),
+  },
+  {
+    id: 'ar-4',
+    resourceType: 'document',
+    resourceId: 'doc-6',
+    resourceName: 'Architecture Overview',
+    requesterId: 'user-7',
+    requesterName: 'Erik Lehnsherr',
+    requesterAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Erik',
+    requesterRole: 'custom-reviewer',
+    reason: 'Want to review architecture for external security audit.',
+    requestedDuration: '30d',
+    status: 'denied',
+    requestedAt: new Date('2026-02-25T16:00:00'),
+    respondedAt: new Date('2026-02-26T09:30:00'),
+    respondedBy: 'user-owner',
   },
 ];
 

@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router';
-import { Hash, Lock, Volume2, ChevronDown, Plus, FileText, FolderOpen, CheckSquare, ChevronRight, MessageSquare, Users, BarChart3, Rocket, Shield, GitPullRequest, Layers, Target, Calendar, Megaphone, BookOpen, LayoutDashboard, Puzzle, Home, type LucideIcon } from 'lucide-react';
+import { Hash, Lock, Volume2, ChevronDown, Plus, FileText, FolderOpen, CheckSquare, ChevronRight, MessageSquare, Users, BarChart3, Rocket, Shield, GitPullRequest, Layers, Target, Calendar, Megaphone, BookOpen, LayoutDashboard, Puzzle, Home, Settings, type LucideIcon } from 'lucide-react';
 import { spaces, directMessages, groupChats, users } from '../data/mockData';
 import { getAppsForSpace } from '../data/appData';
 import { useState, useEffect, useCallback } from 'react';
@@ -33,6 +33,7 @@ export function ChannelSidebar() {
   const spaceApps = spaceId ? getAppsForSpace(spaceId) : [];
   const isOnAppsPage = window.location.pathname.includes('/apps');
   const isOnHomePage = window.location.pathname.includes('/home');
+  const isOnPermissionsPage = window.location.pathname.includes('/permissions');
   
   // Track new post count for badge
   const [newPostCount, setNewPostCount] = useState(0);
@@ -417,6 +418,22 @@ export function ChannelSidebar() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Permissions - Admin only */}
+      <div className="px-2 py-2 border-t border-[#e1dfdd] dark:border-[#3d3d3d]">
+        <Link
+          to={`/space/${spaceId}/permissions`}
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-[13px] font-medium transition-all ${
+            isOnPermissionsPage
+              ? 'bg-gradient-to-r from-[#e8e8f8] to-[#e0e0f5] dark:from-[#404249] dark:to-[#35373c] text-[#6264a7] dark:text-[#949cf7] shadow-sm'
+              : 'text-[#616161] dark:text-[#96989d] hover:bg-[#e8e8f8] dark:hover:bg-[#35373c] hover:text-[#6264a7] dark:hover:text-[#dbdee1]'
+          }`}
+        >
+          <Settings size={16} />
+          <span className="flex-1">Permissions</span>
+          <span className="text-[9px] bg-[#5b5fc7]/10 dark:bg-[#5b5fc7]/20 text-[#5b5fc7] dark:text-[#a6a9dc] px-1.5 py-0.5 rounded font-semibold">ADMIN</span>
+        </Link>
       </div>
 
     </div>

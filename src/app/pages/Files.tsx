@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -6,11 +6,13 @@ import {
   Archive, File, FolderOpen, Folder as FolderIcon, ChevronRight,
   MoreHorizontal, Download, Trash2, Copy, ArrowLeft, Video,
   Code, Presentation, FileSpreadsheet, Star, Eye, Clock,
-  FolderPlus, ArrowUpRight, SortAsc, Check,
+  FolderPlus, ArrowUpRight, SortAsc, Check, Lock, Shield, Send,
 } from 'lucide-react';
-import { spaces, files, folders, type FileItem, type Folder } from '../data/mockData';
+import { spaces, files, folders, currentUser, initialAccessRequests, memberRoles, roleDisplayConfig, type FileItem, type Folder, type AccessRequest, type AccessDuration } from '../data/mockData';
+import { format, formatDistanceToNow } from 'date-fns';
 import { SecurityBadge } from '../components/SecurityBadge';
-import { type LanguageCode, useI18n } from '../context/I18nContext';
+import { AccessBadge, LockedOverlay, RequestAccessModal, AccessRequestsPanel } from '../components/AccessControl';
+import { canRoleAccess } from '../data/accessPermissions';
 
 // File type icon mapping
 function FileIcon({ type, size = 28 }: { type: string; size?: number }) {
@@ -61,43 +63,73 @@ const FOLDER_COLORS: Record<string, string> = {
 type SortKey = 'name' | 'date' | 'size';
 type ViewMode = 'grid' | 'list';
 
-const LOCALE_MAP: Record<LanguageCode, string> = {
-  en: 'en-US',
-  'zh-Hant': 'zh-TW',
-  'zh-Hans': 'zh-CN',
-  ja: 'ja-JP',
-  de: 'de-DE',
-  es: 'es-ES',
-  fr: 'fr-FR',
-  hi: 'hi-IN',
-  pl: 'pl-PL',
-};
+// ─── View As Role Picker ──────────────────────────────────────────────────────
+const PREVIEW_ROLES = [
+  { slug: '', label: 'Your role (Admin)', description: 'Default view' },
+  { slug: 'member', label: 'Member', description: 'Standard member access' },
+  { slug: 'guest', label: 'Guest', description: 'Limited external access' },
+  { slug: 'custom-contributor', label: 'Contributor', description: 'Custom role' },
+  { slug: 'custom-reviewer', label: 'External Reviewer', description: 'Custom role' },
+];
 
-function getLocaleForLanguage(language: LanguageCode) {
-  return LOCALE_MAP[language] || 'en-US';
-}
+function ViewAsRolePicker({
+  activeRole,
+  onChangeRole,
+}: {
+  activeRole: string;
+  onChangeRole: (role: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const currentLabel = PREVIEW_ROLES.find(r => r.slug === activeRole)?.label || 'Admin';
 
-function formatRelativeTime(date: Date, locale: string, style: 'short' | 'long' = 'short') {
-  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto', style });
-  const diff = date.getTime() - Date.now();
-  const seconds = Math.round(diff / 1000);
-  const absSeconds = Math.abs(seconds);
-  if (absSeconds < 60) return rtf.format(seconds, 'second');
-  const minutes = Math.round(seconds / 60);
-  if (Math.abs(minutes) < 60) return rtf.format(minutes, 'minute');
-  const hours = Math.round(minutes / 60);
-  if (Math.abs(hours) < 24) return rtf.format(hours, 'hour');
-  const days = Math.round(hours / 24);
-  if (Math.abs(days) < 30) return rtf.format(days, 'day');
-  const months = Math.round(days / 30);
-  if (Math.abs(months) < 12) return rtf.format(months, 'month');
-  const years = Math.round(months / 12);
-  return rtf.format(years, 'year');
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-colors ${
+          activeRole
+            ? 'bg-[#d4820c]/10 text-[#d4820c] dark:text-[#f5a623] border border-[#d4820c]/30'
+            : 'text-[#616161] dark:text-[#999] hover:bg-[#f5f5f5] dark:hover:bg-[#2a2a2a]'
+        }`}
+      >
+        <Eye size={13} />
+        {activeRole ? `Viewing as: ${currentLabel}` : 'View as…'}
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -4, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.95 }}
+            transition={{ duration: 0.12 }}
+            className="absolute right-0 top-full mt-1 bg-white dark:bg-[#2b2b2b] rounded-xl border border-[#e8e8e8] dark:border-[#3d3d3d] shadow-xl z-30 py-1.5 min-w-[220px]"
+          >
+            <p className="px-3 py-1 text-[10px] font-semibold text-[#999] dark:text-[#666] uppercase tracking-wider">
+              Preview access as role
+            </p>
+            {PREVIEW_ROLES.map(role => (
+              <button
+                key={role.slug}
+                onClick={() => { onChangeRole(role.slug); setOpen(false); }}
+                className={`w-full text-left px-3 py-2 text-[13px] hover:bg-[#f5f5f5] dark:hover:bg-[#333] transition-colors flex items-center justify-between gap-2 ${
+                  activeRole === role.slug ? 'text-[#5b5fc7] dark:text-[#a6a9dc]' : 'text-[#424242] dark:text-[#d1d1d1]'
+                }`}
+              >
+                <div>
+                  <span className="font-medium">{role.label}</span>
+                  <span className="text-[11px] text-[#999] dark:text-[#666] ml-1.5">{role.description}</span>
+                </div>
+                {activeRole === role.slug && <Check size={14} className="text-[#5b5fc7] dark:text-[#a6a9dc] shrink-0" />}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 }
 
 export function Files() {
-  const { t, language } = useI18n();
-  const locale = getLocaleForLanguage(language);
   const { spaceId } = useParams();
   const currentSpace = spaces.find(s => s.id === spaceId);
 
@@ -108,6 +140,73 @@ export function Files() {
   const [sortBy, setSortBy] = useState<SortKey>('date');
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
+  const [accessRequests, setAccessRequests] = useState<AccessRequest[]>(initialAccessRequests);
+  const [tempAccessGrants, setTempAccessGrants] = useState<Record<string, Record<string, Date>>>({});
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [showAccessPanel, setShowAccessPanel] = useState(false);
+  const [previewRole, setPreviewRole] = useState('');
+
+  const userRole = previewRole || (memberRoles[currentUser.id] || 'guest');
+
+  // Access control — level-based via Space Permissions matrix
+  const getFileAccessLevel = useCallback((file: FileItem) => {
+    return (file.accessLevel ?? 'public') as 'public' | 'restricted' | 'confidential';
+  }, []);
+
+  const hasFileAccess = useCallback((file: FileItem) => {
+    const level = getFileAccessLevel(file);
+    if (level === 'public') return true;
+    if (canRoleAccess(userRole, level)) return true;
+    const grants = tempAccessGrants[file.id];
+    if (grants && grants[currentUser.id]) {
+      return grants[currentUser.id].getTime() > Date.now();
+    }
+    return false;
+  }, [getFileAccessLevel, userRole, tempAccessGrants]);
+
+  const hasPendingFileRequest = useCallback((fileId: string) => {
+    return accessRequests.some(r => r.resourceId === fileId && r.requesterId === currentUser.id && r.status === 'pending');
+  }, [accessRequests]);
+
+  const durationMs = (d: AccessDuration) => ({ '24h': 86400000, '3d': 259200000, '7d': 604800000, '30d': 2592000000 }[d]);
+
+  const handleFileRequestAccess = useCallback((fileId: string, reason: string, duration: AccessDuration) => {
+    const file = files.find(f => f.id === fileId);
+    if (!file) return;
+    const newReq: AccessRequest = {
+      id: `ar-file-${Date.now()}`,
+      resourceType: 'file',
+      resourceId: fileId,
+      resourceName: file.name,
+      requesterId: currentUser.id,
+      requesterName: currentUser.name,
+      requesterAvatar: currentUser.avatar,
+      requesterRole: userRole,
+      reason,
+      requestedDuration: duration,
+      status: 'pending',
+      requestedAt: new Date(),
+    };
+    setAccessRequests(prev => [newReq, ...prev]);
+  }, [userRole]);
+
+  const handleFileApproveRequest = useCallback((requestId: string) => {
+    setAccessRequests(prev => prev.map(r => {
+      if (r.id !== requestId) return r;
+      const expiresAt = new Date(Date.now() + durationMs(r.requestedDuration));
+      setTempAccessGrants(grants => ({
+        ...grants,
+        [r.resourceId]: { ...grants[r.resourceId], [r.requesterId]: expiresAt },
+      }));
+      return { ...r, status: 'approved' as const, respondedAt: new Date(), respondedBy: currentUser.id, expiresAt };
+    }));
+  }, []);
+
+  const handleFileDenyRequest = useCallback((requestId: string) => {
+    setAccessRequests(prev => prev.map(r =>
+      r.id === requestId ? { ...r, status: 'denied' as const, respondedAt: new Date(), respondedBy: currentUser.id } : r
+    ));
+  }, []);
 
   if (!currentSpace) return null;
 
@@ -169,14 +268,6 @@ export function Files() {
   };
 
   const selectedFile = selectedFileId ? files.find(f => f.id === selectedFileId) : null;
-  const dateFormatter = new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', year: 'numeric' });
-  const dateTimeFormatter = new Intl.DateTimeFormat(locale, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  });
 
   // Recent files: top 5 most recently uploaded across all folders
   const recentFiles = useMemo(() =>
@@ -191,11 +282,12 @@ export function Files() {
         <div className="h-[52px] px-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <FolderOpen size={18} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
-            <h2 className="text-[16px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('files.title')}</h2>
+            <h2 className="text-[16px] font-semibold text-[#242424] dark:text-[#f0f0f0]">Files</h2>
             <span className="text-[13px] text-[#999] dark:text-[#666]">· {currentSpace.name}</span>
           </div>
 
           <div className="flex items-center gap-1.5">
+            <ViewAsRolePicker activeRole={previewRole} onChangeRole={setPreviewRole} />
             {/* Search toggle */}
             <button
               onClick={() => setSearchOpen(!searchOpen)}
@@ -226,9 +318,9 @@ export function Files() {
                     className="absolute right-0 top-full mt-1 bg-white dark:bg-[#2b2b2b] rounded-lg border border-[#e8e8e8] dark:border-[#3d3d3d] shadow-xl z-20 py-1 min-w-[160px]"
                   >
                     {([
-                      ['name', t('files.sort.name')],
-                      ['date', t('files.sort.date')],
-                      ['size', t('files.sort.size')],
+                      ['name', 'Name'],
+                      ['date', 'Date uploaded'],
+                      ['size', 'Size'],
                     ] as [SortKey, string][]).map(([key, label]) => (
                       <button
                         key={key}
@@ -272,12 +364,12 @@ export function Files() {
 
             <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-[#616161] dark:text-[#999] hover:bg-[#f5f5f5] dark:hover:bg-[#2a2a2a] border border-[#e8e8e8] dark:border-[#333] transition-colors">
               <FolderPlus size={14} />
-              {t('files.newFolder')}
+              New Folder
             </button>
 
             <button className="flex items-center gap-1.5 bg-[#5b5fc7] hover:bg-[#5254b5] text-white px-3.5 py-1.5 rounded-lg text-[12px] font-semibold transition-colors shadow-sm">
               <Upload size={14} />
-              {t('files.upload')}
+              Upload
             </button>
           </div>
         </div>
@@ -296,7 +388,7 @@ export function Files() {
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#aaa] dark:text-[#666]" />
                 <input
                   type="text"
-                  placeholder={t('files.searchAll')}
+                  placeholder="Search all files..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   autoFocus
@@ -318,10 +410,10 @@ export function Files() {
             }`}
           >
             <FolderOpen size={14} />
-            {t('files.allFiles')}
+            All Files
           </button>
           {breadcrumbs.map((folder) => (
-            <React.Fragment key={folder.id}>
+            <div key={folder.id} className="flex items-center gap-1">
               <ChevronRight size={12} className="text-[#ccc] dark:text-[#555]" />
               <button
                 onClick={() => navigateToFolder(folder.id)}
@@ -334,16 +426,16 @@ export function Files() {
                 {folder.emoji && <span className="text-[13px]">{folder.emoji}</span>}
                 {folder.name}
               </button>
-            </React.Fragment>
+            </div>
           ))}
           {!searchQuery && (
             <span className="text-[12px] text-[#ccc] dark:text-[#555] ml-2">
-              {t('files.itemsCount', { count: totalItems })}
+              {totalItems} item{totalItems !== 1 ? 's' : ''}
             </span>
           )}
           {searchQuery && (
             <span className="text-[12px] text-[#ccc] dark:text-[#555] ml-2">
-              {t('files.showingResults', { query: searchQuery })}
+              Showing results for "{searchQuery}"
             </span>
           )}
         </div>
@@ -351,6 +443,22 @@ export function Files() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto scrollbar-on-hover">
+        {/* Preview mode banner */}
+        {previewRole && (
+          <div className="flex items-center justify-between px-5 py-2 bg-[#d4820c]/10 dark:bg-[#d4820c]/15 border-b border-[#d4820c]/20">
+            <div className="flex items-center gap-2 text-[12px] text-[#d4820c] dark:text-[#f5a623]">
+              <Eye size={14} />
+              <span className="font-semibold">Preview Mode</span>
+              <span className="text-[#d4820c]/70 dark:text-[#f5a623]/70">— Viewing access as <strong>{PREVIEW_ROLES.find(r => r.slug === previewRole)?.label}</strong>. Restricted files will appear locked.</span>
+            </div>
+            <button
+              onClick={() => setPreviewRole('')}
+              className="text-[11px] font-semibold text-[#d4820c] dark:text-[#f5a623] hover:underline"
+            >
+              Exit Preview
+            </button>
+          </div>
+        )}
         <div className="p-5">
           {/* Back button in subfolder */}
           {currentFolder && !searchQuery && (
@@ -359,7 +467,7 @@ export function Files() {
               className="flex items-center gap-2 px-3 py-2 mb-4 rounded-lg text-[13px] text-[#616161] dark:text-[#999] hover:bg-[#f5f5f5] dark:hover:bg-[#2a2a2a] transition-colors"
             >
               <ArrowLeft size={14} />
-              {t('files.backTo', { name: currentFolder.parentId ? folders.find(f => f.id === currentFolder.parentId)?.name : t('files.allFiles') })}
+              Back to {currentFolder.parentId ? folders.find(f => f.id === currentFolder.parentId)?.name : 'All Files'}
             </button>
           )}
 
@@ -371,7 +479,7 @@ export function Files() {
                   <div className="flex items-center gap-2 mb-3 px-1">
                     <Clock size={13} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
                     <p className="text-[11px] font-semibold text-[#999] dark:text-[#666] uppercase tracking-wider">
-                      {t('files.recent')}
+                      Recent
                     </p>
                   </div>
                   <div className="flex gap-2.5 overflow-x-auto scrollbar-on-hover pb-1">
@@ -399,7 +507,7 @@ export function Files() {
                             )}
                             <span className="text-[11px] text-[#999] dark:text-[#666]">{file.size}</span>
                             <span className="text-[11px] text-[#ccc] dark:text-[#444]">·</span>
-                            <span className="text-[11px] text-[#999] dark:text-[#666]">{formatRelativeTime(file.uploadedAt, locale, 'short')}</span>
+                            <span className="text-[11px] text-[#999] dark:text-[#666]">{formatDistanceToNow(file.uploadedAt, { addSuffix: true })}</span>
                           </div>
                         </div>
                       </motion.div>
@@ -412,7 +520,7 @@ export function Files() {
               {!searchQuery && childFolders.length > 0 && (
                 <div className="mb-6">
                   <p className="text-[11px] font-semibold text-[#999] dark:text-[#666] uppercase tracking-wider mb-3 px-1">
-                    {t('files.folders')}
+                    Folders
                   </p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                     {childFolders.map(folder => (
@@ -439,7 +547,7 @@ export function Files() {
                         </div>
                         <h3 className="text-[13px] font-medium text-[#242424] dark:text-[#f0f0f0] truncate mb-1">{folder.name}</h3>
                         <p className="text-[11px] text-[#999] dark:text-[#666]">
-                          {t('files.itemsCount', { count: files.filter(f => f.folderId === folder.id).length + folders.filter(f => f.parentId === folder.id).length })}
+                          {files.filter(f => f.folderId === folder.id).length + folders.filter(f => f.parentId === folder.id).length} items
                         </p>
                       </motion.div>
                     ))}
@@ -452,7 +560,7 @@ export function Files() {
                 <div>
                   {!searchQuery && childFolders.length > 0 && (
                     <p className="text-[11px] font-semibold text-[#999] dark:text-[#666] uppercase tracking-wider mb-3 px-1">
-                      {t('files.files')}
+                      Files
                     </p>
                   )}
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
@@ -464,7 +572,7 @@ export function Files() {
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.15 }}
                         onClick={() => setSelectedFileId(selectedFileId === file.id ? null : file.id)}
-                        className={`group rounded-xl border p-4 transition-all cursor-pointer ${
+                        className={`group rounded-xl border p-4 transition-all cursor-pointer relative ${
                           selectedFileId === file.id
                             ? 'border-[#5b5fc7] dark:border-[#5b5fc7] bg-[#5b5fc7]/5 dark:bg-[#5b5fc7]/10 shadow-md'
                             : 'bg-white dark:bg-[#222] border-[#e8e8e8] dark:border-[#333] hover:border-[#ddd] dark:hover:border-[#444] hover:shadow-sm'
@@ -477,15 +585,28 @@ export function Files() {
                           {file.name}
                         </h3>
                         <div className="flex items-center justify-between">
-                          <span className="text-[11px] text-[#999] dark:text-[#666]">{file.size}</span>
+                          <div className="flex items-center gap-1">
+                            <span className="text-[11px] text-[#999] dark:text-[#666]">{file.size}</span>
+                            {getFileAccessLevel(file) !== 'public' && (
+                              <AccessBadge level={getFileAccessLevel(file)} variant="compact" />
+                            )}
+                          </div>
                           {file.securityLevel ? (
                             <SecurityBadge level={file.securityLevel} variant="compact" />
                           ) : (
                             <span className="text-[11px] text-[#999] dark:text-[#666]">
-                              {formatRelativeTime(file.uploadedAt, locale, 'short')}
+                              {formatDistanceToNow(file.uploadedAt, { addSuffix: false })}
                             </span>
                           )}
                         </div>
+                        {!hasFileAccess(file) && (
+                          <div className="absolute inset-0 bg-white/60 dark:bg-[#191919]/70 backdrop-blur-[2px] rounded-xl flex items-center justify-center">
+                            <div className="flex flex-col items-center gap-1">
+                              <Lock size={18} className="text-[#d4820c] dark:text-[#f5a623]" />
+                              <span className="text-[10px] font-semibold text-[#d4820c] dark:text-[#f5a623]">Restricted</span>
+                            </div>
+                          </div>
+                        )}
                       </motion.div>
                     ))}
                   </div>
@@ -498,8 +619,8 @@ export function Files() {
               {searchQuery && childFiles.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
                   <Search size={40} className="text-[#ddd] dark:text-[#444] mb-4" />
-                  <h3 className="text-[16px] font-medium text-[#242424] dark:text-[#f0f0f0] mb-1">{t('files.noFilesFound')}</h3>
-                  <p className="text-[14px] text-[#999] dark:text-[#666]">{t('files.tryDifferentSearch')}</p>
+                  <h3 className="text-[16px] font-medium text-[#242424] dark:text-[#f0f0f0] mb-1">No files found</h3>
+                  <p className="text-[14px] text-[#999] dark:text-[#666]">Try a different search term</p>
                 </div>
               )}
             </div>
@@ -512,7 +633,7 @@ export function Files() {
                   <div className="flex items-center gap-2 mb-3 px-1">
                     <Clock size={13} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
                     <p className="text-[11px] font-semibold text-[#999] dark:text-[#666] uppercase tracking-wider">
-                      {t('files.recent')}
+                      Recent
                     </p>
                   </div>
                   <div className="bg-white dark:bg-[#222] rounded-xl border border-[#e8e8e8] dark:border-[#333] overflow-hidden">
@@ -540,7 +661,7 @@ export function Files() {
                           )}
                           <span className="text-[12px] text-[#616161] dark:text-[#b9bbbe] truncate">{file.uploadedBy}</span>
                         </div>
-                        <span className="text-[12px] text-[#999] dark:text-[#666]">{formatRelativeTime(file.uploadedAt, locale, 'short')}</span>
+                        <span className="text-[12px] text-[#999] dark:text-[#666]">{formatDistanceToNow(file.uploadedAt, { addSuffix: true })}</span>
                         <div className="flex items-center">
                           <button className="p-1 rounded text-transparent group-hover:text-[#999] dark:group-hover:text-[#666] hover:!text-[#242424] dark:hover:!text-[#f0f0f0] transition-colors">
                             <MoreHorizontal size={14} />
@@ -555,10 +676,10 @@ export function Files() {
               <div className="bg-white dark:bg-[#222] rounded-xl border border-[#e8e8e8] dark:border-[#333] overflow-hidden">
                 {/* Table header */}
                 <div className="grid grid-cols-[1fr_100px_140px_120px_40px] px-4 py-2.5 bg-[#faf9f8] dark:bg-[#252525] border-b border-[#e8e8e8] dark:border-[#333] text-[11px] font-semibold text-[#999] dark:text-[#666] uppercase tracking-wider">
-                  <span>{t('files.column.name')}</span>
-                  <span>{t('files.column.size')}</span>
-                  <span>{t('files.column.uploadedBy')}</span>
-                  <span>{t('files.column.date')}</span>
+                  <span>Name</span>
+                  <span>Size</span>
+                  <span>Uploaded by</span>
+                  <span>Date</span>
                   <span />
                 </div>
 
@@ -577,12 +698,12 @@ export function Files() {
                       )}
                       <span className="text-[13px] font-medium text-[#242424] dark:text-[#f0f0f0] truncate">{folder.name}</span>
                       <span className="text-[11px] text-[#999] dark:text-[#666] flex-shrink-0 ml-1">
-                        {t('files.itemsCount', { count: files.filter(f => f.folderId === folder.id).length + folders.filter(f => f.parentId === folder.id).length })}
+                        {files.filter(f => f.folderId === folder.id).length + folders.filter(f => f.parentId === folder.id).length} items
                       </span>
                     </div>
                     <span className="text-[12px] text-[#999] dark:text-[#666]">—</span>
                     <span className="text-[12px] text-[#616161] dark:text-[#b9bbbe] truncate">{folder.createdBy}</span>
-                    <span className="text-[12px] text-[#999] dark:text-[#666]">{dateFormatter.format(folder.createdAt)}</span>
+                    <span className="text-[12px] text-[#999] dark:text-[#666]">{format(folder.createdAt, 'MMM d, yyyy')}</span>
                     <div>
                       <ArrowUpRight size={14} className="text-transparent group-hover:text-[#999] dark:group-hover:text-[#666] transition-colors" />
                     </div>
@@ -602,9 +723,15 @@ export function Files() {
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <FileIcon type={file.type} size={18} />
-                      <span className="text-[13px] font-medium text-[#242424] dark:text-[#f0f0f0] truncate">{file.name}</span>
+                      <span className={`text-[13px] font-medium truncate ${!hasFileAccess(file) ? 'text-[#999] dark:text-[#666]' : 'text-[#242424] dark:text-[#f0f0f0]'}`}>{file.name}</span>
+                      {getFileAccessLevel(file) !== 'public' && (
+                        <AccessBadge level={getFileAccessLevel(file)} variant="compact" />
+                      )}
                       {file.securityLevel && (
                         <SecurityBadge level={file.securityLevel} variant="icon" />
+                      )}
+                      {!hasFileAccess(file) && (
+                        <Lock size={12} className="text-[#d4820c] shrink-0" />
                       )}
                     </div>
                     <span className="text-[12px] text-[#999] dark:text-[#666]">{file.size}</span>
@@ -614,7 +741,7 @@ export function Files() {
                       )}
                       <span className="text-[12px] text-[#616161] dark:text-[#b9bbbe] truncate">{file.uploadedBy}</span>
                     </div>
-                    <span className="text-[12px] text-[#999] dark:text-[#666]">{dateFormatter.format(file.uploadedAt)}</span>
+                    <span className="text-[12px] text-[#999] dark:text-[#666]">{format(file.uploadedAt, 'MMM d, yyyy')}</span>
                     <div className="flex items-center">
                       <button className="p-1 rounded text-transparent group-hover:text-[#999] dark:group-hover:text-[#666] hover:!text-[#242424] dark:hover:!text-[#f0f0f0] transition-colors">
                         <MoreHorizontal size={14} />
@@ -646,7 +773,7 @@ export function Files() {
           >
             {/* Panel header */}
             <div className="h-[52px] px-4 flex items-center justify-between border-b border-[#e8e8e8] dark:border-[#333] flex-shrink-0">
-              <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('files.details')}</h3>
+              <h3 className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">File Details</h3>
               <button
                 onClick={() => setSelectedFileId(null)}
                 className="p-1.5 rounded-md text-[#999] hover:text-[#242424] dark:text-[#666] dark:hover:text-[#f0f0f0] hover:bg-[#f5f5f5] dark:hover:bg-[#333] transition-colors"
@@ -666,54 +793,116 @@ export function Files() {
                 {selectedFile.name}
               </h4>
 
-              {/* Security classification */}
-              {selectedFile.securityLevel && (
-                <div className="mb-4">
+              {/* Access & Security badges */}
+              <div className="flex items-center gap-2 mb-4 flex-wrap">
+                {getFileAccessLevel(selectedFile) !== 'public' && (
+                  <AccessBadge level={getFileAccessLevel(selectedFile)} variant="full" />
+                )}
+                {selectedFile.securityLevel && (
                   <SecurityBadge level={selectedFile.securityLevel} variant="full" />
-                </div>
-              )}
-
-              {/* Meta info */}
-              <div className="space-y-3">
-                <MetaRow label={t('files.meta.size')} value={selectedFile.size} />
-                <MetaRow label={t('files.meta.type')} value={selectedFile.type.toUpperCase()} />
-                <MetaRow label={t('files.meta.uploaded')} value={dateTimeFormatter.format(selectedFile.uploadedAt)} />
-                <MetaRow
-                  label={t('files.meta.uploadedBy')}
-                  value={
-                    <div className="flex items-center gap-2">
-                      {selectedFile.uploadedByAvatar && (
-                        <img src={selectedFile.uploadedByAvatar} alt="" className="w-5 h-5 rounded-full" />
-                      )}
-                      <span>{selectedFile.uploadedBy}</span>
-                    </div>
-                  }
-                />
-                {selectedFile.folderId && (
-                  <MetaRow
-                    label={t('files.meta.location')}
-                    value={
-                      <button
-                        onClick={() => { navigateToFolder(selectedFile.folderId); setSelectedFileId(null); }}
-                        className="flex items-center gap-1.5 text-[#5b5fc7] dark:text-[#a6a9dc] hover:underline"
-                      >
-                        <FolderIcon size={12} />
-                        {folders.find(f => f.id === selectedFile.folderId)?.name || t('files.unknown')}
-                      </button>
-                    }
-                  />
                 )}
               </div>
 
-              {/* Actions */}
-              <div className="mt-6 space-y-1.5">
-                <FileAction icon={<Download size={14} />} label={t('files.action.download')} />
-                <FileAction icon={<Copy size={14} />} label={t('files.action.copyLink')} />
-                <FileAction icon={<Eye size={14} />} label={t('files.action.preview')} />
-                <FileAction icon={<Trash2 size={14} />} label={t('files.action.delete')} danger />
-              </div>
+              {/* Locked state for restricted files */}
+              {!hasFileAccess(selectedFile) ? (
+                <div className="text-center py-6">
+                  <div className={`w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center ${
+                    getFileAccessLevel(selectedFile) === 'confidential' ? 'bg-[#c4314b]/10' : 'bg-[#d4820c]/10'
+                  }`}>
+                    <Lock size={20} className={getFileAccessLevel(selectedFile) === 'confidential' ? 'text-[#c4314b]' : 'text-[#d4820c]'} />
+                  </div>
+                  <p className="text-[13px] font-semibold text-[#242424] dark:text-[#e0e0e0] mb-1">Access Required</p>
+                  <p className="text-[11px] text-[#8a8a8a] mb-4">Your role doesn't have access to this file.</p>
+                  {hasPendingFileRequest(selectedFile.id) ? (
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#d4820c]/10 text-[11px] font-medium text-[#d4820c]">
+                      <Clock size={12} /> Request pending
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setShowRequestModal(true)}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#5b5fc7] hover:bg-[#4a4eb5] text-white text-[11px] font-semibold transition-colors"
+                    >
+                      <Send size={12} /> Request Temporary Access
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <>
+                  {/* Meta info */}
+                  <div className="space-y-3">
+                    <MetaRow label="Size" value={selectedFile.size} />
+                    <MetaRow label="Type" value={selectedFile.type.toUpperCase()} />
+                    <MetaRow label="Uploaded" value={format(selectedFile.uploadedAt, 'MMM d, yyyy \'at\' h:mm a')} />
+                    <MetaRow
+                      label="Uploaded by"
+                      value={
+                        <div className="flex items-center gap-2">
+                          {selectedFile.uploadedByAvatar && (
+                            <img src={selectedFile.uploadedByAvatar} alt="" className="w-5 h-5 rounded-full" />
+                          )}
+                          <span>{selectedFile.uploadedBy}</span>
+                        </div>
+                      }
+                    />
+                    {selectedFile.folderId && (
+                      <MetaRow
+                        label="Location"
+                        value={
+                          <button
+                            onClick={() => { navigateToFolder(selectedFile.folderId); setSelectedFileId(null); }}
+                            className="flex items-center gap-1.5 text-[#5b5fc7] dark:text-[#a6a9dc] hover:underline"
+                          >
+                            <FolderIcon size={12} />
+                            {folders.find(f => f.id === selectedFile.folderId)?.name || 'Unknown'}
+                          </button>
+                        }
+                      />
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="mt-6 space-y-1.5">
+                    {getFileAccessLevel(selectedFile) !== 'public' && (
+                      <FileAction icon={<Shield size={14} />} label="Access Requests" onClick={() => setShowAccessPanel(true)} />
+                    )}
+                    <FileAction icon={<Download size={14} />} label="Download" />
+                    <FileAction icon={<Copy size={14} />} label="Copy link" />
+                    <FileAction icon={<Eye size={14} />} label="Preview" />
+                    <FileAction icon={<Trash2 size={14} />} label="Delete" danger />
+                  </div>
+                </>
+              )}
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Request Access Modal */}
+      <AnimatePresence>
+        {showRequestModal && selectedFile && (
+          <RequestAccessModal
+            resourceName={selectedFile.name}
+            resourceType="file"
+            userRole={userRole}
+            onSubmit={(reason, duration) => handleFileRequestAccess(selectedFile.id, reason, duration)}
+            onClose={() => setShowRequestModal(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Access Requests Panel */}
+      <AnimatePresence>
+        {showAccessPanel && selectedFile && (
+          <AccessRequestsPanel
+            resourceType="file"
+            resourceId={selectedFile.id}
+            resourceName={selectedFile.name}
+            accessRequests={accessRequests}
+            onApproveRequest={handleFileApproveRequest}
+            onDenyRequest={handleFileDenyRequest}
+            isOpen={showAccessPanel}
+            onClose={() => setShowAccessPanel(false)}
+          />
         )}
       </AnimatePresence>
     </div>
@@ -729,9 +918,9 @@ function MetaRow({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-function FileAction({ icon, label, danger }: { icon: React.ReactNode; label: string; danger?: boolean }) {
+function FileAction({ icon, label, danger, onClick }: { icon: React.ReactNode; label: string; danger?: boolean; onClick?: () => void }) {
   return (
-    <button className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] transition-colors ${
+    <button onClick={onClick} className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] transition-colors ${
       danger
         ? 'text-[#c4314b] dark:text-[#f47067] hover:bg-[#c4314b]/5 dark:hover:bg-[#c4314b]/10'
         : 'text-[#616161] dark:text-[#999] hover:bg-[#f5f5f5] dark:hover:bg-[#2a2a2a] hover:text-[#242424] dark:hover:text-[#f0f0f0]'
@@ -743,20 +932,19 @@ function FileAction({ icon, label, danger }: { icon: React.ReactNode; label: str
 }
 
 function EmptyState({ onUpload }: { onUpload: () => void }) {
-  const { t } = useI18n();
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       <div className="w-16 h-16 rounded-2xl bg-[#f7f6f3] dark:bg-[#2a2a2a] flex items-center justify-center mb-4">
         <Upload size={28} className="text-[#ccc] dark:text-[#555]" />
       </div>
-      <h3 className="text-[16px] font-medium text-[#242424] dark:text-[#f0f0f0] mb-1">{t('files.emptyTitle')}</h3>
-      <p className="text-[14px] text-[#999] dark:text-[#666] mb-4">{t('files.emptySubtitle')}</p>
+      <h3 className="text-[16px] font-medium text-[#242424] dark:text-[#f0f0f0] mb-1">This folder is empty</h3>
+      <p className="text-[14px] text-[#999] dark:text-[#666] mb-4">Drop files here or click Upload to add files</p>
       <button
         onClick={onUpload}
         className="flex items-center gap-2 bg-[#5b5fc7] hover:bg-[#5254b5] text-white px-4 py-2 rounded-lg text-[13px] font-medium transition-colors"
       >
         <Upload size={14} />
-        {t('files.uploadFiles')}
+        Upload Files
       </button>
     </div>
   );
