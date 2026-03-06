@@ -9,12 +9,12 @@ import {
   Download, Volume2, RotateCcw, Layers, Plus, ArrowRight,
   Star, Zap, Heart, Bookmark, Target, Wrench, Code, Briefcase,
   Palette, Headphones, Award, Globe, Cpu, Database,
+  Building2, User, Phone, MapPin, Clock, Mail, Filter,
   type LucideIcon,
 } from 'lucide-react';
 import { spaces, users, currentUser } from '../data/mockData';
 import { updateAccessPermission } from '../data/accessPermissions';
 import { Switch } from '../../components/ui/switch';
-import { useI18n } from '../context/I18nContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -43,9 +43,23 @@ interface SpaceMember {
   avatar: string;
   email: string;
   role: string;
+  title?: string;
+  phone?: string;
+  location?: string;
   joinedAt: Date;
   lastActive: Date;
   status: 'online' | 'away' | 'busy' | 'offline';
+  departmentId?: string;
+}
+
+interface SpaceDepartment {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  role: string;
+  joinedAt: Date;
+  memberIds: string[];
 }
 
 interface PermissionCategory {
@@ -138,15 +152,27 @@ const builtInRoleConfig: Record<BuiltInRole, RoleConfigEntry> = {
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
 const mockMembers: SpaceMember[] = [
-  { userId: 'user-1', name: 'John Doe', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John', email: 'john.doe@company.com', role: 'admin', joinedAt: new Date('2025-01-15'), lastActive: new Date('2026-03-04T09:30:00'), status: 'online' },
-  { userId: 'user-owner', name: 'Sarah Chen', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah', email: 'sarah.chen@company.com', role: 'owner', joinedAt: new Date('2024-11-01'), lastActive: new Date('2026-03-04T08:15:00'), status: 'online' },
-  { userId: 'user-2', name: 'Jane Smith', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jane', email: 'jane.smith@company.com', role: 'admin', joinedAt: new Date('2025-02-10'), lastActive: new Date('2026-03-03T16:45:00'), status: 'online' },
-  { userId: 'user-3', name: 'Bob Johnson', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bob', email: 'bob.johnson@company.com', role: 'member', joinedAt: new Date('2025-03-20'), lastActive: new Date('2026-03-04T07:00:00'), status: 'away' },
-  { userId: 'user-4', name: 'Alice Williams', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alice', email: 'alice.williams@company.com', role: 'member', joinedAt: new Date('2025-04-05'), lastActive: new Date('2026-03-03T14:20:00'), status: 'online' },
-  { userId: 'user-5', name: 'Charlie Brown', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie', email: 'charlie.brown@company.com', role: 'custom-contributor', joinedAt: new Date('2025-05-12'), lastActive: new Date('2026-03-02T11:30:00'), status: 'busy' },
-  { userId: 'user-6', name: 'Diana Prince', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Diana', email: 'diana.prince@company.com', role: 'member', joinedAt: new Date('2025-06-01'), lastActive: new Date('2026-03-04T10:00:00'), status: 'online' },
-  { userId: 'user-7', name: 'Erik Lehnsherr', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Erik', email: 'erik.lehnsherr@partner.com', role: 'custom-reviewer', joinedAt: new Date('2026-01-10'), lastActive: new Date('2026-02-28T09:00:00'), status: 'offline' },
-  { userId: 'user-8', name: 'Fiona Gallagher', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Fiona', email: 'fiona.g@contractor.io', role: 'guest', joinedAt: new Date('2026-02-01'), lastActive: new Date('2026-03-01T15:30:00'), status: 'offline' },
+  { userId: 'user-1', name: 'John Doe', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John', email: 'john.doe@company.com', role: 'admin', title: 'Senior Engineer', phone: '+1 (555) 100-0002', location: 'New York, NY', joinedAt: new Date('2025-01-15'), lastActive: new Date('2026-03-04T09:30:00'), status: 'online' },
+  { userId: 'user-owner', name: 'Sarah Chen', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah', email: 'sarah.chen@company.com', role: 'owner', title: 'VP Engineering', phone: '+1 (555) 100-0001', location: 'San Francisco, CA', joinedAt: new Date('2024-11-01'), lastActive: new Date('2026-03-04T08:15:00'), status: 'online' },
+  { userId: 'user-2', name: 'Jane Smith', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jane', email: 'jane.smith@company.com', role: 'admin', title: 'Engineering Manager', location: 'Austin, TX', joinedAt: new Date('2025-02-10'), lastActive: new Date('2026-03-03T16:45:00'), status: 'online' },
+  { userId: 'user-3', name: 'Bob Johnson', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bob', email: 'bob.johnson@company.com', role: 'member', title: 'Backend Engineer', joinedAt: new Date('2025-03-20'), lastActive: new Date('2026-03-04T07:00:00'), status: 'away', departmentId: 'dept-backend' },
+  { userId: 'user-4', name: 'Alice Williams', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alice', email: 'alice.williams@company.com', role: 'member', title: 'Frontend Engineer', joinedAt: new Date('2025-04-05'), lastActive: new Date('2026-03-03T14:20:00'), status: 'online', departmentId: 'dept-frontend' },
+  { userId: 'user-5', name: 'Charlie Brown', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie', email: 'charlie.brown@company.com', role: 'custom-contributor', title: 'Senior Backend Engineer', joinedAt: new Date('2025-05-12'), lastActive: new Date('2026-03-02T11:30:00'), status: 'busy', departmentId: 'dept-backend' },
+  { userId: 'user-6', name: 'Diana Prince', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Diana', email: 'diana.prince@company.com', role: 'member', title: 'UI Engineer', joinedAt: new Date('2025-06-01'), lastActive: new Date('2026-03-04T10:00:00'), status: 'online', departmentId: 'dept-frontend' },
+  { userId: 'user-7', name: 'Erik Lehnsherr', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Erik', email: 'erik.lehnsherr@partner.com', role: 'custom-reviewer', title: 'External Consultant', joinedAt: new Date('2026-01-10'), lastActive: new Date('2026-02-28T09:00:00'), status: 'offline' },
+  { userId: 'user-8', name: 'Fiona Gallagher', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Fiona', email: 'fiona.g@contractor.io', role: 'guest', title: 'Contractor · QA', joinedAt: new Date('2026-02-01'), lastActive: new Date('2026-03-01T15:30:00'), status: 'offline' },
+  // Department-only members (not individually added, come via department)
+  { userId: 'user-dp-1', name: 'Liam Park', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Liam', email: 'liam.park@company.com', role: 'member', title: 'Backend Engineer', joinedAt: new Date('2025-08-01'), lastActive: new Date('2026-03-05T08:45:00'), status: 'online', departmentId: 'dept-backend' },
+  { userId: 'user-dp-2', name: 'Nadia Volkov', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Nadia', email: 'nadia.volkov@company.com', role: 'member', title: 'DevOps Engineer', phone: '+1 (555) 200-0004', joinedAt: new Date('2025-09-15'), lastActive: new Date('2026-03-05T07:30:00'), status: 'online', departmentId: 'dept-backend' },
+  { userId: 'user-dp-3', name: 'Marco Silva', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Marco', email: 'marco.silva@company.com', role: 'member', title: 'Design Engineer', joinedAt: new Date('2025-07-15'), lastActive: new Date('2026-03-04T17:00:00'), status: 'away', departmentId: 'dept-frontend' },
+  { userId: 'user-dp-4', name: 'Yuki Tanaka', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Yuki', email: 'yuki.tanaka@company.com', role: 'member', title: 'QA Lead', joinedAt: new Date('2025-03-20'), lastActive: new Date('2026-03-05T09:15:00'), status: 'online', departmentId: 'dept-qa' },
+  { userId: 'user-dp-5', name: 'Amir Hassan', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Amir', email: 'amir.hassan@company.com', role: 'member', title: 'QA Engineer', joinedAt: new Date('2025-10-01'), lastActive: new Date('2026-03-03T12:00:00'), status: 'offline', departmentId: 'dept-qa' },
+];
+
+const mockDepartments: SpaceDepartment[] = [
+  { id: 'dept-backend', name: 'Backend Engineering', icon: '🔧', description: 'Server-side services, APIs, and infrastructure', role: 'member', joinedAt: new Date('2025-01-20'), memberIds: ['user-3', 'user-5', 'user-dp-1', 'user-dp-2'] },
+  { id: 'dept-frontend', name: 'Frontend Engineering', icon: '🎨', description: 'UI/UX implementation, web applications, and design systems', role: 'member', joinedAt: new Date('2025-02-01'), memberIds: ['user-4', 'user-6', 'user-dp-3'] },
+  { id: 'dept-qa', name: 'Quality Assurance', icon: '🧪', description: 'Testing, automation, and quality processes', role: 'member', joinedAt: new Date('2025-03-15'), memberIds: ['user-dp-4', 'user-dp-5'] },
 ];
 
 // Initial custom roles (pre-populated)
@@ -309,7 +335,7 @@ function RoleBadge({ roleId, config, size = 'md' }: { roleId: string; config: Re
 }
 
 function MemberRow({
-  member, onRoleChange, onRemove, isCurrentUser, allRoleConfig, allRoleKeys,
+  member, onRoleChange, onRemove, isCurrentUser, allRoleConfig, allRoleKeys, onSelect, indented,
 }: {
   member: SpaceMember;
   onRoleChange: (userId: string, role: string) => void;
@@ -317,6 +343,8 @@ function MemberRow({
   isCurrentUser: boolean;
   allRoleConfig: Record<string, RoleConfigEntry>;
   allRoleKeys: string[];
+  onSelect?: (member: SpaceMember) => void;
+  indented?: boolean;
 }) {
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const [showActions, setShowActions] = useState(false);
@@ -324,7 +352,8 @@ function MemberRow({
 
   return (
     <motion.div layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-      className="flex items-center gap-3 px-4 py-3 hover:bg-[#f5f5f5] dark:hover:bg-[#2a2a2a] transition-colors group rounded-lg"
+      className={`flex items-center gap-3 px-4 py-3 hover:bg-[#f5f5f5] dark:hover:bg-[#2a2a2a] transition-colors group rounded-lg ${indented ? 'pl-11' : ''} ${onSelect ? 'cursor-pointer' : ''}`}
+      onClick={() => onSelect?.(member)}
     >
       <div className="relative shrink-0">
         <img src={member.avatar} alt={member.name} className="w-9 h-9 rounded-full" />
@@ -335,9 +364,9 @@ function MemberRow({
           <span className="text-[13px] font-semibold text-[#242424] dark:text-[#f2f3f5] truncate">{member.name}</span>
           {isCurrentUser && <span className="text-[9px] bg-[#5b5fc7]/10 dark:bg-[#5b5fc7]/20 text-[#5b5fc7] dark:text-[#a6a9dc] px-1.5 py-0.5 rounded font-semibold">YOU</span>}
         </div>
-        <p className="text-[11px] text-[#616161] dark:text-[#8a8a8a] truncate">{member.email}</p>
+        <p className="text-[11px] text-[#616161] dark:text-[#8a8a8a] truncate">{member.title || member.email}</p>
       </div>
-      <div className="relative">
+      <div className="relative" onClick={(e) => e.stopPropagation()}>
         <button
           onClick={() => canChangeRole && setShowRoleMenu(!showRoleMenu)}
           className={`${canChangeRole ? 'cursor-pointer hover:ring-2 hover:ring-[#5b5fc7]/30' : 'cursor-default'} rounded-full transition-all`}
@@ -374,7 +403,7 @@ function MemberRow({
       <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] w-[70px] text-right shrink-0 hidden lg:block">
         {member.joinedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })}
       </span>
-      <div className="relative shrink-0">
+      <div className="relative shrink-0" onClick={(e) => e.stopPropagation()}>
         {canChangeRole ? (
           <>
             <button onClick={() => setShowActions(!showActions)} className="p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-[#e8e8e8] dark:hover:bg-[#3d3d3d] transition-all text-[#616161] dark:text-[#b9bbbe]">
@@ -396,6 +425,144 @@ function MemberRow({
             </AnimatePresence>
           </>
         ) : <div className="w-[24px]" />}
+      </div>
+    </motion.div>
+  );
+}
+
+function DepartmentRow({
+  dept, deptMembers, isExpanded, onToggle, onRoleChange, onRemove, onRemoveDept,
+  allRoleConfig, allRoleKeys, onSelectMember,
+}: {
+  dept: SpaceDepartment;
+  deptMembers: SpaceMember[];
+  isExpanded: boolean;
+  onToggle: () => void;
+  onRoleChange: (userId: string, role: string) => void;
+  onRemove: (userId: string) => void;
+  onRemoveDept: (deptId: string) => void;
+  allRoleConfig: Record<string, RoleConfigEntry>;
+  allRoleKeys: string[];
+  onSelectMember: (member: SpaceMember) => void;
+}) {
+  const [showActions, setShowActions] = useState(false);
+  const onlineCount = deptMembers.filter(m => m.status === 'online').length;
+
+  return (
+    <div className="rounded-lg overflow-hidden">
+      <div className="flex items-center gap-3 px-4 py-3 hover:bg-[#f0f0f5] dark:hover:bg-[#2a2a2e] transition-colors group cursor-pointer"
+        onClick={onToggle}>
+        <ChevronRight size={14} className={`transition-transform duration-200 text-[#616161] dark:text-[#b9bbbe] shrink-0 ${isExpanded ? 'rotate-90' : ''}`} />
+        <div className="w-9 h-9 rounded-lg bg-[#5b5fc7]/8 dark:bg-[#5b5fc7]/15 flex items-center justify-center text-[18px] shrink-0">{dept.icon}</div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-[13px] font-semibold text-[#242424] dark:text-[#f2f3f5]">{dept.name}</span>
+            <span className="flex items-center gap-1 text-[10px] bg-[#e8e8e8] dark:bg-[#3d3d3d] text-[#616161] dark:text-[#b9bbbe] px-1.5 py-0.5 rounded-full">
+              <Building2 size={9} /> DEPT
+            </span>
+          </div>
+          <p className="text-[11px] text-[#616161] dark:text-[#8a8a8a] truncate">{dept.description}</p>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 text-[11px] text-[#616161] dark:text-[#8a8a8a]">
+            <Users size={12} />
+            <span>{deptMembers.length}</span>
+            {onlineCount > 0 && (
+              <span className="flex items-center gap-1 text-[#237b4b] dark:text-[#6fcf97]">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#237b4b]" />{onlineCount}
+              </span>
+            )}
+          </div>
+          <RoleBadge roleId={dept.role} config={allRoleConfig} size="sm" />
+        </div>
+        <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] w-[70px] text-right shrink-0 hidden lg:block">
+          {dept.joinedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })}
+        </span>
+        <div className="relative shrink-0" onClick={(e) => e.stopPropagation()}>
+          <button onClick={() => setShowActions(!showActions)} className="p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-[#e8e8e8] dark:hover:bg-[#3d3d3d] transition-all text-[#616161] dark:text-[#b9bbbe]">
+            <MoreHorizontal size={16} />
+          </button>
+          <AnimatePresence>
+            {showActions && (
+              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+                className="absolute right-0 top-full mt-1 w-[180px] bg-white dark:bg-[#2b2d31] rounded-lg border border-[#e1dfdd] dark:border-[#3d3d3d] shadow-xl z-50 py-1">
+                <button onClick={() => setShowActions(false)} className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-[#424242] dark:text-[#e0e0e0] hover:bg-[#f5f5f5] dark:hover:bg-[#35373c]">
+                  <UserPlus size={13} /> Add member to dept
+                </button>
+                <button onClick={() => { onRemoveDept(dept.id); setShowActions(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-[#c4314b] hover:bg-[#c4314b]/8 dark:hover:bg-[#c4314b]/15">
+                  <Trash2 size={13} /> Remove department
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }} className="overflow-hidden border-l-2 border-[#5b5fc7]/20 dark:border-[#5b5fc7]/30 ml-7">
+            {deptMembers.map(member => (
+              <MemberRow key={member.userId} member={member} onRoleChange={onRoleChange} onRemove={onRemove}
+                isCurrentUser={member.userId === currentUser.id} allRoleConfig={allRoleConfig} allRoleKeys={allRoleKeys}
+                onSelect={onSelectMember} indented />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+const statusLabels: Record<string, string> = { online: 'Online', away: 'Away', busy: 'Busy', offline: 'Offline' };
+
+function MemberDetailPanel({ member, onClose, departments, allRoleConfig }: {
+  member: SpaceMember; onClose: () => void; departments: SpaceDepartment[]; allRoleConfig: Record<string, RoleConfigEntry>;
+}) {
+  const dept = member.departmentId ? departments.find(d => d.id === member.departmentId) : null;
+  return (
+    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
+      className="w-[300px] shrink-0 bg-[#faf9f8] dark:bg-[#2b2d31] border-l border-[#e1dfdd] dark:border-[#3d3d3d] flex flex-col overflow-y-auto">
+      <div className="relative">
+        <div className="h-[72px] bg-gradient-to-r from-[#5b5fc7] to-[#7b4db8]" />
+        <button onClick={onClose} className="absolute top-3 right-3 p-1 rounded-md bg-white/20 hover:bg-white/30 text-white transition-colors"><X size={14} /></button>
+        <div className="px-5 -mt-7">
+          <div className="relative inline-block">
+            <img src={member.avatar} alt={member.name} className="w-14 h-14 rounded-full border-4 border-[#faf9f8] dark:border-[#2b2d31]" />
+            <div className={`absolute bottom-0.5 right-0.5 w-3.5 h-3.5 rounded-full border-2 border-[#faf9f8] dark:border-[#2b2d31] ${statusColors[member.status]}`} />
+          </div>
+        </div>
+      </div>
+      <div className="px-5 pt-2 pb-5 space-y-4">
+        <div>
+          <h3 className="text-[15px] font-bold text-[#242424] dark:text-[#f2f3f5]">{member.name}</h3>
+          {member.title && <p className="text-[12px] text-[#616161] dark:text-[#8a8a8a]">{member.title}</p>}
+          <div className="flex items-center gap-2 mt-2">
+            <RoleBadge roleId={member.role} config={allRoleConfig} size="sm" />
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78]">
+              <div className={`w-1.5 h-1.5 rounded-full ${statusColors[member.status]}`} />{statusLabels[member.status]}
+            </span>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center gap-3 text-[12px]"><Mail size={14} className="text-[#8a8a8a] shrink-0" /><span className="text-[#242424] dark:text-[#e0e0e0] truncate">{member.email}</span></div>
+          {member.phone && <div className="flex items-center gap-3 text-[12px]"><Phone size={14} className="text-[#8a8a8a] shrink-0" /><span className="text-[#242424] dark:text-[#e0e0e0]">{member.phone}</span></div>}
+          {member.location && <div className="flex items-center gap-3 text-[12px]"><MapPin size={14} className="text-[#8a8a8a] shrink-0" /><span className="text-[#242424] dark:text-[#e0e0e0]">{member.location}</span></div>}
+          <div className="flex items-center gap-3 text-[12px]"><Clock size={14} className="text-[#8a8a8a] shrink-0" /><span className="text-[#616161] dark:text-[#8a8a8a]">Joined {member.joinedAt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span></div>
+          <div className="flex items-center gap-3 text-[12px]"><Clock size={14} className="text-[#8a8a8a] shrink-0" /><span className="text-[#616161] dark:text-[#8a8a8a]">Active {member.lastActive.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at {member.lastActive.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</span></div>
+        </div>
+        {dept && (
+          <div className="pt-2 border-t border-[#e1dfdd] dark:border-[#3d3d3d]">
+            <p className="text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider mb-1.5">Department</p>
+            <div className="flex items-center gap-2 text-[12px] text-[#242424] dark:text-[#e0e0e0]">
+              <span className="text-[16px]">{dept.icon}</span> {dept.name}
+            </div>
+          </div>
+        )}
+        <div className="pt-2 border-t border-[#e1dfdd] dark:border-[#3d3d3d]">
+          <button className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-[#5b5fc7] hover:bg-[#4a4eb5] text-white text-[12px] font-semibold rounded-lg transition-colors">
+            <Mail size={13} /> Send Message
+          </button>
+        </div>
       </div>
     </motion.div>
   );
@@ -494,7 +661,6 @@ interface RoleFormData {
 const emptyRoleForm: RoleFormData = { id: '', label: '', description: '', colorIdx: 0, iconIdx: 0, baseRole: 'member' };
 
 export function SpacePermissions() {
-  const { t } = useI18n();
   const { spaceId } = useParams();
   const space = spaces.find(s => s.id === spaceId);
   const [activeTab, setActiveTab] = useState<PermTab>('members');
@@ -505,9 +671,17 @@ export function SpacePermissions() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<string>('member');
+  const [inviteMode, setInviteMode] = useState<'person' | 'department'>('person');
+  const [inviteDeptName, setInviteDeptName] = useState('');
+  const [inviteDeptDesc, setInviteDeptDesc] = useState('');
+  const [inviteDeptIcon, setInviteDeptIcon] = useState('🏢');
   const [showRoleFilter, setShowRoleFilter] = useState(false);
   const [pendingChanges, setPendingChanges] = useState(0);
   const [showExportToast, setShowExportToast] = useState(false);
+  const [departments, setDepartments] = useState<SpaceDepartment[]>(mockDepartments);
+  const [expandedDepts, setExpandedDepts] = useState<Set<string>>(new Set());
+  const [selectedMember, setSelectedMember] = useState<SpaceMember | null>(null);
+  const [memberViewMode, setMemberViewMode] = useState<'all' | 'people' | 'departments'>('all');
 
   // Custom roles state
   const [customRoles, setCustomRoles] = useState<Record<string, RoleConfigEntry>>(initialCustomRoles);
@@ -539,11 +713,17 @@ export function SpacePermissions() {
   );
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
 
-  const filteredMembers = useMemo(() => {
-    let result = members;
+  // Individual members = those NOT in any department
+  const individualMembers = useMemo(() => {
+    const deptMemberIds = new Set(departments.flatMap(d => d.memberIds));
+    return members.filter(m => !deptMemberIds.has(m.userId));
+  }, [members, departments]);
+
+  const filteredIndividualMembers = useMemo(() => {
+    let result = individualMembers;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(m => m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q));
+      result = result.filter(m => m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q) || (m.title || '').toLowerCase().includes(q));
     }
     if (roleFilter !== 'all') {
       result = result.filter(m => m.role === roleFilter);
@@ -551,13 +731,45 @@ export function SpacePermissions() {
     const priorityMap: Record<string, number> = {};
     for (const [k, v] of Object.entries(allRoleConfig)) priorityMap[k] = v.priority;
     return result.sort((a, b) => (priorityMap[a.role] ?? 99) - (priorityMap[b.role] ?? 99));
-  }, [members, searchQuery, roleFilter, allRoleConfig]);
+  }, [individualMembers, searchQuery, roleFilter, allRoleConfig]);
+
+  const filteredDepartments = useMemo(() => {
+    let result = departments;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(d => {
+        if (d.name.toLowerCase().includes(q)) return true;
+        const deptMembers = d.memberIds.map(id => members.find(m => m.userId === id)).filter(Boolean) as SpaceMember[];
+        return deptMembers.some(m => m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q) || (m.title || '').toLowerCase().includes(q));
+      });
+    }
+    if (roleFilter !== 'all') {
+      result = result.filter(d => {
+        if (d.role === roleFilter) return true;
+        const deptMembers = d.memberIds.map(id => members.find(m => m.userId === id)).filter(Boolean) as SpaceMember[];
+        return deptMembers.some(m => m.role === roleFilter);
+      });
+    }
+    return result;
+  }, [departments, members, searchQuery, roleFilter]);
+
+  const getDeptMembers = useCallback((dept: SpaceDepartment) => {
+    return dept.memberIds.map(id => members.find(m => m.userId === id)).filter(Boolean) as SpaceMember[];
+  }, [members]);
 
   const roleCounts = useMemo(() => {
     const counts: Record<string, number> = { all: members.length };
     members.forEach(m => { counts[m.role] = (counts[m.role] || 0) + 1; });
     return counts;
   }, [members]);
+
+  const toggleDept = useCallback((deptId: string) => {
+    setExpandedDepts(prev => {
+      const next = new Set(prev);
+      if (next.has(deptId)) next.delete(deptId); else next.add(deptId);
+      return next;
+    });
+  }, []);
 
   const handleRoleChange = useCallback((userId: string, newRole: string) => {
     setMembers(prev => prev.map(m => m.userId === userId ? { ...m, role: newRole } : m));
@@ -566,6 +778,13 @@ export function SpacePermissions() {
 
   const handleRemoveMember = useCallback((userId: string) => {
     setMembers(prev => prev.filter(m => m.userId !== userId));
+    setDepartments(prev => prev.map(d => ({ ...d, memberIds: d.memberIds.filter(id => id !== userId) })));
+    if (selectedMember?.userId === userId) setSelectedMember(null);
+    setPendingChanges(p => p + 1);
+  }, [selectedMember]);
+
+  const handleRemoveDept = useCallback((deptId: string) => {
+    setDepartments(prev => prev.filter(d => d.id !== deptId));
     setPendingChanges(p => p + 1);
   }, []);
 
@@ -587,19 +806,38 @@ export function SpacePermissions() {
   }, []);
 
   const handleInvite = useCallback(() => {
-    if (!inviteEmail.trim()) return;
-    const newMember: SpaceMember = {
-      userId: `user-new-${Date.now()}`,
-      name: inviteEmail.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${Date.now()}`,
-      email: inviteEmail, role: inviteRole,
-      joinedAt: new Date(), lastActive: new Date(), status: 'offline',
-    };
-    setMembers(prev => [...prev, newMember]);
+    if (inviteMode === 'person') {
+      if (!inviteEmail.trim()) return;
+      const newMember: SpaceMember = {
+        userId: `user-new-${Date.now()}`,
+        name: inviteEmail.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${Date.now()}`,
+        email: inviteEmail, role: inviteRole, title: 'Team Member',
+        joinedAt: new Date(), lastActive: new Date(), status: 'offline',
+      };
+      setMembers(prev => [...prev, newMember]);
+    } else {
+      if (!inviteDeptName.trim()) return;
+      const newDept: SpaceDepartment = {
+        id: `dept-new-${Date.now()}`,
+        name: inviteDeptName.trim(),
+        icon: inviteDeptIcon,
+        description: inviteDeptDesc.trim() || `${inviteDeptName.trim()} department`,
+        role: inviteRole,
+        joinedAt: new Date(),
+        memberIds: [],
+      };
+      setDepartments(prev => [...prev, newDept]);
+    }
     setInviteEmail('');
+    setInviteDeptName('');
+    setInviteDeptDesc('');
+    setInviteDeptIcon('🏢');
     setShowInviteModal(false);
     setPendingChanges(p => p + 1);
-  }, [inviteEmail, inviteRole]);
+  }, [inviteMode, inviteEmail, inviteRole, inviteDeptName, inviteDeptDesc, inviteDeptIcon]);
+
+  const deptIcons = ['🏢', '🔧', '🎨', '🧪', '📊', '🔒', '🚀', '📱', '🌐', '💡', '📋', '🎯'];
 
   const handleSaveChanges = useCallback(() => { setPendingChanges(0); }, []);
 
@@ -817,33 +1055,89 @@ export function SpacePermissions() {
   }, [space, members, permCategories, channelOverrides, allRoleConfig, allRoleKeys]);
 
   const tabs: { id: PermTab; label: string; icon: LucideIcon }[] = [
-    { id: 'members', label: t('spacePermissions.tab.members'), icon: Users },
-    { id: 'roles', label: t('spacePermissions.tab.roles'), icon: Crown },
-    { id: 'permissions', label: t('spacePermissions.tab.permissions'), icon: Shield },
-    { id: 'channels', label: t('spacePermissions.tab.channels'), icon: Layers },
-    { id: 'audit', label: t('spacePermissions.tab.audit'), icon: Eye },
+    { id: 'members', label: 'Members', icon: Users },
+    { id: 'roles', label: 'Roles', icon: Crown },
+    { id: 'permissions', label: 'Permissions', icon: Shield },
+    { id: 'channels', label: 'Channels', icon: Layers },
+    { id: 'audit', label: 'Audit Log', icon: Eye },
   ];
 
-  const auditLog = [
-    { id: '1', action: 'Role changed', detail: 'Jane Smith changed from Member to Admin', user: 'John Doe', timestamp: new Date('2026-03-03T14:30:00'), type: 'role-change' as const },
-    { id: '2', action: 'Member invited', detail: 'Erik Lehnsherr invited as Guest', user: 'Sarah Chen', timestamp: new Date('2026-01-10T09:00:00'), type: 'invite' as const },
-    { id: '3', action: 'Permission updated', detail: 'Guest "Download files" permission enabled', user: 'John Doe', timestamp: new Date('2026-02-15T11:20:00'), type: 'permission' as const },
-    { id: '4', action: 'Custom role created', detail: 'Contributor role created based on Member template', user: 'Sarah Chen', timestamp: new Date('2026-02-20T13:15:00'), type: 'role-change' as const },
-    { id: '5', action: 'Member invited', detail: 'Fiona Gallagher invited as Guest', user: 'Jane Smith', timestamp: new Date('2026-02-01T10:00:00'), type: 'invite' as const },
-    { id: '6', action: 'Custom role created', detail: 'External Reviewer role created based on Guest template', user: 'John Doe', timestamp: new Date('2026-01-25T10:30:00'), type: 'role-change' as const },
-    { id: '7', action: 'Member removed', detail: 'Mike Thompson removed from space', user: 'John Doe', timestamp: new Date('2026-01-20T16:45:00'), type: 'remove' as const },
-    { id: '8', action: 'Permission updated', detail: 'Member "Create channels" enabled', user: 'Sarah Chen', timestamp: new Date('2025-12-15T14:00:00'), type: 'permission' as const },
-    { id: '9', action: 'Role changed', detail: 'Bob Johnson changed from Guest to Member', user: 'John Doe', timestamp: new Date('2025-11-20T09:30:00'), type: 'role-change' as const },
-    { id: '10', action: 'Space created', detail: 'Engineering space created', user: 'Sarah Chen', timestamp: new Date('2024-11-01T08:00:00'), type: 'create' as const },
+  const auditLog: { id: string; action: string; detail: string; user: string; timestamp: Date; type: string; fileName?: string; filePath?: string }[] = [
+    { id: '1', action: 'Role changed', detail: 'Jane Smith changed from Member to Admin', user: 'John Doe', timestamp: new Date('2026-03-03T14:30:00'), type: 'role-change' },
+    { id: 'f1', action: 'File downloaded', detail: 'Downloaded "Q1-2026-Roadmap.pdf" from /Engineering/Planning', user: 'Bob Johnson', timestamp: new Date('2026-03-04T11:22:00'), type: 'file-download', fileName: 'Q1-2026-Roadmap.pdf', filePath: '/Engineering/Planning' },
+    { id: 'd1', action: 'Document edited', detail: 'Edited "API Design Guidelines" — 14 changes across 3 sections', user: 'Alice Williams', timestamp: new Date('2026-03-04T10:05:00'), type: 'doc-edit', fileName: 'API Design Guidelines' },
+    { id: 'f2', action: 'File accessed', detail: 'Viewed "architecture-diagram-v3.png" from /Engineering/Diagrams', user: 'Charlie Brown', timestamp: new Date('2026-03-04T09:45:00'), type: 'file-access', fileName: 'architecture-diagram-v3.png', filePath: '/Engineering/Diagrams' },
+    { id: 'd2', action: 'Document accessed', detail: 'Opened "Sprint Retrospective — Feb 2026" (read-only)', user: 'Erik Lehnsherr', timestamp: new Date('2026-03-04T08:30:00'), type: 'doc-access', fileName: 'Sprint Retrospective — Feb 2026' },
+    { id: 'f3', action: 'File uploaded', detail: 'Uploaded "security-audit-report.xlsx" to /Engineering/Reports (2.4 MB)', user: 'John Doe', timestamp: new Date('2026-03-03T16:10:00'), type: 'file-upload', fileName: 'security-audit-report.xlsx', filePath: '/Engineering/Reports' },
+    { id: '2', action: 'Member invited', detail: 'Erik Lehnsherr invited as Guest', user: 'Sarah Chen', timestamp: new Date('2026-01-10T09:00:00'), type: 'invite' },
+    { id: 'd3', action: 'Document edited', detail: 'Edited "Onboarding Checklist" — added 3 new tasks and updated links', user: 'Diana Prince', timestamp: new Date('2026-03-03T15:30:00'), type: 'doc-edit', fileName: 'Onboarding Checklist' },
+    { id: 'f4', action: 'File downloaded', detail: 'Downloaded "brand-assets-v2.zip" from /Engineering/Assets (48 MB)', user: 'Diana Prince', timestamp: new Date('2026-03-03T14:55:00'), type: 'file-download', fileName: 'brand-assets-v2.zip', filePath: '/Engineering/Assets' },
+    { id: '3', action: 'Permission updated', detail: 'Guest "Download files" permission enabled', user: 'John Doe', timestamp: new Date('2026-02-15T11:20:00'), type: 'permission' },
+    { id: 'd4', action: 'Document accessed', detail: 'Opened "Release Notes — v4.2.0" (read-only)', user: 'Fiona Gallagher', timestamp: new Date('2026-03-02T13:20:00'), type: 'doc-access', fileName: 'Release Notes — v4.2.0' },
+    { id: 'f5', action: 'File accessed', detail: 'Viewed "deployment-config.yaml" from /Engineering/DevOps', user: 'Nadia Volkov', timestamp: new Date('2026-03-02T10:15:00'), type: 'file-access', fileName: 'deployment-config.yaml', filePath: '/Engineering/DevOps' },
+    { id: 'd5', action: 'Document edited', detail: 'Edited "Architecture Decision Records" — added ADR-047 (Event Sourcing)', user: 'Sarah Chen', timestamp: new Date('2026-03-01T17:00:00'), type: 'doc-edit', fileName: 'Architecture Decision Records' },
+    { id: 'f6', action: 'File uploaded', detail: 'Uploaded "test-coverage-report.html" to /Engineering/QA (1.1 MB)', user: 'Yuki Tanaka', timestamp: new Date('2026-03-01T11:45:00'), type: 'file-upload', fileName: 'test-coverage-report.html', filePath: '/Engineering/QA' },
+    { id: 'd6', action: 'Document accessed', detail: 'Opened "Incident Response Playbook" (read-only)', user: 'Liam Park', timestamp: new Date('2026-02-28T14:30:00'), type: 'doc-access', fileName: 'Incident Response Playbook' },
+    { id: 'f7', action: 'File downloaded', detail: 'Downloaded "database-schema-v5.sql" from /Engineering/Database', user: 'Bob Johnson', timestamp: new Date('2026-02-27T09:20:00'), type: 'file-download', fileName: 'database-schema-v5.sql', filePath: '/Engineering/Database' },
+    { id: '4', action: 'Custom role created', detail: 'Contributor role created based on Member template', user: 'Sarah Chen', timestamp: new Date('2026-02-20T13:15:00'), type: 'role-change' },
+    { id: '5', action: 'Member invited', detail: 'Fiona Gallagher invited as Guest', user: 'Jane Smith', timestamp: new Date('2026-02-01T10:00:00'), type: 'invite' },
+    { id: '6', action: 'Custom role created', detail: 'External Reviewer role created based on Guest template', user: 'John Doe', timestamp: new Date('2026-01-25T10:30:00'), type: 'role-change' },
+    { id: '7', action: 'Member removed', detail: 'Mike Thompson removed from space', user: 'John Doe', timestamp: new Date('2026-01-20T16:45:00'), type: 'remove' },
+    { id: '8', action: 'Permission updated', detail: 'Member "Create channels" enabled', user: 'Sarah Chen', timestamp: new Date('2025-12-15T14:00:00'), type: 'permission' },
+    { id: '9', action: 'Role changed', detail: 'Bob Johnson changed from Guest to Member', user: 'John Doe', timestamp: new Date('2025-11-20T09:30:00'), type: 'role-change' },
+    { id: '10', action: 'Space created', detail: 'Engineering space created', user: 'Sarah Chen', timestamp: new Date('2024-11-01T08:00:00'), type: 'create' },
   ];
 
-  const auditTypeColors: Record<string, { bg: string; text: string }> = {
-    'role-change': { bg: 'bg-[#5b5fc7]/10 dark:bg-[#5b5fc7]/20', text: 'text-[#5b5fc7] dark:text-[#a6a9dc]' },
-    'invite': { bg: 'bg-[#237b4b]/10 dark:bg-[#237b4b]/20', text: 'text-[#237b4b] dark:text-[#6fcf97]' },
-    'permission': { bg: 'bg-[#d4820c]/10 dark:bg-[#d4820c]/20', text: 'text-[#d4820c] dark:text-[#f5a623]' },
-    'remove': { bg: 'bg-[#c4314b]/10 dark:bg-[#c4314b]/20', text: 'text-[#c4314b] dark:text-[#f47067]' },
-    'create': { bg: 'bg-[#2196f3]/10 dark:bg-[#2196f3]/20', text: 'text-[#2196f3] dark:text-[#64b5f6]' },
+  const auditTypeColors: Record<string, { bg: string; text: string; icon: LucideIcon }> = {
+    'role-change': { bg: 'bg-[#5b5fc7]/10 dark:bg-[#5b5fc7]/20', text: 'text-[#5b5fc7] dark:text-[#a6a9dc]', icon: UserCog },
+    'invite': { bg: 'bg-[#237b4b]/10 dark:bg-[#237b4b]/20', text: 'text-[#237b4b] dark:text-[#6fcf97]', icon: UserPlus },
+    'permission': { bg: 'bg-[#d4820c]/10 dark:bg-[#d4820c]/20', text: 'text-[#d4820c] dark:text-[#f5a623]', icon: Shield },
+    'remove': { bg: 'bg-[#c4314b]/10 dark:bg-[#c4314b]/20', text: 'text-[#c4314b] dark:text-[#f47067]', icon: Trash2 },
+    'create': { bg: 'bg-[#2196f3]/10 dark:bg-[#2196f3]/20', text: 'text-[#2196f3] dark:text-[#64b5f6]', icon: Settings },
+    'file-access': { bg: 'bg-[#0d9488]/10 dark:bg-[#0d9488]/20', text: 'text-[#0d9488] dark:text-[#5eead4]', icon: FolderOpen },
+    'file-upload': { bg: 'bg-[#6366f1]/10 dark:bg-[#6366f1]/20', text: 'text-[#6366f1] dark:text-[#a5b4fc]', icon: Plus },
+    'file-download': { bg: 'bg-[#0d9488]/10 dark:bg-[#0d9488]/20', text: 'text-[#0d9488] dark:text-[#5eead4]', icon: Download },
+    'doc-access': { bg: 'bg-[#d946ef]/10 dark:bg-[#d946ef]/20', text: 'text-[#d946ef] dark:text-[#f0abfc]', icon: FileText },
+    'doc-edit': { bg: 'bg-[#d946ef]/10 dark:bg-[#d946ef]/20', text: 'text-[#d946ef] dark:text-[#f0abfc]', icon: Edit3 },
   };
+
+  type AuditFilterCategory = 'all' | 'management' | 'files' | 'documents';
+  const [auditFilter, setAuditFilter] = useState<AuditFilterCategory>('all');
+  const [auditSearchQuery, setAuditSearchQuery] = useState('');
+
+  const auditFilterCategories: { id: AuditFilterCategory; label: string; icon: LucideIcon; types: string[] }[] = [
+    { id: 'all', label: 'All Activity', icon: Eye, types: [] },
+    { id: 'management', label: 'Management', icon: Shield, types: ['role-change', 'invite', 'permission', 'remove', 'create'] },
+    { id: 'files', label: 'Files', icon: FolderOpen, types: ['file-access', 'file-upload', 'file-download'] },
+    { id: 'documents', label: 'Documents', icon: FileText, types: ['doc-access', 'doc-edit'] },
+  ];
+
+  const filteredAuditLog = useMemo(() => {
+    let result = [...auditLog];
+    if (auditFilter !== 'all') {
+      const category = auditFilterCategories.find(c => c.id === auditFilter);
+      if (category) result = result.filter(e => category.types.includes(e.type));
+    }
+    if (auditSearchQuery.trim()) {
+      const q = auditSearchQuery.toLowerCase();
+      result = result.filter(e =>
+        e.action.toLowerCase().includes(q) ||
+        e.detail.toLowerCase().includes(q) ||
+        e.user.toLowerCase().includes(q) ||
+        (e.fileName && e.fileName.toLowerCase().includes(q)) ||
+        (e.filePath && e.filePath.toLowerCase().includes(q))
+      );
+    }
+    return result.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+  }, [auditFilter, auditSearchQuery]);
+
+  const auditCategoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: auditLog.length };
+    for (const cat of auditFilterCategories) {
+      if (cat.id !== 'all') counts[cat.id] = auditLog.filter(e => cat.types.includes(e.type)).length;
+    }
+    return counts;
+  }, []);
 
   if (!space) return null;
 
@@ -853,25 +1147,25 @@ export function SpacePermissions() {
       <div className="h-[60px] px-6 flex items-center justify-between border-b border-[#e1dfdd] dark:border-[#3d3d3d] bg-gradient-to-r from-white to-[#faf9f8] dark:from-[#313338] dark:to-[#2b2d31] shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-[#5b5fc7]/10 dark:bg-[#5b5fc7]/20 flex items-center justify-center">
-            <Shield size={18} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
+            <Settings size={18} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
           </div>
           <div>
-            <h1 className="text-[15px] font-bold text-[#242424] dark:text-[#f2f3f5]">{t('spacePermissions.title', { space: space.name })}</h1>
-            <p className="text-[11px] text-[#616161] dark:text-[#8a8a8a]">{t('spacePermissions.subtitle')}</p>
+            <h1 className="text-[15px] font-bold text-[#242424] dark:text-[#f2f3f5]">{space.name} — Space Management</h1>
+            <p className="text-[11px] text-[#616161] dark:text-[#8a8a8a]">Manage members, departments, roles, and access controls</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={handleExportReport}
             className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#616161] dark:text-[#b9bbbe] bg-[#f0f0f0] dark:bg-[#252525] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg hover:bg-[#e8e8e8] dark:hover:bg-[#2a2a2a] hover:border-[#5b5fc7]/30 transition-colors"
-            title={t('spacePermissions.exportTitle')}
+            title="Export permissions report as CSV"
           >
-            <Download size={13} /> {t('spacePermissions.exportReport')}
+            <Download size={13} /> Export Report
           </button>
           <AnimatePresence>
             {pendingChanges > 0 && (
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="flex items-center gap-2">
-                <span className="text-[11px] text-[#d4820c] dark:text-[#f5a623] font-medium">{t('spacePermissions.unsavedCount', { count: pendingChanges })}</span>
-                <button onClick={handleSaveChanges} className="px-3 py-1.5 bg-[#5b5fc7] hover:bg-[#4a4eb5] text-white text-[12px] font-semibold rounded-lg transition-colors shadow-sm">{t('spacePermissions.saveChanges')}</button>
+                <span className="text-[11px] text-[#d4820c] dark:text-[#f5a623] font-medium">{pendingChanges} unsaved change{pendingChanges > 1 ? 's' : ''}</span>
+                <button onClick={handleSaveChanges} className="px-3 py-1.5 bg-[#5b5fc7] hover:bg-[#4a4eb5] text-white text-[12px] font-semibold rounded-lg transition-colors shadow-sm">Save Changes</button>
               </motion.div>
             )}
           </AnimatePresence>
@@ -900,86 +1194,166 @@ export function SpacePermissions() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className={`flex-1 ${activeTab === 'members' ? 'flex flex-col overflow-hidden' : 'overflow-y-auto'}`}>
         <AnimatePresence mode="wait">
 
           {/* ─── Members Tab ─────────────────────────────────────────── */}
           {activeTab === 'members' && (
-            <motion.div key="members" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="p-6 space-y-4">
-              <div className="flex items-center gap-3 flex-wrap">
-                <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8a8a8a]" />
-                  <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search members..."
-                    className="w-full bg-[#f0f0f0] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg pl-9 pr-3 py-2 text-[12px] text-[#242424] dark:text-[#e0e0e0] placeholder-[#8a8a8a] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/40" />
-                </div>
-                <div className="relative">
-                  <button onClick={() => setShowRoleFilter(!showRoleFilter)}
-                    className="flex items-center gap-2 px-3 py-2 bg-[#f0f0f0] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg text-[12px] text-[#424242] dark:text-[#e0e0e0] hover:border-[#5b5fc7]/40 transition-colors">
-                    <Users size={13} />
-                    {roleFilter === 'all' ? t('spacePermissions.allRoles') : (allRoleConfig[roleFilter]?.label || roleFilter)}
-                    <ChevronDown size={12} />
-                  </button>
-                  <AnimatePresence>
-                    {showRoleFilter && (
-                      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-                        className="absolute left-0 top-full mt-1 w-[180px] bg-white dark:bg-[#2b2d31] rounded-lg border border-[#e1dfdd] dark:border-[#3d3d3d] shadow-xl z-50 py-1 max-h-[260px] overflow-y-auto">
-                        <button onClick={() => { setRoleFilter('all'); setShowRoleFilter(false); }}
-                          className={`w-full flex items-center gap-2 px-3 py-2 text-[12px] transition-colors ${roleFilter === 'all' ? 'bg-[#5b5fc7]/8 text-[#5b5fc7]' : 'text-[#424242] dark:text-[#e0e0e0] hover:bg-[#f5f5f5] dark:hover:bg-[#35373c]'}`}>
-                          <Users size={13} /> {t('spacePermissions.all', { count: roleCounts.all })}
-                          {roleFilter === 'all' && <Check size={13} className="ml-auto" />}
+            <motion.div key="members" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="flex-1 flex overflow-hidden">
+              <div className="flex-1 flex flex-col overflow-hidden p-6">
+                {/* Toolbar */}
+                <div className="flex items-center gap-3 flex-wrap mb-3">
+                  <div className="relative flex-1 min-w-[200px] max-w-[360px]">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8a8a8a]" />
+                    <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search members or departments..."
+                      className="w-full bg-[#f0f0f0] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg pl-9 pr-3 py-2 text-[12px] text-[#242424] dark:text-[#e0e0e0] placeholder-[#8a8a8a] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/40" />
+                  </div>
+                  {/* View mode toggle */}
+                  <div className="flex items-center bg-[#f0f0f0] dark:bg-[#1e1f22] rounded-lg border border-[#e1dfdd] dark:border-[#3d3d3d] p-0.5">
+                    {([
+                      { id: 'all' as const, label: 'All', icon: Users },
+                      { id: 'people' as const, label: 'People', icon: User },
+                      { id: 'departments' as const, label: 'Depts', icon: Building2 },
+                    ]).map(v => {
+                      const VIcon = v.icon;
+                      return (
+                        <button key={v.id} onClick={() => setMemberViewMode(v.id)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium rounded-md transition-all ${
+                            memberViewMode === v.id
+                              ? 'bg-white dark:bg-[#35373c] text-[#5b5fc7] dark:text-[#a6a9dc] shadow-sm'
+                              : 'text-[#616161] dark:text-[#8a8a8a] hover:text-[#242424] dark:hover:text-[#e0e0e0]'
+                          }`}>
+                          <VIcon size={12} /> {v.label}
                         </button>
-                        {allRoleKeys.map(r => {
-                          const cfg = allRoleConfig[r];
-                          if (!cfg) return null;
-                          const Icon = cfg.icon;
-                          return (
-                            <button key={r} onClick={() => { setRoleFilter(r); setShowRoleFilter(false); }}
-                              className={`w-full flex items-center gap-2 px-3 py-2 text-[12px] transition-colors ${roleFilter === r ? 'bg-[#5b5fc7]/8 text-[#5b5fc7]' : 'text-[#424242] dark:text-[#e0e0e0] hover:bg-[#f5f5f5] dark:hover:bg-[#35373c]'}`}>
-                              <Icon size={13} /> {cfg.label} ({roleCounts[r] || 0})
-                              {roleFilter === r && <Check size={13} className="ml-auto" />}
-                            </button>
-                          );
-                        })}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-                <button onClick={() => setShowInviteModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#5b5fc7] hover:bg-[#4a4eb5] text-white text-[12px] font-semibold rounded-lg transition-colors shadow-sm ml-auto">
-                  <UserPlus size={14} /> {t('spacePermissions.inviteMember')}
-                </button>
-              </div>
-
-              <div className="flex items-center gap-4 flex-wrap">
-                {allRoleKeys.map(r => (
-                  <div key={r} className="flex items-center gap-1.5 text-[11px] text-[#616161] dark:text-[#8a8a8a]">
-                    <RoleBadge roleId={r} config={allRoleConfig} size="sm" />
-                    <span>{roleCounts[r] || 0}</span>
+                      );
+                    })}
                   </div>
-                ))}
-              </div>
-
-              <div className="bg-[#faf9f8] dark:bg-[#2b2d31] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] overflow-hidden">
-                <div className="flex items-center gap-3 px-4 py-2 border-b border-[#e1dfdd] dark:border-[#3d3d3d] bg-[#f0f0f0] dark:bg-[#252525]">
-                  <div className="w-9 shrink-0" />
-                  <div className="flex-1 text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider">Member</div>
-                  <div className="w-[80px] text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider text-center">Role</div>
-                  <div className="w-[70px] text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider text-right hidden lg:block">Joined</div>
-                  <div className="w-[24px] shrink-0" />
+                  {/* Role filter */}
+                  <div className="relative">
+                    <button onClick={() => setShowRoleFilter(!showRoleFilter)}
+                      className="flex items-center gap-2 px-3 py-2 bg-[#f0f0f0] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg text-[12px] text-[#424242] dark:text-[#e0e0e0] hover:border-[#5b5fc7]/40 transition-colors">
+                      <Filter size={13} />
+                      {roleFilter === 'all' ? 'All roles' : (allRoleConfig[roleFilter]?.label || roleFilter)}
+                      <ChevronDown size={12} />
+                    </button>
+                    <AnimatePresence>
+                      {showRoleFilter && (
+                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+                          className="absolute left-0 top-full mt-1 w-[180px] bg-white dark:bg-[#2b2d31] rounded-lg border border-[#e1dfdd] dark:border-[#3d3d3d] shadow-xl z-50 py-1 max-h-[260px] overflow-y-auto">
+                          <button onClick={() => { setRoleFilter('all'); setShowRoleFilter(false); }}
+                            className={`w-full flex items-center gap-2 px-3 py-2 text-[12px] transition-colors ${roleFilter === 'all' ? 'bg-[#5b5fc7]/8 text-[#5b5fc7]' : 'text-[#424242] dark:text-[#e0e0e0] hover:bg-[#f5f5f5] dark:hover:bg-[#35373c]'}`}>
+                            <Users size={13} /> All ({roleCounts.all})
+                            {roleFilter === 'all' && <Check size={13} className="ml-auto" />}
+                          </button>
+                          {allRoleKeys.map(r => {
+                            const cfg = allRoleConfig[r];
+                            if (!cfg) return null;
+                            const RIcon = cfg.icon;
+                            return (
+                              <button key={r} onClick={() => { setRoleFilter(r); setShowRoleFilter(false); }}
+                                className={`w-full flex items-center gap-2 px-3 py-2 text-[12px] transition-colors ${roleFilter === r ? 'bg-[#5b5fc7]/8 text-[#5b5fc7]' : 'text-[#424242] dark:text-[#e0e0e0] hover:bg-[#f5f5f5] dark:hover:bg-[#35373c]'}`}>
+                                <RIcon size={13} /> {cfg.label} ({roleCounts[r] || 0})
+                                {roleFilter === r && <Check size={13} className="ml-auto" />}
+                              </button>
+                            );
+                          })}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  <button onClick={() => { setShowInviteModal(true); setInviteMode('person'); }}
+                    className="flex items-center gap-2 px-4 py-2 bg-[#5b5fc7] hover:bg-[#4a4eb5] text-white text-[12px] font-semibold rounded-lg transition-colors shadow-sm ml-auto">
+                    <UserPlus size={14} /> Add Member
+                  </button>
                 </div>
-                <AnimatePresence>
-                  {filteredMembers.map(member => (
-                    <MemberRow key={member.userId} member={member} onRoleChange={handleRoleChange} onRemove={handleRemoveMember}
-                      isCurrentUser={member.userId === currentUser.id} allRoleConfig={allRoleConfig} allRoleKeys={allRoleKeys} />
+
+                {/* Role summary */}
+                <div className="flex items-center gap-3 flex-wrap mb-3">
+                  {allRoleKeys.map(r => (
+                    <div key={r} className="flex items-center gap-1.5 text-[11px] text-[#616161] dark:text-[#8a8a8a]">
+                      <RoleBadge roleId={r} config={allRoleConfig} size="sm" />
+                      <span>{roleCounts[r] || 0}</span>
+                    </div>
                   ))}
-                </AnimatePresence>
-                {filteredMembers.length === 0 && (
-                  <div className="py-12 text-center">
-                    <Users size={32} className="mx-auto text-[#d1d1d1] dark:text-[#4a4a4a] mb-2" />
-                    <p className="text-[13px] text-[#8a8a8a] dark:text-[#6d6f78]">{t('spacePermissions.noMembers')}</p>
-                  </div>
-                )}
+                  <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] ml-2">
+                    {members.length} total · {departments.length} department{departments.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+
+                {/* Member list */}
+                <div className="flex-1 overflow-y-auto space-y-4">
+                  {/* Departments */}
+                  {(memberViewMode === 'all' || memberViewMode === 'departments') && filteredDepartments.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-2 px-2 py-1.5">
+                        <Building2 size={13} className="text-[#8a8a8a]" />
+                        <span className="text-[11px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider">
+                          Departments ({filteredDepartments.length})
+                        </span>
+                      </div>
+                      <div className="bg-[#faf9f8] dark:bg-[#2b2d31] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] overflow-hidden">
+                        {filteredDepartments.map(dept => (
+                          <DepartmentRow key={dept.id} dept={dept} deptMembers={getDeptMembers(dept)}
+                            isExpanded={expandedDepts.has(dept.id)} onToggle={() => toggleDept(dept.id)}
+                            onRoleChange={handleRoleChange} onRemove={handleRemoveMember} onRemoveDept={handleRemoveDept}
+                            allRoleConfig={allRoleConfig} allRoleKeys={allRoleKeys} onSelectMember={setSelectedMember} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Individual members */}
+                  {(memberViewMode === 'all' || memberViewMode === 'people') && (
+                    <div>
+                      <div className="flex items-center gap-2 px-2 py-1.5">
+                        <User size={13} className="text-[#8a8a8a]" />
+                        <span className="text-[11px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider">
+                          Individual Members ({filteredIndividualMembers.length})
+                        </span>
+                      </div>
+                      <div className="bg-[#faf9f8] dark:bg-[#2b2d31] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] overflow-hidden">
+                        <div className="flex items-center gap-3 px-4 py-2 border-b border-[#e1dfdd] dark:border-[#3d3d3d] bg-[#f0f0f0] dark:bg-[#252525]">
+                          <div className="w-9 shrink-0" />
+                          <div className="flex-1 text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider">Member</div>
+                          <div className="w-[80px] text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider text-center">Role</div>
+                          <div className="w-[70px] text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider text-right hidden lg:block">Joined</div>
+                          <div className="w-[24px] shrink-0" />
+                        </div>
+                        <AnimatePresence>
+                          {filteredIndividualMembers.map(member => (
+                            <MemberRow key={member.userId} member={member} onRoleChange={handleRoleChange} onRemove={handleRemoveMember}
+                              isCurrentUser={member.userId === currentUser.id} allRoleConfig={allRoleConfig} allRoleKeys={allRoleKeys}
+                              onSelect={setSelectedMember} />
+                          ))}
+                        </AnimatePresence>
+                        {filteredIndividualMembers.length === 0 && (
+                          <div className="py-10 text-center">
+                            <Users size={28} className="mx-auto text-[#d1d1d1] dark:text-[#4a4a4a] mb-2" />
+                            <p className="text-[12px] text-[#8a8a8a] dark:text-[#6d6f78]">No individual members found</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Global empty */}
+                  {filteredIndividualMembers.length === 0 && filteredDepartments.length === 0 && (
+                    <div className="py-16 text-center">
+                      <Users size={40} className="mx-auto text-[#d1d1d1] dark:text-[#4a4a4a] mb-3" />
+                      <p className="text-[14px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-1">No members found</p>
+                      <p className="text-[12px] text-[#b9bbbe] dark:text-[#4a4a4a]">Try adjusting your search or filter criteria</p>
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {/* Detail panel */}
+              <AnimatePresence>
+                {selectedMember && (
+                  <MemberDetailPanel member={selectedMember} onClose={() => setSelectedMember(null)}
+                    departments={departments} allRoleConfig={allRoleConfig} />
+                )}
+              </AnimatePresence>
             </motion.div>
           )}
 
@@ -1233,33 +1607,100 @@ export function SpacePermissions() {
 
           {/* ─── Audit Log Tab ───────────────────────────────────────── */}
           {activeTab === 'audit' && (
-            <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="p-6">
-              <div className="bg-[#faf9f8] dark:bg-[#2b2d31] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] overflow-hidden">
-                <div className="px-4 py-3 border-b border-[#e1dfdd] dark:border-[#3d3d3d] bg-[#f0f0f0] dark:bg-[#252525]">
-                  <h3 className="text-[13px] font-semibold text-[#242424] dark:text-[#f2f3f5]">Permission Changes History</h3>
-                  <p className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">Track all role and permission modifications in this space</p>
+            <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="p-6 space-y-4">
+              {/* Toolbar */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="relative flex-1 min-w-[200px] max-w-[360px]">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8a8a8a]" />
+                  <input type="text" value={auditSearchQuery} onChange={(e) => setAuditSearchQuery(e.target.value)} placeholder="Search audit log..."
+                    className="w-full bg-[#f0f0f0] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg pl-9 pr-3 py-2 text-[12px] text-[#242424] dark:text-[#e0e0e0] placeholder-[#8a8a8a] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/40" />
                 </div>
-                <div className="divide-y divide-[#e1dfdd] dark:divide-[#3d3d3d]">
-                  {auditLog.map((entry, idx) => {
-                    const colors = auditTypeColors[entry.type] || auditTypeColors['create'];
+                <div className="flex items-center bg-[#f0f0f0] dark:bg-[#1e1f22] rounded-lg border border-[#e1dfdd] dark:border-[#3d3d3d] p-0.5">
+                  {auditFilterCategories.map(cat => {
+                    const CatIcon = cat.icon;
                     return (
-                      <motion.div key={entry.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.03 }}
+                      <button key={cat.id} onClick={() => setAuditFilter(cat.id)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium rounded-md transition-all ${
+                          auditFilter === cat.id
+                            ? 'bg-white dark:bg-[#35373c] text-[#5b5fc7] dark:text-[#a6a9dc] shadow-sm'
+                            : 'text-[#616161] dark:text-[#8a8a8a] hover:text-[#242424] dark:hover:text-[#e0e0e0]'
+                        }`}>
+                        <CatIcon size={12} /> {cat.label}
+                        <span className={`text-[9px] px-1 py-0.5 rounded-full min-w-[18px] text-center ${
+                          auditFilter === cat.id ? 'bg-[#5b5fc7]/15 text-[#5b5fc7]' : 'bg-[#e1dfdd] dark:bg-[#3d3d3d] text-[#8a8a8a]'
+                        }`}>{auditCategoryCounts[cat.id] ?? 0}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Summary stats */}
+              <div className="grid grid-cols-4 gap-3">
+                {auditFilterCategories.map(cat => {
+                  const CatIcon = cat.icon;
+                  const count = auditCategoryCounts[cat.id] ?? 0;
+                  return (
+                    <button key={cat.id} onClick={() => setAuditFilter(cat.id)}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all ${
+                        auditFilter === cat.id
+                          ? 'bg-[#5b5fc7]/5 dark:bg-[#5b5fc7]/10 border-[#5b5fc7]/30'
+                          : 'bg-[#faf9f8] dark:bg-[#2b2d31] border-[#e1dfdd] dark:border-[#3d3d3d] hover:border-[#5b5fc7]/20'
+                      }`}>
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                        auditFilter === cat.id ? 'bg-[#5b5fc7]/10 dark:bg-[#5b5fc7]/20' : 'bg-[#f0f0f0] dark:bg-[#252525]'
+                      }`}>
+                        <CatIcon size={15} className={auditFilter === cat.id ? 'text-[#5b5fc7] dark:text-[#a6a9dc]' : 'text-[#8a8a8a]'} />
+                      </div>
+                      <div className="text-left">
+                        <p className={`text-[16px] font-bold ${auditFilter === cat.id ? 'text-[#5b5fc7] dark:text-[#a6a9dc]' : 'text-[#242424] dark:text-[#f2f3f5]'}`}>{count}</p>
+                        <p className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78]">{cat.label}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Log entries */}
+              <div className="bg-[#faf9f8] dark:bg-[#2b2d31] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] overflow-hidden">
+                <div className="px-4 py-3 border-b border-[#e1dfdd] dark:border-[#3d3d3d] bg-[#f0f0f0] dark:bg-[#252525] flex items-center justify-between">
+                  <div>
+                    <h3 className="text-[13px] font-semibold text-[#242424] dark:text-[#f2f3f5]">Activity History</h3>
+                    <p className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">Track management changes, file access, and document activity</p>
+                  </div>
+                  <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">{filteredAuditLog.length} entries</span>
+                </div>
+                <div className="divide-y divide-[#e1dfdd] dark:divide-[#3d3d3d] max-h-[520px] overflow-y-auto">
+                  {filteredAuditLog.map((entry, idx) => {
+                    const colors = auditTypeColors[entry.type] || auditTypeColors['create'];
+                    const AuditIcon = colors.icon;
+                    return (
+                      <motion.div key={entry.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.02 }}
                         className="flex items-start gap-3 px-4 py-3 hover:bg-[#f5f5f5] dark:hover:bg-[#2a2a2a] transition-colors">
                         <div className={`w-7 h-7 rounded-full ${colors.bg} flex items-center justify-center shrink-0 mt-0.5`}>
-                          {entry.type === 'role-change' && <UserCog size={13} className={colors.text} />}
-                          {entry.type === 'invite' && <UserPlus size={13} className={colors.text} />}
-                          {entry.type === 'permission' && <Shield size={13} className={colors.text} />}
-                          {entry.type === 'remove' && <Trash2 size={13} className={colors.text} />}
-                          {entry.type === 'create' && <Settings size={13} className={colors.text} />}
+                          <AuditIcon size={13} className={colors.text} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-[12px] font-semibold text-[#242424] dark:text-[#e0e0e0]">{entry.action}</span>
                             <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${colors.bg} ${colors.text}`}>
-                              {entry.type.replace('-', ' ').toUpperCase()}
+                              {entry.type.replace(/-/g, ' ').toUpperCase()}
                             </span>
                           </div>
-                          <p className="text-[11px] text-[#616161] dark:text-[#8a8a8a]">{entry.detail}</p>
+                          <p className="text-[11px] text-[#616161] dark:text-[#8a8a8a] mt-0.5">{entry.detail}</p>
+                          {entry.fileName && (
+                            <div className="flex items-center gap-1.5 mt-1">
+                              {entry.type.startsWith('doc-') ? (
+                                <FileText size={10} className="text-[#d946ef] dark:text-[#f0abfc]" />
+                              ) : (
+                                <FolderOpen size={10} className="text-[#0d9488] dark:text-[#5eead4]" />
+                              )}
+                              <span className="text-[10px] font-medium text-[#424242] dark:text-[#d0d0d0]">{entry.fileName}</span>
+                              {entry.filePath && (
+                                <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78]">in {entry.filePath}</span>
+                              )}
+                            </div>
+                          )}
                           <div className="flex items-center gap-2 mt-1">
                             <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78]">by {entry.user}</span>
                             <span className="text-[10px] text-[#b9bbbe] dark:text-[#4a4a4a]">•</span>
@@ -1272,6 +1713,13 @@ export function SpacePermissions() {
                       </motion.div>
                     );
                   })}
+                  {filteredAuditLog.length === 0 && (
+                    <div className="py-16 text-center">
+                      <Eye size={32} className="mx-auto text-[#d1d1d1] dark:text-[#4a4a4a] mb-2" />
+                      <p className="text-[13px] font-medium text-[#8a8a8a] dark:text-[#6d6f78]">No matching audit entries</p>
+                      <p className="text-[11px] text-[#b9bbbe] dark:text-[#4a4a4a] mt-1">Try adjusting your search or filter</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -1280,49 +1728,112 @@ export function SpacePermissions() {
         </AnimatePresence>
       </div>
 
-      {/* ─── Invite Modal ─────────────────────────────────────────── */}
+      {/* ─── Add Member / Department Modal ──────────────────────────── */}
       <AnimatePresence>
         {showInviteModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowInviteModal(false)}>
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              onClick={(e) => e.stopPropagation()} className="w-[440px] bg-white dark:bg-[#2b2d31] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] shadow-2xl overflow-hidden">
+              onClick={(e) => e.stopPropagation()} className="w-[480px] bg-white dark:bg-[#2b2d31] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] shadow-2xl overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4 border-b border-[#e1dfdd] dark:border-[#3d3d3d] bg-gradient-to-r from-[#5b5fc7] to-[#7b4db8]">
-                <div className="flex items-center gap-2 text-white"><UserPlus size={18} /><span className="text-[14px] font-bold">Invite Member</span></div>
+                <div className="flex items-center gap-2 text-white"><UserPlus size={18} /><span className="text-[14px] font-bold">Add {inviteMode === 'person' ? 'Member' : 'Department'}</span></div>
                 <button onClick={() => setShowInviteModal(false)} className="text-white/70 hover:text-white transition-colors"><X size={18} /></button>
               </div>
               <div className="p-5 space-y-4">
-                <div>
-                  <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-1.5">Email Address</label>
-                  <input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="colleague@company.com"
-                    className="w-full bg-[#f0f0f0] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg px-3 py-2.5 text-[13px] text-[#242424] dark:text-[#e0e0e0] placeholder-[#8a8a8a] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/40"
-                    onKeyDown={(e) => e.key === 'Enter' && handleInvite()} autoFocus />
+                {/* Mode toggle */}
+                <div className="flex items-center bg-[#f0f0f0] dark:bg-[#1e1f22] rounded-lg border border-[#e1dfdd] dark:border-[#3d3d3d] p-0.5">
+                  <button onClick={() => setInviteMode('person')}
+                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-[12px] font-medium rounded-md transition-all ${
+                      inviteMode === 'person' ? 'bg-white dark:bg-[#35373c] text-[#5b5fc7] dark:text-[#a6a9dc] shadow-sm' : 'text-[#616161] dark:text-[#8a8a8a]'
+                    }`}><User size={14} /> Person</button>
+                  <button onClick={() => setInviteMode('department')}
+                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-[12px] font-medium rounded-md transition-all ${
+                      inviteMode === 'department' ? 'bg-white dark:bg-[#35373c] text-[#5b5fc7] dark:text-[#a6a9dc] shadow-sm' : 'text-[#616161] dark:text-[#8a8a8a]'
+                    }`}><Building2 size={14} /> Department</button>
                 </div>
-                <div>
-                  <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-1.5">Assign Role</label>
-                  <div className="grid grid-cols-3 gap-2 max-h-[180px] overflow-y-auto">
-                    {allRoleKeys.filter(r => r !== 'owner').map(r => {
-                      const cfg = allRoleConfig[r];
-                      if (!cfg) return null;
-                      const Icon = cfg.icon;
-                      const isSelected = inviteRole === r;
-                      return (
-                        <button key={r} onClick={() => setInviteRole(r)}
-                          className={`flex flex-col items-center gap-1.5 px-3 py-3 rounded-lg border-2 transition-all ${
-                            isSelected ? 'border-[#5b5fc7] bg-[#5b5fc7]/5 dark:bg-[#5b5fc7]/10' : 'border-[#e1dfdd] dark:border-[#3d3d3d] hover:border-[#5b5fc7]/30'
-                          }`}>
-                          <Icon size={18} className={isSelected ? 'text-[#5b5fc7] dark:text-[#a6a9dc]' : 'text-[#8a8a8a]'} />
-                          <span className={`text-[11px] font-semibold ${isSelected ? 'text-[#5b5fc7] dark:text-[#a6a9dc]' : 'text-[#616161] dark:text-[#8a8a8a]'}`}>{cfg.label}</span>
-                          {!cfg.isBuiltIn && <span className="text-[7px] text-[#8a8a8a] uppercase">Custom</span>}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <p className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] mt-2">{allRoleConfig[inviteRole]?.description || ''}</p>
-                </div>
+
+                {inviteMode === 'person' ? (
+                  <>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-1.5">Email Address</label>
+                      <input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="colleague@company.com"
+                        className="w-full bg-[#f0f0f0] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg px-3 py-2.5 text-[13px] text-[#242424] dark:text-[#e0e0e0] placeholder-[#8a8a8a] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/40"
+                        onKeyDown={(e) => e.key === 'Enter' && handleInvite()} autoFocus />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-1.5">Assign Role</label>
+                      <div className="grid grid-cols-3 gap-2 max-h-[180px] overflow-y-auto">
+                        {allRoleKeys.filter(r => r !== 'owner').map(r => {
+                          const cfg = allRoleConfig[r];
+                          if (!cfg) return null;
+                          const RIcon = cfg.icon;
+                          const isSelected = inviteRole === r;
+                          return (
+                            <button key={r} onClick={() => setInviteRole(r)}
+                              className={`flex flex-col items-center gap-1.5 px-3 py-3 rounded-lg border-2 transition-all ${
+                                isSelected ? 'border-[#5b5fc7] bg-[#5b5fc7]/5 dark:bg-[#5b5fc7]/10' : 'border-[#e1dfdd] dark:border-[#3d3d3d] hover:border-[#5b5fc7]/30'
+                              }`}>
+                              <RIcon size={18} className={isSelected ? 'text-[#5b5fc7] dark:text-[#a6a9dc]' : 'text-[#8a8a8a]'} />
+                              <span className={`text-[11px] font-semibold ${isSelected ? 'text-[#5b5fc7] dark:text-[#a6a9dc]' : 'text-[#616161] dark:text-[#8a8a8a]'}`}>{cfg.label}</span>
+                              {!cfg.isBuiltIn && <span className="text-[7px] text-[#8a8a8a] uppercase">Custom</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <p className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] mt-2">{allRoleConfig[inviteRole]?.description || ''}</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-1.5">Department Name</label>
+                      <input type="text" value={inviteDeptName} onChange={(e) => setInviteDeptName(e.target.value)} placeholder="e.g. DevOps, Data Science..."
+                        className="w-full bg-[#f0f0f0] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg px-3 py-2.5 text-[13px] text-[#242424] dark:text-[#e0e0e0] placeholder-[#8a8a8a] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/40"
+                        autoFocus />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-1.5">Description</label>
+                      <input type="text" value={inviteDeptDesc} onChange={(e) => setInviteDeptDesc(e.target.value)} placeholder="What does this department do?"
+                        className="w-full bg-[#f0f0f0] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg px-3 py-2.5 text-[13px] text-[#242424] dark:text-[#e0e0e0] placeholder-[#8a8a8a] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/40" />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-2">Icon</label>
+                      <div className="flex gap-2 flex-wrap">
+                        {deptIcons.map(icon => (
+                          <button key={icon} onClick={() => setInviteDeptIcon(icon)}
+                            className={`w-9 h-9 rounded-lg border-2 flex items-center justify-center text-[18px] transition-all ${
+                              inviteDeptIcon === icon ? 'border-[#5b5fc7] bg-[#5b5fc7]/5 dark:bg-[#5b5fc7]/10 scale-110' : 'border-[#e1dfdd] dark:border-[#3d3d3d] hover:border-[#5b5fc7]/30'
+                            }`}>{icon}</button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-1.5">Default Role</label>
+                      <div className="flex gap-2 flex-wrap">
+                        {allRoleKeys.filter(r => r !== 'owner').map(r => {
+                          const cfg = allRoleConfig[r];
+                          if (!cfg) return null;
+                          const RIcon = cfg.icon;
+                          const isSelected = inviteRole === r;
+                          return (
+                            <button key={r} onClick={() => setInviteRole(r)}
+                              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border-2 transition-all text-[12px] font-medium ${
+                                isSelected ? 'border-[#5b5fc7] bg-[#5b5fc7]/5 dark:bg-[#5b5fc7]/10 text-[#5b5fc7]' : 'border-[#e1dfdd] dark:border-[#3d3d3d] text-[#616161] dark:text-[#b9bbbe] hover:border-[#5b5fc7]/30'
+                              }`}><RIcon size={14} /> {cfg.label}</button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                )}
+
                 <div className="flex justify-end gap-2 pt-2">
                   <button onClick={() => setShowInviteModal(false)} className="px-4 py-2 text-[12px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#3d3d3d] rounded-lg transition-colors">Cancel</button>
-                  <button onClick={handleInvite} disabled={!inviteEmail.trim()} className="px-4 py-2 bg-[#5b5fc7] hover:bg-[#4a4eb5] disabled:opacity-50 disabled:cursor-not-allowed text-white text-[12px] font-semibold rounded-lg transition-colors shadow-sm">Send Invite</button>
+                  <button onClick={handleInvite}
+                    disabled={inviteMode === 'person' ? !inviteEmail.trim() : !inviteDeptName.trim()}
+                    className="px-4 py-2 bg-[#5b5fc7] hover:bg-[#4a4eb5] disabled:opacity-50 disabled:cursor-not-allowed text-white text-[12px] font-semibold rounded-lg transition-colors shadow-sm">
+                    {inviteMode === 'person' ? 'Add Member' : 'Add Department'}
+                  </button>
                 </div>
               </div>
             </motion.div>
