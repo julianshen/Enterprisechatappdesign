@@ -246,6 +246,10 @@ export function FloatingChatBar() {
                 exit={{ opacity: 0, scale: 0 }}
                 className="group relative"
               >
+                <div className="pointer-events-none absolute right-[calc(100%+10px)] top-1/2 hidden -translate-y-1/2 whitespace-nowrap rounded-xl bg-[#1f2333] px-3 py-2 text-right shadow-xl group-hover:block dark:bg-[#10131b]">
+                  <p className="text-[11px] font-semibold text-white/70">{channel.spaceName}</p>
+                  <p className="text-[12px] font-bold text-white">#{channel.channelName}</p>
+                </div>
                 <button
                   onClick={() => {
                     openChat('space', channel.channelId, `#${channel.channelName}`, {
