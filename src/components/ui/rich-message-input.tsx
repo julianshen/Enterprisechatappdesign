@@ -64,6 +64,16 @@ export function RichMessageInput({
   const imageInputRef = useRef<HTMLInputElement>(null);
   const resolvedPlaceholder = placeholder ?? t('richInput.placeholder');
 
+  const setFabHidden = useCallback((hidden: boolean) => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    window.dispatchEvent(new CustomEvent('floating-chat-fab-visibility', {
+      detail: { hidden },
+    }));
+  }, []);
+
   useEffect(() => {
     if (autoFocus) textareaRef.current?.focus();
   }, [autoFocus]);
@@ -515,6 +525,8 @@ export function RichMessageInput({
                 onClick={handleSend}
                 disabled={!input.trim() || disabled}
                 size="icon"
+                onMouseEnter={() => setFabHidden(true)}
+                onMouseLeave={() => setFabHidden(false)}
                 className={cn(
                   'rounded-xl shrink-0 transition-all',
                   compact ? 'h-9 w-9' : 'h-10 w-10',

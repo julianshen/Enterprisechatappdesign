@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from "@/lib/utils";
+import { useI18n } from '../context/I18nContext';
 
 // ─── Types ───
 
@@ -819,6 +820,7 @@ function DeploymentRow({ deploy, onClick }: { deploy: Deployment; onClick: () =>
 // ─── Main Component ───
 
 export function ReleaseManagementApp() {
+  const { t } = useI18n();
   const [selectedDeploy, setSelectedDeploy] = useState<Deployment | null>(null);
   const [filterStatus, setFilterStatus] = useState<DeployStatus | 'all'>('all');
   const [filterService, setFilterService] = useState<string>('all');
@@ -898,7 +900,7 @@ export function ReleaseManagementApp() {
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#b9bbbe]" />
             <input
               type="text"
-              placeholder="Search deployments..."
+              placeholder={t('search.deployments')}
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-3 py-2 rounded-lg bg-[#f5f5f5] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] text-sm text-[#242424] dark:text-[#f0f0f0] placeholder-[#b9bbbe] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/30 focus:border-[#5b5fc7]"

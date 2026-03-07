@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from "@/lib/utils";
+import { useI18n } from '../context/I18nContext';
 
 // ─── Types ───
 
@@ -177,6 +178,7 @@ const navItems: { id: TabId; label: string; icon: typeof GitMerge; count?: numbe
 // ─── Main Component ───
 
 export function GitLabApp() {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<TabId>('merge_requests');
   const [expandedMR, setExpandedMR] = useState<number | null>(482);
   const [expandedStage, setExpandedStage] = useState<string | null>('test');
@@ -272,7 +274,7 @@ export function GitLabApp() {
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1 px-3 py-1.5 bg-white dark:bg-[#252525] rounded-lg border border-[#e1dfdd] dark:border-[#3d3d3d]">
                     <Search size={12} className="text-[#8a8a8a]" />
-                    <input placeholder="Filter merge requests..." className="bg-transparent text-xs text-[#242424] dark:text-[#e0e0e0] placeholder-[#b9bbbe] outline-none w-48" />
+                    <input placeholder={t('search.mergeRequests')} className="bg-transparent text-xs text-[#242424] dark:text-[#e0e0e0] placeholder-[#b9bbbe] outline-none w-48" />
                   </div>
                   <div className="flex items-center gap-1">
                     {['Open', 'Merged', 'All'].map((f, i) => (
@@ -609,7 +611,7 @@ export function GitLabApp() {
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1 px-3 py-1.5 bg-white dark:bg-[#252525] rounded-lg border border-[#e1dfdd] dark:border-[#3d3d3d]">
                     <Search size={12} className="text-[#8a8a8a]" />
-                    <input placeholder="Search issues..." className="bg-transparent text-xs text-[#242424] dark:text-[#e0e0e0] placeholder-[#b9bbbe] outline-none w-40" />
+                    <input placeholder={t('search.issues')} className="bg-transparent text-xs text-[#242424] dark:text-[#e0e0e0] placeholder-[#b9bbbe] outline-none w-40" />
                   </div>
                   <select className="px-2.5 py-1.5 rounded-md bg-white dark:bg-[#252525] border border-[#e1dfdd] dark:border-[#3d3d3d] text-[11px] text-[#616161] dark:text-[#8a8a8a] outline-none">
                     <option>Milestone: v2.14</option>

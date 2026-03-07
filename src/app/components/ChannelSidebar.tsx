@@ -1,10 +1,13 @@
 import { Link, useParams } from 'react-router';
-import { Hash, Lock, Volume2, ChevronDown, Plus, FileText, FolderOpen, CheckSquare, ChevronRight, MessageSquare, Users, BarChart3, Rocket, Shield, GitPullRequest, Layers, Target, Calendar, Megaphone, BookOpen, LayoutDashboard, Puzzle, Home, Settings, PenLine, type LucideIcon } from 'lucide-react';
+import { Hash, Lock, Volume2, ChevronDown, Plus, FileText, FolderOpen, CheckSquare, ChevronRight, MessageSquare, Users, BarChart3, Rocket, Shield, GitPullRequest, Layers, Target, Calendar, Megaphone, BookOpen, LayoutDashboard, Puzzle, Home, Settings, PenLine, Pin, type LucideIcon } from 'lucide-react';
 import { spaces, directMessages, groupChats, users } from '../data/mockData';
 import { getAppsForSpace } from '../data/appData';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, type MouseEvent } from 'react';
 import { getNewPostCount } from '../pages/SpaceHome';
 import { getCustomDashboardsForSpace, subscribeCustomDashboards } from '../data/customDashboards';
+import { useFloatingChat } from '../context/FloatingChatContext';
+import { toast } from 'sonner';
+import { useI18n } from '../context/I18nContext';
 
 const dashboardIconMap: Record<string, LucideIcon> = {
   'bar-chart': BarChart3,
@@ -21,6 +24,8 @@ const dashboardIconMap: Record<string, LucideIcon> = {
 
 export function ChannelSidebar() {
   const { spaceId, channelId, dashboardId, appId } = useParams();
+  const { togglePinChannel, isChannelPinned } = useFloatingChat();
+  const { t } = useI18n();
   const [channelsExpanded, setChannelsExpanded] = useState(true);
   const [dashboardsExpanded, setDashboardsExpanded] = useState(true);
   const [appsExpanded, setAppsExpanded] = useState(true);
@@ -95,12 +100,40 @@ export function ChannelSidebar() {
     }
   };
 
+  const handlePinChannel = (event: MouseEvent<HTMLButtonElement>, channel: NonNullable<typeof currentSpace>['channels'][number]) => {
+    if (!currentSpace) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const wasPinned = isChannelPinned(currentSpace.id, channel.id);
+    togglePinChannel({
+      channelId: channel.id,
+      channelName: channel.name,
+      channelType: channel.type,
+      spaceId: currentSpace.id,
+      spaceName: currentSpace.name,
+      spaceIcon: currentSpace.icon,
+    });
+
+    if (wasPinned) {
+      toast.info(t('floatingChat.unpinnedToast', { name: channel.name }));
+      return;
+    }
+
+    toast.success(t('floatingChat.pinnedToast', { name: channel.name }), {
+      description: t('floatingChat.pinnedToastDescription', { spaceName: currentSpace.name }),
+    });
+  };
+
   if (showChatSidebar) {
     return (
       <div className="w-[280px] bg-gradient-to-b from-[#faf9f8] to-[#f3f2f1] dark:from-[#2b2d31] dark:to-[#1e1f22] border-r border-[#e1dfdd] dark:border-[#3d3d3d] flex flex-col">
         {/* Header */}
         <div className="h-[60px] px-4 flex items-center justify-between border-b border-[#e1dfdd] dark:border-[#3d3d3d] shadow-sm">
-          <h2 className="font-bold text-[#242424] dark:text-[#f2f3f5] text-[16px] tracking-tight">Chat</h2>
+          <h2 className="font-bold text-[#242424] dark:text-[#f2f3f5] text-[16px] tracking-tight">{t('channel.chatTitle')}</h2>
           <button className="text-[#616161] dark:text-[#b9bbbe] hover:text-[#242424] dark:hover:text-[#f2f3f5] transition-all hover:bg-[#e8e8f8] dark:hover:bg-[#3d3d3d] p-1.5 rounded-md">
             <Plus size={18} />
           </button>
@@ -111,7 +144,7 @@ export function ChannelSidebar() {
           <div className="relative">
             <input
               type="text"
-              placeholder="Search messages"
+              placeholder={t('channel.searchMessages')}
               className="w-full bg-[#e8e8e8] dark:bg-[#1e1f22] border-0 rounded-md px-3 py-2 text-sm text-[#242424] dark:text-[#dbdee1] placeholder-[#616161] dark:placeholder-[#6d6f78] focus:outline-none focus:ring-2 focus:ring-[#6264a7] transition-all shadow-inner"
             />
           </div>
@@ -129,7 +162,7 @@ export function ChannelSidebar() {
                 size={14}
                 className={`transition-transform duration-200 ${dmsExpanded ? 'rotate-90' : ''}`}
               />
-              Direct Messages
+              {t('channel.directMessages')}
             </button>
             
             {dmsExpanded && (
@@ -182,7 +215,7 @@ export function ChannelSidebar() {
                 size={14}
                 className={`transition-transform duration-200 ${groupsExpanded ? 'rotate-90' : ''}`}
               />
-              Group Chats
+              {t('channel.groupChats')}
             </button>
             
             {groupsExpanded && (
@@ -237,7 +270,7 @@ export function ChannelSidebar() {
         <div className="relative">
           <input
             type="text"
-            placeholder="Search"
+            placeholder={t('chat.search')}
             className="w-full bg-[#e8e8e8] dark:bg-[#1e1f22] border-0 rounded-md px-3 py-2 text-sm text-[#242424] dark:text-[#dbdee1] placeholder-[#616161] dark:placeholder-[#6d6f78] focus:outline-none focus:ring-2 focus:ring-[#6264a7] transition-all shadow-inner"
           />
         </div>
@@ -257,7 +290,7 @@ export function ChannelSidebar() {
               }`}
             >
               <Home size={20} />
-              <span className="flex-1">Home</span>
+              <span className="flex-1">{t('channel.home')}</span>
               {!isOnHomePage && newPostCount > 0 && (
                 <span className="bg-gradient-to-r from-[#5b5fc7] to-[#7b4db8] text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] text-center font-bold shadow-sm">
                   {newPostCount > 9 ? '9+' : newPostCount}
@@ -274,7 +307,7 @@ export function ChannelSidebar() {
             }`}
           >
             <FileText size={20} />
-            <span>Documents</span>
+            <span>{t('channel.documents')}</span>
           </Link>
           <Link
             to={`/space/${spaceId}/files`}
@@ -285,7 +318,7 @@ export function ChannelSidebar() {
             }`}
           >
             <FolderOpen size={20} />
-            <span>Files</span>
+            <span>{t('channel.files')}</span>
           </Link>
           <Link
             to={`/space/${spaceId}/tasks`}
@@ -418,25 +451,41 @@ export function ChannelSidebar() {
           
           {channelsExpanded && (
             <div className="mt-1 space-y-0.5">
-              {currentSpace.channels.map((channel) => (
-                <Link
-                  key={channel.id}
-                  to={`/space/${spaceId}/${channel.id}`}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-md text-[14px] font-medium transition-all group ${
-                    channelId === channel.id
-                      ? 'bg-gradient-to-r from-[#e8e8f8] to-[#e0e0f5] dark:from-[#404249] dark:to-[#35373c] text-[#6264a7] dark:text-[#949cf7] shadow-sm'
-                      : 'text-[#4e5058] dark:text-[#96989d] hover:bg-[#e8e8f8] dark:hover:bg-[#35373c] hover:text-[#242424] dark:hover:text-[#dbdee1]'
-                  }`}
-                >
-                  {getChannelIcon(channel.type)}
-                  <span className="flex-1 truncate">{channel.name}</span>
-                  {channel.unreadCount && channel.unreadCount > 0 && (
-                    <span className="bg-gradient-to-r from-[#d83c3e] to-[#c4314b] text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] text-center font-bold shadow-md">
-                      {channel.unreadCount}
-                    </span>
-                  )}
-                </Link>
-              ))}
+              {currentSpace.channels.map((channel) => {
+                const isPinned = isChannelPinned(currentSpace.id, channel.id);
+                return (
+                  <Link
+                    key={channel.id}
+                    to={`/space/${spaceId}/${channel.id}`}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-md text-[14px] font-medium transition-all group ${
+                      channelId === channel.id
+                        ? 'bg-gradient-to-r from-[#e8e8f8] to-[#e0e0f5] dark:from-[#404249] dark:to-[#35373c] text-[#6264a7] dark:text-[#949cf7] shadow-sm'
+                        : 'text-[#4e5058] dark:text-[#96989d] hover:bg-[#e8e8f8] dark:hover:bg-[#35373c] hover:text-[#242424] dark:hover:text-[#dbdee1]'
+                    }`}
+                  >
+                    {getChannelIcon(channel.type)}
+                    <span className="flex-1 truncate">{channel.name}</span>
+                    <div className="flex items-center gap-1">
+                      {channel.unreadCount && channel.unreadCount > 0 && (
+                        <span className="bg-gradient-to-r from-[#d83c3e] to-[#c4314b] text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] text-center font-bold shadow-md">
+                          {channel.unreadCount}
+                        </span>
+                      )}
+                      <button
+                        onClick={(event) => handlePinChannel(event, channel)}
+                        className={`flex h-6 w-6 items-center justify-center rounded-md transition-all ${
+                          isPinned
+                            ? 'bg-[#5b5fc7]/10 text-[#5b5fc7]'
+                            : 'text-[#8a8a8a] opacity-0 group-hover:opacity-100 hover:bg-[#e0e0e0] hover:text-[#5b5fc7] dark:text-[#6d6f78] dark:hover:bg-[#404249]'
+                        }`}
+                        title={isPinned ? 'Pinned to floating chat' : 'Pin to floating chat'}
+                      >
+                        <Pin size={13} className={isPinned ? 'fill-current' : ''} />
+                      </button>
+                    </div>
+                  </Link>
+                );
+              })}
               <button className="flex items-center gap-3 px-3 py-2 rounded-md text-[14px] text-[#616161] dark:text-[#96989d] hover:text-[#242424] dark:hover:text-[#dbdee1] hover:bg-[#e8e8f8] dark:hover:bg-[#35373c] w-full transition-all">
                 <Plus size={16} />
                 <span>Add channel</span>

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from "@/lib/utils";
+import { useI18n } from '../context/I18nContext';
 
 // ─── Types ───
 
@@ -178,6 +179,7 @@ const tools = [
 // ─── Component ───
 
 export function MiroBoard() {
+  const { t } = useI18n();
   const canvasRef = useRef<HTMLDivElement>(null);
   const [activeTool, setActiveTool] = useState('select');
   const [zoom, setZoom] = useState(55);
@@ -239,7 +241,7 @@ export function MiroBoard() {
                       <div className="flex items-center gap-2 px-2 py-1.5 bg-[#f5f5f5] dark:bg-[#1e1f22] rounded-lg">
                         <Search size={13} className="text-[#8a8a8a]" />
                         <input
-                          placeholder="Search boards..."
+                          placeholder={t('search.boards')}
                           className="bg-transparent text-xs text-[#242424] dark:text-[#e0e0e0] placeholder-[#b9bbbe] outline-none flex-1"
                         />
                       </div>

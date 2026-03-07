@@ -11,6 +11,7 @@ import {
   type SpaceRequest, type SpaceRequestStatus,
 } from '../data/spaceRequests';
 import { motion, AnimatePresence } from 'motion/react';
+import { useI18n } from '../context/I18nContext';
 
 // ─── Seed demo data on first load ───
 seedDemoRequests();
@@ -56,6 +57,7 @@ type InboxTab = 'notifications' | 'requests';
 // ─── Main Component ───
 
 export function Inbox() {
+  const { t } = useI18n();
   const [items, setItems] = useState(notifications);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -119,7 +121,7 @@ export function Inbox() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2.5">
               <Bell size={18} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
-              <h2 className="font-semibold text-[#242424] dark:text-[#f0f0f0] text-[16px]">Inbox</h2>
+              <h2 className="font-semibold text-[#242424] dark:text-[#f0f0f0] text-[16px]">{t('sidebar.inbox')}</h2>
               {(unreadCount + pendingRequestCount) > 0 && (
                 <span className="text-[11px] bg-[#c4314b] text-white px-1.5 py-0.5 rounded-full font-semibold leading-none">
                   {unreadCount + pendingRequestCount}
@@ -130,7 +132,7 @@ export function Inbox() {
               <button
                 onClick={markAllRead}
                 className="p-1.5 text-[#5b5fc7] dark:text-[#a6a9dc] hover:bg-[#eeeef8] dark:hover:bg-[#5b5fc7]/10 rounded-md transition-all"
-                title="Mark all read"
+                title={t('inbox.markAllRead')}
               >
                 <CheckCheck size={16} />
               </button>
@@ -216,8 +218,8 @@ export function Inbox() {
                     <div className="w-12 h-12 bg-[#edf7f0] dark:bg-[#237b4b]/15 rounded-full flex items-center justify-center mb-3">
                       <Check size={22} className="text-[#237b4b] dark:text-[#57ab5a]" />
                     </div>
-                    <p className="text-[#242424] dark:text-[#f0f0f0] font-medium text-sm mb-0.5">All caught up!</p>
-                    <p className="text-xs text-[#616161] dark:text-[#b9bbbe]">No unread notifications.</p>
+                    <p className="text-[#242424] dark:text-[#f0f0f0] font-medium text-sm mb-0.5">{t('inbox.caughtUpTitle')}</p>
+                    <p className="text-xs text-[#616161] dark:text-[#b9bbbe]">{t('inbox.caughtUpSubtitle')}</p>
                   </div>
                 ) : (
                   filtered.map((notif) => {
@@ -267,12 +269,12 @@ export function Inbox() {
                             </span>
                             {notif.formFields && !submitted[notif.id] && (
                               <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[#fef7ec] dark:bg-[#d4820c]/15 text-[#d4820c] dark:text-[#f0b850]">
-                                Action required
+                                {t('inbox.actionRequired')}
                               </span>
                             )}
                             {submitted[notif.id] && (
                               <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[#edf7f0] dark:bg-[#237b4b]/15 text-[#237b4b] dark:text-[#57ab5a]">
-                                Submitted
+                                {t('inbox.submitted')}
                               </span>
                             )}
                           </div>
@@ -293,8 +295,8 @@ export function Inbox() {
                 transition={{ duration: 0.15 }}
               >
                 {/* Request filter bar */}
-                <div className="px-4 py-2 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-                  <div className="flex bg-[#f0f0f0] dark:bg-[#292929] rounded-md p-0.5 gap-0">
+                <div className="px-4 py-2">
+                  <div className="flex flex-wrap bg-[#f0f0f0] dark:bg-[#292929] rounded-md p-0.5 gap-1">
                     {(['all', 'pending-owner', 'pending-admin', 'approved', 'rejected'] as const).map(f => {
                       const label = f === 'all' ? 'All' : statusConfig[f as SpaceRequestStatus].label;
                       const count = f === 'all'
@@ -327,7 +329,7 @@ export function Inbox() {
                     <div className="w-12 h-12 bg-[#f0f0f0] dark:bg-[#292929] rounded-full flex items-center justify-center mb-3">
                       <Building2 size={22} className="text-[#b9bbbe] dark:text-[#5a5a5a]" />
                     </div>
-                    <p className="text-[#242424] dark:text-[#f0f0f0] font-medium text-sm mb-0.5">No requests found</p>
+                    <p className="text-[#242424] dark:text-[#f0f0f0] font-medium text-sm mb-0.5">{t('inbox.noRequestsFound')}</p>
                     <p className="text-xs text-[#616161] dark:text-[#b9bbbe]">
                       {requestFilter === 'all'
                         ? 'Use "Add space" in the sidebar to request a new space.'
@@ -414,12 +416,12 @@ export function Inbox() {
               }
             </div>
             <p className="text-[#242424] dark:text-[#f0f0f0] font-medium mb-1">
-              {activeTab === 'notifications' ? 'Select a notification' : 'Select a request'}
+              {activeTab === 'notifications' ? t('inbox.selectNotification') : t('inbox.selectRequest')}
             </p>
             <p className="text-sm text-[#616161] dark:text-[#8a8a8a] max-w-xs">
               {activeTab === 'notifications'
                 ? 'Choose a notification from the list to view its details or take action.'
-                : 'Choose a space request to view its details, status, and approval progress.'}
+                : t('inbox.selectRequestDesc')}
             </p>
           </div>
         ) : selectedRequest ? (
@@ -480,7 +482,7 @@ export function Inbox() {
                   <div className="bg-gradient-to-br from-[#faf9f8] to-[#f3f2f1] dark:from-[#252525] dark:to-[#1f1f1f] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] p-5">
                     <div className="flex items-center gap-2 mb-4">
                       <ClipboardCheck size={16} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
-                      <h4 className="font-semibold text-[#242424] dark:text-[#f0f0f0] text-sm">Your Response</h4>
+                      <h4 className="font-semibold text-[#242424] dark:text-[#f0f0f0] text-sm">{t('inbox.yourResponse')}</h4>
                     </div>
                     <div className="space-y-4">
                       {selected.formFields.map((field) => (
@@ -495,7 +497,7 @@ export function Inbox() {
                               onChange={(e) => updateFormField(selected.id, field.label, e.target.value)}
                               className="w-full bg-white dark:bg-[#1e1f22] border border-[#d1d1d1] dark:border-[#3d3d3d] rounded-lg px-3 py-2.5 text-sm text-[#242424] dark:text-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7] focus:border-transparent transition-all appearance-none cursor-pointer"
                             >
-                              <option value="">Select...</option>
+                              <option value="">{t('inbox.selectOption')}</option>
                               {field.options.map(opt => (
                                 <option key={opt} value={opt}>{opt}</option>
                               ))}
@@ -504,7 +506,7 @@ export function Inbox() {
                             <textarea
                               value={formState[selected.id]?.[field.label] || ''}
                               onChange={(e) => updateFormField(selected.id, field.label, e.target.value)}
-                              placeholder={`Enter ${field.label.toLowerCase()}...`}
+                              placeholder={t('inbox.enterField', { field: field.label.toLowerCase() })}
                               rows={3}
                               className="w-full bg-white dark:bg-[#1e1f22] border border-[#d1d1d1] dark:border-[#3d3d3d] rounded-lg px-3 py-2.5 text-sm text-[#242424] dark:text-[#e0e0e0] placeholder-[#8a8a8a] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7] focus:border-transparent transition-all resize-none"
                             />
@@ -513,7 +515,7 @@ export function Inbox() {
                               type="text"
                               value={formState[selected.id]?.[field.label] || ''}
                               onChange={(e) => updateFormField(selected.id, field.label, e.target.value)}
-                              placeholder={`Enter ${field.label.toLowerCase()}...`}
+                              placeholder={t('inbox.enterField', { field: field.label.toLowerCase() })}
                               className="w-full bg-white dark:bg-[#1e1f22] border border-[#d1d1d1] dark:border-[#3d3d3d] rounded-lg px-3 py-2.5 text-sm text-[#242424] dark:text-[#e0e0e0] placeholder-[#8a8a8a] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7] focus:border-transparent transition-all"
                             />
                           )}
@@ -525,7 +527,7 @@ export function Inbox() {
                         className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#5b5fc7] hover:bg-[#4f52b5] text-white text-sm font-medium rounded-lg transition-all shadow-sm hover:shadow-md"
                       >
                         <Send size={14} />
-                        Submit
+                        {t('inbox.submit')}
                       </button>
                     </div>
                   </div>
@@ -538,9 +540,9 @@ export function Inbox() {
                       <Check size={16} className="text-white" />
                     </div>
                     <div>
-                      <p className="font-semibold text-[#237b4b] dark:text-[#57ab5a] text-sm mb-0.5">Response submitted</p>
+                      <p className="font-semibold text-[#237b4b] dark:text-[#57ab5a] text-sm mb-0.5">{t('inbox.responseSubmitted')}</p>
                       <p className="text-xs text-[#3d8c5c] dark:text-[#6fbe7b]">
-                        Your response has been recorded. You'll be notified if any follow-up is needed.
+                        {t('inbox.responseRecorded')}
                       </p>
                     </div>
                   </div>
@@ -563,6 +565,7 @@ function SpaceRequestDetail({
   request: SpaceRequest;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
   const sc = statusConfig[request.status];
   const StatusIcon = sc.icon;
   const isOwnerSelf = request.ownerId === request.requesterId;
@@ -668,16 +671,16 @@ function SpaceRequestDetail({
             <div className="px-4 pt-4 pb-4">
               <h4 className="text-[15px] font-bold text-[#242424] dark:text-[#f0f0f0] mb-0.5">{request.spaceName}</h4>
               <p className="text-[12px] text-[#616161] dark:text-[#8a8a8a] mb-3">
-                {request.spaceDescription || 'No description provided'}
+                {request.spaceDescription || t('createSpace.noDescriptionProvided')}
               </p>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 rounded-lg bg-[#faf9f8] dark:bg-[#1e1f22]">
-                  <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider mb-1.5">Scenario</p>
+                  <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider mb-1.5">{t('createSpace.scenario')}</p>
                   <p className="text-[12px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{request.scenarioName}</p>
                 </div>
                 <div className="p-3 rounded-lg bg-[#faf9f8] dark:bg-[#1e1f22]">
-                  <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider mb-1.5">Owner</p>
+                  <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider mb-1.5">{t('createSpace.owner')}</p>
                   <div className="flex items-center gap-2">
                     <img src={request.ownerAvatar} alt={request.ownerName} className="w-5 h-5 rounded-full" />
                     <div>
@@ -695,7 +698,7 @@ function SpaceRequestDetail({
             <div className="p-3 rounded-xl bg-[#faf9f8] dark:bg-[#1e1f22] border border-[#e8e8e8] dark:border-[#3d3d3d]">
               <div className="flex items-center gap-1.5 mb-2">
                 <Hash size={11} className="text-[#5b5fc7]" />
-                <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider">{request.channelCount} Channels</p>
+                <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider">{request.channelCount} {t('channel.channels')}</p>
               </div>
               <div className="space-y-0.5">
                 {request.channels.map(ch => (
@@ -706,26 +709,26 @@ function SpaceRequestDetail({
             <div className="p-3 rounded-xl bg-[#faf9f8] dark:bg-[#1e1f22] border border-[#e8e8e8] dark:border-[#3d3d3d]">
               <div className="flex items-center gap-1.5 mb-2">
                 <BarChart3 size={11} className="text-[#5b5fc7]" />
-                <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider">{request.dashboardCount} Dashboards</p>
+                <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider">{request.dashboardCount} {t('createSpace.dashboards')}</p>
               </div>
               <div className="space-y-0.5">
                 {request.dashboards.length > 0 ? request.dashboards.map(d => (
                   <p key={d} className="text-[10px] text-[#616161] dark:text-[#8a8a8a] truncate">{d}</p>
                 )) : (
-                  <p className="text-[10px] text-[#ccc] italic">None</p>
+                  <p className="text-[10px] text-[#ccc] italic">{t('createSpace.none')}</p>
                 )}
               </div>
             </div>
             <div className="p-3 rounded-xl bg-[#faf9f8] dark:bg-[#1e1f22] border border-[#e8e8e8] dark:border-[#3d3d3d]">
               <div className="flex items-center gap-1.5 mb-2">
                 <Package size={11} className="text-[#5b5fc7]" />
-                <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider">{request.appCount} Apps</p>
+                <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider">{request.appCount} {t('common.apps')}</p>
               </div>
               <div className="space-y-0.5">
                 {request.apps.length > 0 ? request.apps.map(a => (
                   <p key={a} className="text-[10px] text-[#616161] dark:text-[#8a8a8a] truncate">{a}</p>
                 )) : (
-                  <p className="text-[10px] text-[#ccc] italic">None</p>
+                  <p className="text-[10px] text-[#ccc] italic">{t('createSpace.none')}</p>
                 )}
               </div>
             </div>
@@ -735,7 +738,7 @@ function SpaceRequestDetail({
           <div className="p-3 rounded-xl bg-[#faf9f8] dark:bg-[#1e1f22] border border-[#e8e8e8] dark:border-[#3d3d3d] mb-6">
             <div className="flex items-center gap-1.5 mb-1">
               <Shield size={11} className="text-[#5b5fc7]" />
-              <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider">Permissions</p>
+              <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider">{t('spaceApps.permissions')}</p>
             </div>
             <p className="text-[11px] text-[#616161] dark:text-[#8a8a8a]">{request.permissions}</p>
           </div>

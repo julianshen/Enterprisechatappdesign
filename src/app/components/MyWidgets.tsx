@@ -24,9 +24,11 @@ import {
   getSpaceRequests, subscribeSpaceRequests,
   type SpaceRequest,
 } from '../data/spaceRequests';
+import { useI18n } from '../context/I18nContext';
 
 // ─── Calendar Widget ───
 export function WorkingCalendarWidget() {
+  const { t } = useI18n();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
 
@@ -99,7 +101,7 @@ export function WorkingCalendarWidget() {
       {meetingsOnSelected.length > 0 && (
         <div className="mt-3 pt-3 border-t border-[#f0f0f0] dark:border-[#333]">
           <p className="text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider mb-2 px-0.5">
-            {isToday(selectedDate) ? 'Today' : format(selectedDate, 'EEE, MMM d')} — {meetingsOnSelected.length} event{meetingsOnSelected.length > 1 ? 's' : ''}
+            {isToday(selectedDate) ? t('common.today') : format(selectedDate, 'EEE, MMM d')} — {t('common.events', { count: meetingsOnSelected.length })}
           </p>
           <div className="space-y-1.5">
             {meetingsOnSelected.map(m => (
@@ -109,8 +111,8 @@ export function WorkingCalendarWidget() {
                   <p className="text-[12px] text-[#242424] dark:text-[#e0e0e0] font-medium truncate">{m.title}</p>
                   <p className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78]">{format(m.startTime, 'h:mm a')} – {format(m.endTime, 'h:mm a')}</p>
                 </div>
-                {m.status === 'completed' && <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[#e8e8e8] dark:bg-[#3d3d3d] text-[#8a8a8a] dark:text-[#6d6f78]">Done</span>}
-                {m.status === 'in-progress' && <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[#237b4b]/15 text-[#237b4b] dark:text-[#57ab5a] animate-pulse">Live</span>}
+                {m.status === 'completed' && <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[#e8e8e8] dark:bg-[#3d3d3d] text-[#8a8a8a] dark:text-[#6d6f78]">{t('recent.calendar.status.done')}</span>}
+                {m.status === 'in-progress' && <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[#237b4b]/15 text-[#237b4b] dark:text-[#57ab5a] animate-pulse">{t('recent.calendar.status.live')}</span>}
               </div>
             ))}
           </div>
@@ -122,6 +124,7 @@ export function WorkingCalendarWidget() {
 
 // ─── Incoming Meetings Widget ───
 export function IncomingMeetingsWidget() {
+  const { t } = useI18n();
   const upcomingMeetings = meetings
     .filter(m => m.status !== 'completed')
     .sort((a, b) => a.startTime.getTime() - b.startTime.getTime())
@@ -132,7 +135,7 @@ export function IncomingMeetingsWidget() {
   };
 
   if (upcomingMeetings.length === 0) {
-    return <div className="p-4 text-center text-sm text-[#8a8a8a] dark:text-[#6d6f78]">No upcoming meetings</div>;
+    return <div className="p-4 text-center text-sm text-[#8a8a8a] dark:text-[#6d6f78]">{t('recent.meetings.empty')}</div>;
   }
 
   return (
@@ -157,12 +160,12 @@ export function IncomingMeetingsWidget() {
               <div className="flex items-start justify-between gap-2 mb-1">
                 <p className="text-[13px] font-medium text-[#242424] dark:text-[#e0e0e0] truncate">{meeting.title}</p>
                 {meeting.status === 'in-progress' && (
-                  <span className="shrink-0 text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-[#237b4b]/15 text-[#237b4b] dark:text-[#57ab5a] animate-pulse">In Progress</span>
+                  <span className="shrink-0 text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-[#237b4b]/15 text-[#237b4b] dark:text-[#57ab5a] animate-pulse">{t('recent.meetings.status.inProgress')}</span>
                 )}
               </div>
               <div className="flex items-center gap-3 text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] mb-1.5">
                 <span className="flex items-center gap-1"><Clock size={10} />{format(meeting.startTime, 'h:mm a')} – {format(meeting.endTime, 'h:mm a')}</span>
-                {meeting.recurring && <span className="flex items-center gap-0.5"><Repeat size={9} />Recurring</span>}
+                {meeting.recurring && <span className="flex items-center gap-0.5"><Repeat size={9} />{t('recent.meetings.recurring')}</span>}
               </div>
               {meeting.location && (
                 <div className="flex items-center gap-1 mb-1.5">
@@ -181,7 +184,7 @@ export function IncomingMeetingsWidget() {
                     </div>
                   )}
                 </div>
-                <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78]">{meeting.attendees.length} attendee{meeting.attendees.length > 1 ? 's' : ''}</span>
+                <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78]">{t('recent.meetings.attendeesCount', { count: meeting.attendees.length })}</span>
               </div>
             </div>
           </div>
@@ -202,6 +205,7 @@ const serviceItems = [
 ];
 
 function ServiceForm({ serviceId, onClose }: { serviceId: string; onClose: () => void }) {
+  const { t } = useI18n();
   const [submitted, setSubmitted] = useState(false);
   const svc = serviceItems.find(s => s.id === serviceId);
   if (!svc) return null;
@@ -213,8 +217,8 @@ function ServiceForm({ serviceId, onClose }: { serviceId: string; onClose: () =>
           <CheckSquare size={14} className={svc.color} />
         </div>
         <p className="text-[12px] font-medium text-[#242424] dark:text-[#e0e0e0]">{svc.label} submitted!</p>
-        <p className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] mt-0.5">Your request is being processed</p>
-        <button onClick={onClose} className="text-[11px] text-[#5b5fc7] dark:text-[#a6a9dc] font-medium hover:underline mt-2">Close</button>
+        <p className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] mt-0.5">{t('myWidgets.requestProcessing')}</p>
+        <button onClick={onClose} className="text-[11px] text-[#5b5fc7] dark:text-[#a6a9dc] font-medium hover:underline mt-2">{t('myWidgets.close')}</button>
       </div>
     );
   }
@@ -223,31 +227,31 @@ function ServiceForm({ serviceId, onClose }: { serviceId: string; onClose: () =>
     return (
       <div className="space-y-2.5">
         <div className="flex items-center justify-between">
-          <p className="text-[12px] font-semibold text-[#242424] dark:text-[#e0e0e0]">Apply for Leave</p>
+          <p className="text-[12px] font-semibold text-[#242424] dark:text-[#e0e0e0]">{t('recent.leave.title')}</p>
           <button onClick={onClose} className="text-[#8a8a8a] hover:text-[#242424] dark:hover:text-[#e0e0e0] transition-colors"><X size={12} /></button>
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">Type</label>
+            <label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">{t('recent.form.type')}</label>
             <select className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0]">
-              <option>Annual Leave</option><option>Sick Leave</option><option>Personal Leave</option><option>Unpaid Leave</option>
+              <option>{t('recent.leave.type.annual')}</option><option>{t('recent.leave.type.sick')}</option><option>{t('recent.leave.type.personal')}</option><option>{t('recent.leave.type.unpaid')}</option>
             </select>
           </div>
           <div>
-            <label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">Duration</label>
+            <label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">{t('recent.form.duration')}</label>
             <select className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0]">
-              <option>Half Day</option><option>1 Day</option><option>2 Days</option><option>3+ Days</option>
+              <option>{t('recent.leave.duration.halfDay')}</option><option>{t('recent.leave.duration.oneDay')}</option><option>{t('recent.leave.duration.twoDays')}</option><option>{t('recent.leave.duration.threePlus')}</option>
             </select>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <div><label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">From</label><input type="date" defaultValue="2026-03-06" className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0]" /></div>
-          <div><label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">To</label><input type="date" defaultValue="2026-03-06" className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0]" /></div>
+          <div><label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">{t('recent.form.from')}</label><input type="date" defaultValue="2026-03-06" className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0]" /></div>
+          <div><label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">{t('recent.form.to')}</label><input type="date" defaultValue="2026-03-06" className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0]" /></div>
         </div>
-        <textarea placeholder="Reason (optional)" rows={2} className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0] placeholder:text-[#b9bbbe] resize-none" />
+        <textarea placeholder={t('myWidgets.reasonOptional')} rows={2} className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0] placeholder:text-[#b9bbbe] resize-none" />
         <div className="flex justify-end gap-2">
-          <button onClick={onClose} className="px-3 py-1.5 text-[11px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#333] rounded-md transition-colors">Cancel</button>
-          <button onClick={() => setSubmitted(true)} className="px-3 py-1.5 text-[11px] font-medium text-white bg-[#5b5fc7] hover:bg-[#4b4fbf] rounded-md transition-colors shadow-sm">Submit</button>
+          <button onClick={onClose} className="px-3 py-1.5 text-[11px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#333] rounded-md transition-colors">{t('common.cancel')}</button>
+          <button onClick={() => setSubmitted(true)} className="px-3 py-1.5 text-[11px] font-medium text-white bg-[#5b5fc7] hover:bg-[#4b4fbf] rounded-md transition-colors shadow-sm">{t('inbox.submit')}</button>
         </div>
       </div>
     );
@@ -257,17 +261,17 @@ function ServiceForm({ serviceId, onClose }: { serviceId: string; onClose: () =>
     return (
       <div className="space-y-2.5">
         <div className="flex items-center justify-between">
-          <p className="text-[12px] font-semibold text-[#242424] dark:text-[#e0e0e0]">Log Overtime</p>
+          <p className="text-[12px] font-semibold text-[#242424] dark:text-[#e0e0e0]">{t('recent.overtime.title')}</p>
           <button onClick={onClose} className="text-[#8a8a8a] hover:text-[#242424] dark:hover:text-[#e0e0e0] transition-colors"><X size={12} /></button>
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <div><label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">Date</label><input type="date" defaultValue="2026-03-05" className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0]" /></div>
-          <div><label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">Hours</label><input type="number" defaultValue="2" min="0.5" step="0.5" className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0]" /></div>
+          <div><label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">{t('recent.form.date')}</label><input type="date" defaultValue="2026-03-05" className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0]" /></div>
+          <div><label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">{t('recent.form.hours')}</label><input type="number" defaultValue="2" min="0.5" step="0.5" className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0]" /></div>
         </div>
-        <textarea placeholder="Description of work done" rows={2} className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0] placeholder:text-[#b9bbbe] resize-none" />
+        <textarea placeholder={t('myWidgets.workDescription')} rows={2} className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0] placeholder:text-[#b9bbbe] resize-none" />
         <div className="flex justify-end gap-2">
-          <button onClick={onClose} className="px-3 py-1.5 text-[11px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#333] rounded-md transition-colors">Cancel</button>
-          <button onClick={() => setSubmitted(true)} className="px-3 py-1.5 text-[11px] font-medium text-white bg-[#d4820c] hover:bg-[#c0760b] rounded-md transition-colors shadow-sm">Submit</button>
+          <button onClick={onClose} className="px-3 py-1.5 text-[11px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#333] rounded-md transition-colors">{t('common.cancel')}</button>
+          <button onClick={() => setSubmitted(true)} className="px-3 py-1.5 text-[11px] font-medium text-white bg-[#d4820c] hover:bg-[#c0760b] rounded-md transition-colors shadow-sm">{t('inbox.submit')}</button>
         </div>
       </div>
     );
@@ -277,24 +281,24 @@ function ServiceForm({ serviceId, onClose }: { serviceId: string; onClose: () =>
     return (
       <div className="space-y-2.5">
         <div className="flex items-center justify-between">
-          <p className="text-[12px] font-semibold text-[#242424] dark:text-[#e0e0e0]">Reserve Meeting Room</p>
+          <p className="text-[12px] font-semibold text-[#242424] dark:text-[#e0e0e0]">{t('myWidgets.reserveMeetingRoom')}</p>
           <button onClick={onClose} className="text-[#8a8a8a] hover:text-[#242424] dark:hover:text-[#e0e0e0] transition-colors"><X size={12} /></button>
         </div>
         <div>
-          <label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">Room</label>
+          <label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">{t('myWidgets.room')}</label>
           <select className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0]">
-            <option>Conference Room A (10 pax)</option><option>Conference Room B (6 pax)</option><option>Huddle Space 1 (4 pax)</option><option>Board Room (20 pax)</option><option>Phone Booth 1 (1 pax)</option>
+            <option>{t('myWidgets.roomOption.a')}</option><option>{t('myWidgets.roomOption.b')}</option><option>{t('myWidgets.roomOption.huddle')}</option><option>{t('myWidgets.roomOption.board')}</option><option>{t('myWidgets.roomOption.booth')}</option>
           </select>
         </div>
         <div className="grid grid-cols-3 gap-2">
-          <div><label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">Date</label><input type="date" defaultValue="2026-03-06" className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0]" /></div>
-          <div><label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">Start</label><input type="time" defaultValue="10:00" className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0]" /></div>
-          <div><label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">End</label><input type="time" defaultValue="11:00" className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0]" /></div>
+          <div><label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">{t('recent.form.date')}</label><input type="date" defaultValue="2026-03-06" className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0]" /></div>
+          <div><label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">{t('myWidgets.start')}</label><input type="time" defaultValue="10:00" className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0]" /></div>
+          <div><label className="text-[10px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-0.5 block">{t('myWidgets.end')}</label><input type="time" defaultValue="11:00" className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0]" /></div>
         </div>
-        <input type="text" placeholder="Meeting title" className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0] placeholder:text-[#b9bbbe]" />
+        <input type="text" placeholder={t('myWidgets.meetingTitle')} className="w-full text-[11px] px-2 py-1.5 rounded-md border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#2a2a2a] text-[#242424] dark:text-[#e0e0e0] placeholder:text-[#b9bbbe]" />
         <div className="flex justify-end gap-2">
-          <button onClick={onClose} className="px-3 py-1.5 text-[11px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#333] rounded-md transition-colors">Cancel</button>
-          <button onClick={() => setSubmitted(true)} className="px-3 py-1.5 text-[11px] font-medium text-white bg-[#8764b8] hover:bg-[#7556a8] rounded-md transition-colors shadow-sm">Reserve</button>
+          <button onClick={onClose} className="px-3 py-1.5 text-[11px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#333] rounded-md transition-colors">{t('common.cancel')}</button>
+          <button onClick={() => setSubmitted(true)} className="px-3 py-1.5 text-[11px] font-medium text-white bg-[#8764b8] hover:bg-[#7556a8] rounded-md transition-colors shadow-sm">{t('myWidgets.reserve')}</button>
         </div>
       </div>
     );
@@ -304,7 +308,7 @@ function ServiceForm({ serviceId, onClose }: { serviceId: string; onClose: () =>
   return (
     <div className="text-center py-3">
       <p className="text-[12px] text-[#8a8a8a] dark:text-[#6d6f78] mb-2">{svc.label} — Coming soon</p>
-      <button onClick={onClose} className="text-[11px] text-[#5b5fc7] dark:text-[#a6a9dc] font-medium hover:underline">Dismiss</button>
+      <button onClick={onClose} className="text-[11px] text-[#5b5fc7] dark:text-[#a6a9dc] font-medium hover:underline">{t('recent.services.dismiss')}</button>
     </div>
   );
 }
@@ -347,6 +351,7 @@ export function CommonServicesWidget() {
 
 // ─── My Requests Widget ───
 export function MyRequestsWidget() {
+  const { t } = useI18n();
   const [requests, setRequests] = useState<SpaceRequest[]>([]);
 
   useEffect(() => {
@@ -357,14 +362,14 @@ export function MyRequestsWidget() {
   }, []);
 
   const statusMap: Record<string, { label: string; className: string }> = {
-    'pending-owner': { label: 'Awaiting Owner', className: 'bg-[#fef7ec] dark:bg-[#d4820c]/15 text-[#d4820c] dark:text-[#f0b850]' },
-    'pending-admin': { label: 'Awaiting Admin', className: 'bg-[#eeeef8] dark:bg-[#5b5fc7]/15 text-[#5b5fc7] dark:text-[#a6a9dc]' },
-    'approved': { label: 'Approved', className: 'bg-[#edf7f0] dark:bg-[#237b4b]/15 text-[#237b4b] dark:text-[#57ab5a]' },
-    'rejected': { label: 'Rejected', className: 'bg-[#fdf0f2] dark:bg-[#c4314b]/15 text-[#c4314b] dark:text-[#f47067]' },
+    'pending-owner': { label: t('myWidgets.status.awaitingOwner'), className: 'bg-[#fef7ec] dark:bg-[#d4820c]/15 text-[#d4820c] dark:text-[#f0b850]' },
+    'pending-admin': { label: t('myWidgets.status.awaitingAdmin'), className: 'bg-[#eeeef8] dark:bg-[#5b5fc7]/15 text-[#5b5fc7] dark:text-[#a6a9dc]' },
+    'approved': { label: t('myWidgets.status.approved'), className: 'bg-[#edf7f0] dark:bg-[#237b4b]/15 text-[#237b4b] dark:text-[#57ab5a]' },
+    'rejected': { label: t('myWidgets.status.rejected'), className: 'bg-[#fdf0f2] dark:bg-[#c4314b]/15 text-[#c4314b] dark:text-[#f47067]' },
   };
 
   if (requests.length === 0) {
-    return <div className="p-4 text-center text-sm text-[#8a8a8a] dark:text-[#6d6f78]">No requests yet</div>;
+    return <div className="p-4 text-center text-sm text-[#8a8a8a] dark:text-[#6d6f78]">{t('myWidgets.noRequestsYet')}</div>;
   }
 
   return (
@@ -391,11 +396,12 @@ export function MyRequestsWidget() {
 
 // ─── Pending Approvals Widget ───
 export function PendingApprovalsWidget() {
+  const { t } = useI18n();
   const pending = notifications.filter(n => n.formFields && !n.read);
   return (
     <div className="divide-y divide-[#f0f0f0] dark:divide-[#333]">
       {pending.length === 0 ? (
-        <div className="p-4 text-center text-sm text-[#8a8a8a] dark:text-[#6d6f78]">No pending approvals</div>
+        <div className="p-4 text-center text-sm text-[#8a8a8a] dark:text-[#6d6f78]">{t('recent.approvals.empty')}</div>
       ) : (
         pending.slice(0, 4).map(n => (
           <Link key={n.id} to="/inbox" className="flex items-center gap-3 px-4 py-3 hover:bg-[#faf9f8] dark:hover:bg-[#2a2a2a] transition-colors group">
@@ -406,7 +412,7 @@ export function PendingApprovalsWidget() {
               <p className="text-sm text-[#242424] dark:text-[#e0e0e0] font-medium truncate">{n.title}</p>
               <p className="text-xs text-[#8a8a8a] dark:text-[#6d6f78] truncate">{n.from} · {format(n.timestamp, 'MMM d')}</p>
             </div>
-            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[#fef7ec] dark:bg-[#d4820c]/15 text-[#d4820c] dark:text-[#f0b850]">Action needed</span>
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[#fef7ec] dark:bg-[#d4820c]/15 text-[#d4820c] dark:text-[#f0b850]">{t('recent.approvals.actionNeeded')}</span>
             <ChevronRight size={14} className="text-[#d1d1d1] dark:text-[#3d3d3d] group-hover:text-[#8a8a8a] transition-colors shrink-0" />
           </Link>
         ))
@@ -417,10 +423,11 @@ export function PendingApprovalsWidget() {
 
 // ─── Unread Channels Widget ───
 export function UnreadChannelsWidget() {
+  const { t } = useI18n();
   return (
     <div className="divide-y divide-[#f0f0f0] dark:divide-[#333]">
       {recentActivity.unread.length === 0 ? (
-        <div className="p-4 text-center text-sm text-[#8a8a8a] dark:text-[#6d6f78]">All caught up!</div>
+        <div className="p-4 text-center text-sm text-[#8a8a8a] dark:text-[#6d6f78]">{t('recent.unread.empty')}</div>
       ) : (
         recentActivity.unread.map(ch => (
           <Link
@@ -435,7 +442,7 @@ export function UnreadChannelsWidget() {
               <p className="text-sm text-[#242424] dark:text-[#e0e0e0] font-medium truncate">
                 {ch.spaceName} <span className="text-[#d1d1d1] dark:text-[#5a5a5a] mx-1">›</span> {ch.channelName}
               </p>
-              <p className="text-xs text-[#8a8a8a] dark:text-[#6d6f78]">Last message {format(ch.lastMessage, 'h:mm a')}</p>
+              <p className="text-xs text-[#8a8a8a] dark:text-[#6d6f78]">{t('recent.unread.lastMessage', { time: format(ch.lastMessage, 'h:mm a') })}</p>
             </div>
             <span className="bg-[#c4314b] text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">{ch.count}</span>
           </Link>
@@ -447,10 +454,11 @@ export function UnreadChannelsWidget() {
 
 // ─── Active Threads Widget ───
 export function ActiveThreadsWidget() {
+  const { t } = useI18n();
   return (
     <div className="divide-y divide-[#f0f0f0] dark:divide-[#333]">
       {recentActivity.threads.length === 0 ? (
-        <div className="p-4 text-center text-sm text-[#8a8a8a] dark:text-[#6d6f78]">No active threads</div>
+        <div className="p-4 text-center text-sm text-[#8a8a8a] dark:text-[#6d6f78]">{t('recent.threads.empty')}</div>
       ) : (
         recentActivity.threads.map(thread => (
           <div key={thread.id} className="px-4 py-3 hover:bg-[#faf9f8] dark:hover:bg-[#2a2a2a] transition-colors cursor-pointer">
@@ -465,7 +473,7 @@ export function ActiveThreadsWidget() {
             <p className="text-sm text-[#424242] dark:text-[#c8c8c8] truncate mb-1.5">{thread.content}</p>
             <div className="flex items-center gap-1.5 text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">
               <MessageSquare size={12} />
-              <span>{thread.replies} replies</span>
+              <span>{t('recent.threads.replies', { count: thread.replies })}</span>
             </div>
           </div>
         ))

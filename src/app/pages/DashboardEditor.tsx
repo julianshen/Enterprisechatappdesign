@@ -24,6 +24,7 @@ import {
   MY_SPACE_ID,
 } from '../data/customDashboards';
 import { renderMyWidget, isMyWidgetType } from '../components/MyWidgets';
+import { useI18n } from '../context/I18nContext';
 
 // ─── Icon map ───
 const DASHBOARD_ICONS: { id: string; icon: LucideIcon; label: string }[] = [
@@ -178,7 +179,7 @@ function MiniMetricPreview() {
       {['128', '94', '22'].map((v, i) => (
         <div key={i} className="flex-1 text-center">
           <div className="text-[11px] font-bold text-[#242424] dark:text-[#f0f0f0]">{v}</div>
-          <div className="text-[7px] text-[#999]">Label</div>
+          <div className="text-[7px] text-[#999]">{t('dashboardEditor.field.label')}</div>
         </div>
       ))}
     </div>
@@ -496,7 +497,7 @@ function WidgetConfigPanel({
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#e8e8e8] dark:border-[#333] bg-[#faf9f8] dark:bg-[#2a2a2a] shrink-0">
         <div className="flex items-center gap-2">
           <Settings2 size={14} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
-          <span className="text-[13px] font-semibold text-[#242424] dark:text-[#f0f0f0]">Widget Settings</span>
+          <span className="text-[13px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('dashboardEditor.widgetSettings')}</span>
         </div>
         <button onClick={onClose} className="p-1 rounded text-[#999] hover:text-[#242424] dark:text-[#666] dark:hover:text-[#f0f0f0] hover:bg-[#f0f0f0] dark:hover:bg-[#333] transition-colors">
           <X size={14} />
@@ -578,7 +579,7 @@ function WidgetConfigPanel({
                 <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider">
                   Wide Widget
                 </label>
-                <p className="text-[10px] text-[#999]">Spans multiple columns</p>
+                <p className="text-[10px] text-[#999]">{t('dashboardEditor.spansMultipleColumns')}</p>
               </div>
               <button
                 onClick={() => updateField('wide', !widget.wide)}
@@ -625,7 +626,7 @@ function WidgetConfigPanel({
                           onUpdate({ ...widget, data: { items: newItems } });
                         }}
                         className="flex-1 px-2 py-1 text-[12px] bg-white dark:bg-[#2b2d31] text-[#242424] dark:text-[#f0f0f0] rounded border border-[#e1dfdd] dark:border-[#3d3d3d] outline-none"
-                        placeholder="Label"
+                        placeholder={t('dashboardEditor.field.label')}
                       />
                       <input
                         type="text"
@@ -636,7 +637,7 @@ function WidgetConfigPanel({
                           onUpdate({ ...widget, data: { items: newItems } });
                         }}
                         className="w-16 px-2 py-1 text-[12px] bg-white dark:bg-[#2b2d31] text-[#242424] dark:text-[#f0f0f0] rounded border border-[#e1dfdd] dark:border-[#3d3d3d] outline-none text-center"
-                        placeholder="Value"
+                        placeholder={t('dashboardEditor.field.value')}
                       />
                       <button
                         onClick={() => {
@@ -658,7 +659,7 @@ function WidgetConfigPanel({
                           onUpdate({ ...widget, data: { items: newItems } });
                         }}
                         className="flex-1 px-2 py-1 text-[11px] bg-white dark:bg-[#2b2d31] text-[#242424] dark:text-[#f0f0f0] rounded border border-[#e1dfdd] dark:border-[#3d3d3d] outline-none"
-                        placeholder="Change (e.g. +12%)"
+                        placeholder={t('dashboardEditor.field.changeExample')}
                       />
                       <select
                         value={item.changeType || 'neutral'}
@@ -669,9 +670,9 @@ function WidgetConfigPanel({
                         }}
                         className="px-2 py-1 text-[11px] bg-white dark:bg-[#2b2d31] text-[#242424] dark:text-[#f0f0f0] rounded border border-[#e1dfdd] dark:border-[#3d3d3d] outline-none"
                       >
-                        <option value="up">Up</option>
-                        <option value="down">Down</option>
-                        <option value="neutral">Neutral</option>
+                        <option value="up">{t('dashboardEditor.direction.up')}</option>
+                        <option value="down">{t('dashboardEditor.direction.down')}</option>
+                        <option value="neutral">{t('dashboardEditor.direction.neutral')}</option>
                       </select>
                     </div>
                   </div>
@@ -708,7 +709,7 @@ function WidgetConfigPanel({
                           onUpdate({ ...widget, data: { items: newItems } });
                         }}
                         className="flex-1 px-2 py-1 text-[12px] bg-white dark:bg-[#2b2d31] text-[#242424] dark:text-[#f0f0f0] rounded border border-[#e1dfdd] dark:border-[#3d3d3d] outline-none"
-                        placeholder="Item label"
+                        placeholder={t('dashboardEditor.field.itemLabel')}
                       />
                       <button
                         onClick={() => {
@@ -730,7 +731,7 @@ function WidgetConfigPanel({
                           onUpdate({ ...widget, data: { items: newItems } });
                         }}
                         className="flex-1 px-2 py-1 text-[11px] bg-white dark:bg-[#2b2d31] text-[#242424] dark:text-[#f0f0f0] rounded border border-[#e1dfdd] dark:border-[#3d3d3d] outline-none"
-                        placeholder="Sublabel"
+                        placeholder={t('dashboardEditor.field.sublabel')}
                       />
                       <select
                         value={item.statusColor || 'gray'}
@@ -741,11 +742,11 @@ function WidgetConfigPanel({
                         }}
                         className="px-2 py-1 text-[11px] bg-white dark:bg-[#2b2d31] text-[#242424] dark:text-[#f0f0f0] rounded border border-[#e1dfdd] dark:border-[#3d3d3d] outline-none"
                       >
-                        <option value="blue">Blue</option>
-                        <option value="green">Green</option>
-                        <option value="orange">Orange</option>
-                        <option value="red">Red</option>
-                        <option value="gray">Gray</option>
+                        <option value="blue">{t('dashboardEditor.color.blue')}</option>
+                        <option value="green">{t('dashboardEditor.color.green')}</option>
+                        <option value="orange">{t('dashboardEditor.color.orange')}</option>
+                        <option value="red">{t('dashboardEditor.color.red')}</option>
+                        <option value="gray">{t('dashboardEditor.color.gray')}</option>
                       </select>
                     </div>
                     <input
@@ -757,7 +758,7 @@ function WidgetConfigPanel({
                         onUpdate({ ...widget, data: { items: newItems } });
                       }}
                       className="w-full px-2 py-1 text-[11px] bg-white dark:bg-[#2b2d31] text-[#242424] dark:text-[#f0f0f0] rounded border border-[#e1dfdd] dark:border-[#3d3d3d] outline-none"
-                      placeholder="Status label"
+                      placeholder={t('dashboardEditor.field.statusLabel')}
                     />
                   </div>
                 ))}
@@ -793,7 +794,7 @@ function WidgetConfigPanel({
                           onUpdate({ ...widget, data: { items: newItems } });
                         }}
                         className="flex-1 px-2 py-1 text-[12px] bg-white dark:bg-[#2b2d31] text-[#242424] dark:text-[#f0f0f0] rounded border border-[#e1dfdd] dark:border-[#3d3d3d] outline-none"
-                        placeholder="Label"
+                        placeholder={t('dashboardEditor.field.label')}
                       />
                       <button
                         onClick={() => {
@@ -867,7 +868,7 @@ function WidgetConfigPanel({
                           onUpdate({ ...widget, data: { items: newItems } });
                         }}
                         className="flex-1 px-2 py-1 text-[12px] bg-white dark:bg-[#2b2d31] text-[#242424] dark:text-[#f0f0f0] rounded border border-[#e1dfdd] dark:border-[#3d3d3d] outline-none"
-                        placeholder="Link title"
+                        placeholder={t('dashboardEditor.field.linkTitle')}
                       />
                       <button
                         onClick={() => {
@@ -888,7 +889,7 @@ function WidgetConfigPanel({
                         onUpdate({ ...widget, data: { items: newItems } });
                       }}
                       className="w-full px-2 py-1 text-[11px] bg-white dark:bg-[#2b2d31] text-[#242424] dark:text-[#f0f0f0] rounded border border-[#e1dfdd] dark:border-[#3d3d3d] outline-none"
-                      placeholder="URL"
+                      placeholder={t('dashboardEditor.field.url')}
                     />
                     <input
                       type="text"
@@ -899,7 +900,7 @@ function WidgetConfigPanel({
                         onUpdate({ ...widget, data: { items: newItems } });
                       }}
                       className="w-full px-2 py-1 text-[11px] bg-white dark:bg-[#2b2d31] text-[#242424] dark:text-[#f0f0f0] rounded border border-[#e1dfdd] dark:border-[#3d3d3d] outline-none"
-                      placeholder="Description"
+                      placeholder={t('dashboardEditor.field.description')}
                     />
                   </div>
                 ))}
@@ -1156,8 +1157,8 @@ function AddWidgetModal({
             <div className="flex items-center gap-2.5 text-white">
               <Sparkles size={20} />
               <div>
-                <h2 className="text-[16px] font-bold">Widget Marketplace</h2>
-                <p className="text-[11px] text-white/70">Browse and add widgets to your dashboard</p>
+                <h2 className="text-[16px] font-bold">{t('dashboardEditor.marketplaceTitle')}</h2>
+                <p className="text-[11px] text-white/70">{t('dashboardEditor.marketplaceSubtitle')}</p>
               </div>
             </div>
             <button onClick={onClose} className="p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors">
@@ -1172,7 +1173,7 @@ function AddWidgetModal({
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search widgets by name, category, or keyword..."
+              placeholder={t('dashboardEditor.searchWidgets')}
               className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-white/15 text-white placeholder-white/40 text-[13px] outline-none focus:bg-white/20 transition-colors border border-white/10 focus:border-white/25"
             />
             {searchQuery && (
@@ -1190,7 +1191,7 @@ function AddWidgetModal({
         <div className="flex flex-1 min-h-0">
           {/* Category sidebar */}
           <div className="w-[190px] shrink-0 border-r border-[#e1dfdd] dark:border-[#3d3d3d] bg-[#faf9f8] dark:bg-[#252525] py-3 px-2 overflow-y-auto">
-            <p className="text-[9px] font-bold text-[#999] dark:text-[#666] uppercase tracking-wider px-2 mb-2">Categories</p>
+            <p className="text-[9px] font-bold text-[#999] dark:text-[#666] uppercase tracking-wider px-2 mb-2">{t('dashboardEditor.categories')}</p>
             {MARKETPLACE_CATEGORIES.map(cat => {
               const count = cat.id === 'all' ? MARKETPLACE_WIDGETS.length
                 : cat.id === 'featured' ? MARKETPLACE_WIDGETS.filter(w => w.featured).length
@@ -1218,7 +1219,7 @@ function AddWidgetModal({
 
             {/* Widget type legend */}
             <div className="mt-4 pt-3 border-t border-[#e1dfdd] dark:border-[#3d3d3d] px-2">
-              <p className="text-[9px] font-bold text-[#999] dark:text-[#666] uppercase tracking-wider mb-2">Widget Types</p>
+              <p className="text-[9px] font-bold text-[#999] dark:text-[#666] uppercase tracking-wider mb-2">{t('dashboardEditor.widgetTypes')}</p>
               {WIDGET_TYPES.map(wt => (
                 <div key={wt.id} className="flex items-center gap-2 py-1">
                   <wt.icon size={11} className="text-[#999] dark:text-[#666]" />
@@ -1245,7 +1246,7 @@ function AddWidgetModal({
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-3">
                   <Star size={14} className="text-[#d4820c]" />
-                  <h3 className="text-[13px] font-bold text-[#242424] dark:text-[#f0f0f0]">Featured</h3>
+                  <h3 className="text-[13px] font-bold text-[#242424] dark:text-[#f0f0f0]">{t('dashboardEditor.featured')}</h3>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   {featuredWidgets.map(mw => {
@@ -1292,7 +1293,7 @@ function AddWidgetModal({
             {showFeatured && (
               <div className="flex items-center gap-2 mb-3">
                 <LayoutGrid size={14} className="text-[#616161] dark:text-[#999]" />
-                <h3 className="text-[13px] font-bold text-[#242424] dark:text-[#f0f0f0]">All Widgets</h3>
+                <h3 className="text-[13px] font-bold text-[#242424] dark:text-[#f0f0f0]">{t('dashboardEditor.allWidgets')}</h3>
               </div>
             )}
 
@@ -1347,7 +1348,7 @@ function AddWidgetModal({
                 <div className="w-14 h-14 rounded-2xl bg-[#f0f0f0] dark:bg-[#333] flex items-center justify-center mb-4">
                   <Search size={24} className="text-[#ccc] dark:text-[#555]" />
                 </div>
-                <p className="text-[14px] font-semibold text-[#616161] dark:text-[#999] mb-1">No widgets found</p>
+                <p className="text-[14px] font-semibold text-[#616161] dark:text-[#999] mb-1">{t('dashboardEditor.noWidgetsFound')}</p>
                 <p className="text-[12px] text-[#999] dark:text-[#666] max-w-[240px]">
                   Try a different search term or browse another category
                 </p>
@@ -1387,7 +1388,7 @@ function IconPickerPopover({
       exit={{ opacity: 0, y: -4 }}
       className="absolute top-full left-0 mt-1 bg-white dark:bg-[#2b2d31] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] shadow-xl z-20 p-3"
     >
-      <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider mb-2">Choose Icon</p>
+      <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider mb-2">{t('dashboardEditor.chooseIcon')}</p>
       <div className="grid grid-cols-5 gap-1.5">
         {DASHBOARD_ICONS.map(({ id, icon: Icon, label }) => (
           <button
@@ -1522,7 +1523,7 @@ function DraggableWidgetCard({
               onClick={e => { e.stopPropagation(); onMoveUp(); }}
               disabled={index === 0}
               className="p-1 rounded text-[#616161] dark:text-[#999] hover:bg-[#f0f0f0] dark:hover:bg-[#333] disabled:opacity-30 transition-colors"
-              title="Move up"
+              title={t('dashboardEditor.action.moveUp')}
             >
               <ArrowUp size={11} />
             </button>
@@ -1530,7 +1531,7 @@ function DraggableWidgetCard({
               onClick={e => { e.stopPropagation(); onMoveDown(); }}
               disabled={index === totalCount - 1}
               className="p-1 rounded text-[#616161] dark:text-[#999] hover:bg-[#f0f0f0] dark:hover:bg-[#333] disabled:opacity-30 transition-colors"
-              title="Move down"
+              title={t('dashboardEditor.action.moveDown')}
             >
               <ArrowDown size={11} />
             </button>
@@ -1545,7 +1546,7 @@ function DraggableWidgetCard({
             <button
               onClick={e => { e.stopPropagation(); onDuplicate(); }}
               className="p-1 rounded text-[#616161] dark:text-[#999] hover:bg-[#f0f0f0] dark:hover:bg-[#333] transition-colors"
-              title="Duplicate"
+              title={t('dashboardEditor.action.duplicate')}
             >
               <Copy size={11} />
             </button>
@@ -1553,7 +1554,7 @@ function DraggableWidgetCard({
             <button
               onClick={e => { e.stopPropagation(); onDelete(); }}
               className="p-1 rounded text-[#c4314b] hover:bg-[#c4314b]/10 transition-colors"
-              title="Delete"
+              title={t('common.delete')}
             >
               <Trash2 size={11} />
             </button>
@@ -1577,6 +1578,7 @@ function DraggableWidgetCard({
 // ─── Main Editor ───
 
 export function DashboardEditor() {
+  const { t } = useI18n();
   const { spaceId: rawSpaceId, dashboardId } = useParams();
   const navigate = useNavigate();
 
@@ -1689,7 +1691,7 @@ export function DashboardEditor() {
   if (!space && !isMyDashboard) {
     return (
       <div className="flex-1 flex items-center justify-center bg-white dark:bg-[#1f1f1f]">
-        <p className="text-[#616161]">Space not found</p>
+        <p className="text-[#616161]">{t('dashboardEditor.spaceNotFound')}</p>
       </div>
     );
   }
@@ -1711,11 +1713,11 @@ export function DashboardEditor() {
             <div className="flex items-center gap-2">
               <LayoutDashboard size={16} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
               <span className="text-[14px] font-semibold text-[#242424] dark:text-[#f0f0f0]">
-                {isEditMode ? 'Edit Dashboard' : 'New Dashboard'}
+                {isEditMode ? t('dashboardEditor.editDashboard') : t('dashboardEditor.newDashboard')}
               </span>
             </div>
             {hasChanges && !saved && (
-              <span className="text-[11px] text-[#d4820c] font-medium ml-2">Unsaved changes</span>
+              <span className="text-[11px] text-[#d4820c] font-medium ml-2">{t('dashboardEditor.unsavedChanges')}</span>
             )}
           </div>
           <div className="flex items-center gap-2">
@@ -1728,20 +1730,20 @@ export function DashboardEditor() {
               }`}
             >
               <Eye size={14} />
-              {isPreview ? 'Editing' : 'Preview'}
+              {isPreview ? t('dashboardEditor.editing') : t('common.preview')}
             </button>
             <button
               onClick={() => navigate(-1)}
               className="px-3 py-1.5 text-[12px] font-medium text-[#616161] dark:text-[#999] hover:bg-[#f0f0f0] dark:hover:bg-[#333] rounded-lg transition-colors"
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               onClick={handleSave}
               disabled={!name.trim() || saved}
               className="flex items-center gap-1.5 px-4 py-1.5 bg-[#5b5fc7] hover:bg-[#4a4eb5] disabled:opacity-50 disabled:cursor-not-allowed text-white text-[12px] font-semibold rounded-lg transition-colors shadow-sm"
             >
-              {saved ? <><Check size={14} />Saved!</> : <><Save size={14} />Save Dashboard</>}
+              {saved ? <><Check size={14} />{t('dashboardEditor.saved')}</> : <><Save size={14} />{t('dashboardEditor.saveDashboard')}</>}
             </button>
           </div>
         </div>
@@ -1777,7 +1779,7 @@ export function DashboardEditor() {
                   type="text"
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  placeholder="Dashboard name..."
+                  placeholder={t('dashboardEditor.dashboardName')}
                   className="w-full text-[20px] font-bold text-[#242424] dark:text-[#f0f0f0] bg-transparent outline-none placeholder-[#ccc] dark:placeholder-[#555]"
                   autoFocus
                 />
@@ -1785,7 +1787,7 @@ export function DashboardEditor() {
                   type="text"
                   value={description}
                   onChange={e => setDescription(e.target.value)}
-                  placeholder="Add a description..."
+                  placeholder={t('dashboardEditor.addDescription')}
                   className="w-full text-[13px] text-[#616161] dark:text-[#8a8a8a] bg-transparent outline-none placeholder-[#ccc] dark:placeholder-[#555]"
                 />
               </div>

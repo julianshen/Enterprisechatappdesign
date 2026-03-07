@@ -8,6 +8,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { cn } from "@/lib/utils";
+import { useI18n } from '../context/I18nContext';
 
 // ─── Types ───
 
@@ -436,6 +437,7 @@ function AssetDetail({ asset, onClose, onPromote }: { asset: Asset; onClose: () 
 // ─── Main Component ───
 
 export function AssetManagementApp() {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<TabId>('registry');
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<AssetType | 'all'>('all');
@@ -507,7 +509,7 @@ export function AssetManagementApp() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold text-[#242424] dark:text-[#f0f0f0]">Asset Management</span>
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#5b5fc7]/10 text-[#5b5fc7] dark:bg-[#5b5fc7]/20 dark:text-[#a6a9dc] font-bold">{assets.length} assets</span>
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#5b5fc7]/10 text-[#5b5fc7] dark:bg-[#5b5fc7]/20 dark:text-[#a6a9dc] font-bold">{t('asset.assetsCount', { count: assets.length })}</span>
               </div>
               <div className="flex items-center gap-3 mt-0.5 text-[10px] text-[#8a8a8a] dark:text-[#6d6f78]">
                 <span className="flex items-center gap-1"><Shield size={9} /> Scanner: Trivy</span>
@@ -522,7 +524,7 @@ export function AssetManagementApp() {
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Search assets..."
+                placeholder={t('search.assets')}
                 className="pl-8 pr-3 py-1.5 text-[12px] rounded-lg border border-[#e1dfdd] dark:border-[#3d3d3d] bg-[#faf9f8] dark:bg-[#1e1f22] text-[#242424] dark:text-[#f0f0f0] placeholder-[#b9bbbe] w-[200px] focus:outline-none focus:ring-1 focus:ring-[#5b5fc7]/50"
               />
             </div>

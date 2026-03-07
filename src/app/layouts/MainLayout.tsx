@@ -2,6 +2,7 @@ import { Outlet, useParams, useLocation } from 'react-router';
 import { SpaceSidebar } from '../components/SpaceSidebar';
 import { ChannelSidebar } from '../components/ChannelSidebar';
 import { GlobalAIAssistant } from '../components/GlobalAIAssistant';
+import { FloatingChatBar } from '../components/FloatingChatBar';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
@@ -24,6 +25,7 @@ export function MainLayout() {
         {showSidebar && <ChannelSidebar />}
         <Outlet />
         <GlobalAIAssistant />
+        <FloatingChatBar />
       </div>
     </DndProvider>
   );

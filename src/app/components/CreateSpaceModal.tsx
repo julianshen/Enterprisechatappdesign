@@ -9,6 +9,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { addSpaceRequest, type SpaceRequest } from '../data/spaceRequests';
+import { useI18n } from '../context/I18nContext';
 
 // ─── Types ───
 
@@ -270,6 +271,7 @@ const levelBadge: Record<string, { label: string; color: string }> = {
 
 export const CreateSpaceModal = forwardRef<HTMLDivElement, { onClose: () => void }>(
   function CreateSpaceModal({ onClose }, ref) {
+    const { t } = useI18n();
     const [step, setStep] = useState(0);
     const [selectedScenario, setSelectedScenario] = useState<SpaceScenario | null>(null);
     const [spaceName, setSpaceName] = useState('');
@@ -406,7 +408,7 @@ export const CreateSpaceModal = forwardRef<HTMLDivElement, { onClose: () => void
                 >
                   <Check size={32} className="text-[#237b4b]" />
                 </motion.div>
-                <h2 className="text-[20px] font-bold text-[#242424] dark:text-[#f0f0f0] mb-2">Request Submitted</h2>
+                <h2 className="text-[20px] font-bold text-[#242424] dark:text-[#f0f0f0] mb-2">{t('createSpace.requestSubmitted')}</h2>
                 <p className="text-[13px] text-[#616161] dark:text-[#999] max-w-[400px] mb-2">
                   Your request to create <strong className="text-[#242424] dark:text-[#f0f0f0]">{spaceName}</strong> has been submitted for approval.
                 </p>
@@ -418,7 +420,7 @@ export const CreateSpaceModal = forwardRef<HTMLDivElement, { onClose: () => void
                     <div className="w-8 h-8 rounded-full bg-[#237b4b] flex items-center justify-center">
                       <Check size={14} className="text-white" />
                     </div>
-                    <span className="text-[9px] text-[#237b4b] font-semibold">Submitted</span>
+                    <span className="text-[9px] text-[#237b4b] font-semibold">{t('inbox.submitted')}</span>
                   </div>
                   <ArrowRight size={14} className="text-[#ccc] dark:text-[#555] mt-[-14px]" />
 
@@ -429,7 +431,7 @@ export const CreateSpaceModal = forwardRef<HTMLDivElement, { onClose: () => void
                         <div className="w-8 h-8 rounded-full bg-[#d4820c]/15 border-2 border-[#d4820c] flex items-center justify-center">
                           <Clock size={12} className="text-[#d4820c]" />
                         </div>
-                        <span className="text-[9px] text-[#d4820c] font-semibold">Owner</span>
+                        <span className="text-[9px] text-[#d4820c] font-semibold">{t('createSpace.owner')}</span>
                       </div>
                       <ArrowRight size={14} className="text-[#ccc] dark:text-[#555] mt-[-14px]" />
                     </>
@@ -440,7 +442,7 @@ export const CreateSpaceModal = forwardRef<HTMLDivElement, { onClose: () => void
                     <div className="w-8 h-8 rounded-full bg-[#e1dfdd] dark:bg-[#3d3d3d] flex items-center justify-center">
                       <Shield size={12} className="text-[#999]" />
                     </div>
-                    <span className="text-[9px] text-[#999] font-semibold">Admin</span>
+                    <span className="text-[9px] text-[#999] font-semibold">{t('createSpace.admin')}</span>
                   </div>
                   <ArrowRight size={14} className="text-[#ccc] dark:text-[#555] mt-[-14px]" />
 
@@ -449,7 +451,7 @@ export const CreateSpaceModal = forwardRef<HTMLDivElement, { onClose: () => void
                     <div className="w-8 h-8 rounded-full bg-[#e1dfdd] dark:bg-[#3d3d3d] flex items-center justify-center">
                       <Sparkles size={12} className="text-[#999]" />
                     </div>
-                    <span className="text-[9px] text-[#999] font-semibold">Created</span>
+                    <span className="text-[9px] text-[#999] font-semibold">{t('createSpace.created')}</span>
                   </div>
                 </div>
 
@@ -466,7 +468,7 @@ export const CreateSpaceModal = forwardRef<HTMLDivElement, { onClose: () => void
                   onClick={onClose}
                   className="px-6 py-2.5 bg-[#5b5fc7] hover:bg-[#4a4eb5] text-white text-[13px] font-semibold rounded-lg transition-colors"
                 >
-                  Done
+                  {t('tasks.status.done')}
                 </button>
               </motion.div>
             ) : (
@@ -479,8 +481,8 @@ export const CreateSpaceModal = forwardRef<HTMLDivElement, { onClose: () => void
                         <Building2 size={18} className="text-white" />
                       </div>
                       <div>
-                        <h2 className="text-[16px] font-bold text-[#242424] dark:text-[#f0f0f0]">Request New Space</h2>
-                        <p className="text-[11px] text-[#616161] dark:text-[#8a8a8a]">Spaces require approval before creation</p>
+                        <h2 className="text-[16px] font-bold text-[#242424] dark:text-[#f0f0f0]">{t('createSpace.requestNewSpace')}</h2>
+                        <p className="text-[11px] text-[#616161] dark:text-[#8a8a8a]">{t('createSpace.approvalRequired')}</p>
                       </div>
                     </div>
                     <button
@@ -824,11 +826,12 @@ function ScenarioStep({
   selected: SpaceScenario | null;
   onSelect: (s: SpaceScenario) => void;
 }) {
+  const { t } = useI18n();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   return (
     <div>
-      <h3 className="text-[14px] font-bold text-[#242424] dark:text-[#f0f0f0] mb-1">Choose a Scenario</h3>
+      <h3 className="text-[14px] font-bold text-[#242424] dark:text-[#f0f0f0] mb-1">{t('createSpace.chooseScenario')}</h3>
       <p className="text-[12px] text-[#616161] dark:text-[#8a8a8a] mb-5">
         Each scenario is a pre-configured template with channels, dashboards, apps, and permission settings.
       </p>
@@ -911,7 +914,7 @@ function ScenarioStep({
                       <div className="pt-3 mt-3 border-t border-[#e8e8e8] dark:border-[#3d3d3d] space-y-2.5">
                         {/* Channels */}
                         <div>
-                          <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider mb-1.5">Channels</p>
+                          <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider mb-1.5">{t('channel.channels')}</p>
                           <div className="flex flex-wrap gap-1">
                             {s.channels.map(ch => (
                               <span key={ch.name} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#f5f5f5] dark:bg-[#333] text-[9px] text-[#616161] dark:text-[#999]">
@@ -923,7 +926,7 @@ function ScenarioStep({
                         {/* Dashboards */}
                         {s.dashboards.length > 0 && (
                           <div>
-                            <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider mb-1.5">Dashboards</p>
+                            <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider mb-1.5">{t('createSpace.dashboards')}</p>
                             <div className="flex flex-wrap gap-1">
                               {s.dashboards.map(d => (
                                 <span key={d} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#5b5fc7]/8 text-[9px] text-[#5b5fc7] dark:text-[#a6a9dc]">
@@ -936,7 +939,7 @@ function ScenarioStep({
                         {/* Apps */}
                         {s.apps.length > 0 && (
                           <div>
-                            <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider mb-1.5">Apps</p>
+                            <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider mb-1.5">{t('common.apps')}</p>
                             <div className="flex flex-wrap gap-1">
                               {s.apps.map(a => (
                                 <span key={a} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#237b4b]/8 text-[9px] text-[#237b4b] dark:text-[#4ade80]">
@@ -948,7 +951,7 @@ function ScenarioStep({
                         )}
                         {/* Permissions */}
                         <div>
-                          <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider mb-1">Permissions</p>
+                          <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider mb-1">{t('spaceApps.permissions')}</p>
                           <p className="text-[10px] text-[#616161] dark:text-[#8a8a8a] flex items-start gap-1">
                             <Shield size={9} className="shrink-0 mt-0.5" />{s.permissions}
                           </p>
@@ -983,12 +986,13 @@ function DetailsStep({
   scenario: SpaceScenario | null;
   nameRef: React.RefObject<HTMLInputElement | null>;
 }) {
+  const { t } = useI18n();
   const charCount = name.length;
   const maxChars = 50;
 
   return (
     <div>
-      <h3 className="text-[14px] font-bold text-[#242424] dark:text-[#f0f0f0] mb-1">Space Details</h3>
+      <h3 className="text-[14px] font-bold text-[#242424] dark:text-[#f0f0f0] mb-1">{t('createSpace.spaceDetails')}</h3>
       <p className="text-[12px] text-[#616161] dark:text-[#8a8a8a] mb-6">
         Give your space a name and description. You can change these later.
       </p>
@@ -1000,7 +1004,7 @@ function DetailsStep({
             <scenario.icon size={16} className="text-white" />
           </div>
           <div>
-            <p className="text-[11px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{scenario.name} scenario</p>
+            <p className="text-[11px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('createSpace.scenarioSummary', { name: scenario.name })}</p>
             <p className="text-[10px] text-[#999] dark:text-[#666]">
               {scenario.channels.length} channels, {scenario.dashboards.length} dashboards, {scenario.apps.length} apps
             </p>
@@ -1012,7 +1016,7 @@ function DetailsStep({
       <div className="mb-5">
         <label className="flex items-center justify-between mb-1.5">
           <span className="text-[12px] font-semibold text-[#242424] dark:text-[#f0f0f0]">
-            Space Name <span className="text-[#c4314b]">*</span>
+            {t('createSpace.spaceName')} <span className="text-[#c4314b]">*</span>
           </span>
           <span className={`text-[10px] ${charCount > maxChars ? 'text-[#c4314b]' : 'text-[#999]'}`}>
             {charCount}/{maxChars}
@@ -1023,24 +1027,24 @@ function DetailsStep({
           type="text"
           value={name}
           onChange={e => onNameChange(e.target.value.slice(0, maxChars))}
-          placeholder="e.g. Platform Engineering"
+          placeholder={t('createSpace.spaceNameExample')}
           className="w-full px-4 py-2.5 rounded-lg border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#1e1f22] text-[13px] text-[#242424] dark:text-[#f0f0f0] placeholder-[#c0c0c0] dark:placeholder-[#555] outline-none focus:border-[#5b5fc7] focus:ring-2 focus:ring-[#5b5fc7]/15 transition-all"
         />
         {name.trim().length > 0 && name.trim().length < 2 && (
-          <p className="mt-1 text-[10px] text-[#c4314b]">Name must be at least 2 characters</p>
+          <p className="mt-1 text-[10px] text-[#c4314b]">{t('createSpace.nameTooShort')}</p>
         )}
       </div>
 
       {/* Description field */}
       <div className="mb-5">
         <label className="flex items-center justify-between mb-1.5">
-          <span className="text-[12px] font-semibold text-[#242424] dark:text-[#f0f0f0]">Description</span>
-          <span className="text-[10px] text-[#999]">Optional</span>
+          <span className="text-[12px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('dashboardEditor.field.description')}</span>
+          <span className="text-[10px] text-[#999]">{t('createSpace.optional')}</span>
         </label>
         <textarea
           value={description}
           onChange={e => onDescriptionChange(e.target.value.slice(0, 300))}
-          placeholder="Describe the purpose of this space..."
+          placeholder={t('createSpace.descriptionPlaceholder')}
           rows={3}
           className="w-full px-4 py-2.5 rounded-lg border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#1e1f22] text-[13px] text-[#242424] dark:text-[#f0f0f0] placeholder-[#c0c0c0] dark:placeholder-[#555] outline-none focus:border-[#5b5fc7] focus:ring-2 focus:ring-[#5b5fc7]/15 transition-all resize-none"
         />
@@ -1049,17 +1053,17 @@ function DetailsStep({
 
       {/* Preview card */}
       <div className="p-4 rounded-xl bg-gradient-to-br from-[#faf9f8] to-[#f5f5f5] dark:from-[#1e1f22] dark:to-[#252525] border border-[#e8e8e8] dark:border-[#3d3d3d]">
-        <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider mb-3">Preview</p>
+        <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider mb-3">{t('common.preview')}</p>
         <div className="flex items-center gap-3">
           <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${scenario?.gradient || 'from-[#6b7280] to-[#4b5563]'} flex items-center justify-center`}>
             {scenario ? <scenario.icon size={24} className="text-white" /> : <Building2 size={24} className="text-white" />}
           </div>
           <div>
             <p className="text-[14px] font-bold text-[#242424] dark:text-[#f0f0f0]">
-              {name || 'Untitled Space'}
+              {name || t('createSpace.untitledSpace')}
             </p>
             <p className="text-[11px] text-[#616161] dark:text-[#8a8a8a]">
-              {description || 'No description'}
+              {description || t('createSpace.noDescription')}
             </p>
           </div>
         </div>
@@ -1085,11 +1089,12 @@ function OwnerStep({
   managers: ManagerUser[];
   searchRef: React.RefObject<HTMLInputElement | null>;
 }) {
+  const { t } = useI18n();
   const isCurrentUserOwner = selected?.id === CURRENT_USER_ID;
 
   return (
     <div>
-      <h3 className="text-[14px] font-bold text-[#242424] dark:text-[#f0f0f0] mb-1">Select Space Owner</h3>
+      <h3 className="text-[14px] font-bold text-[#242424] dark:text-[#f0f0f0] mb-1">{t('createSpace.selectOwner')}</h3>
       <p className="text-[12px] text-[#616161] dark:text-[#8a8a8a] mb-2">
         Every space must have exactly one owner. Owners must be at least a manager.
       </p>
@@ -1098,8 +1103,8 @@ function OwnerStep({
       <div className="flex items-start gap-2.5 px-4 py-3 rounded-xl bg-[#5b5fc7]/6 border border-[#5b5fc7]/15 mb-5">
         <AlertCircle size={14} className="text-[#5b5fc7] shrink-0 mt-0.5" />
         <div className="text-[11px] text-[#616161] dark:text-[#999]">
-          <p className="font-semibold text-[#5b5fc7] dark:text-[#a6a9dc] mb-0.5">Approval workflow</p>
-          <p>If you select yourself as owner, the request goes directly to an admin for approval. Otherwise, the selected owner must approve first.</p>
+          <p className="font-semibold text-[#5b5fc7] dark:text-[#a6a9dc] mb-0.5">{t('createSpace.approvalWorkflow')}</p>
+          <p>{t('createSpace.approvalWorkflowDesc')}</p>
         </div>
       </div>
 
@@ -1111,7 +1116,7 @@ function OwnerStep({
           type="text"
           value={search}
           onChange={e => onSearchChange(e.target.value)}
-          placeholder="Search by name, title, or department..."
+          placeholder={t('createSpace.searchManagers')}
           className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-[#e1dfdd] dark:border-[#3d3d3d] bg-white dark:bg-[#1e1f22] text-[13px] text-[#242424] dark:text-[#f0f0f0] placeholder-[#c0c0c0] dark:placeholder-[#555] outline-none focus:border-[#5b5fc7] focus:ring-2 focus:ring-[#5b5fc7]/15 transition-all"
         />
       </div>
@@ -1143,7 +1148,7 @@ function OwnerStep({
                 <div className="flex items-center gap-2">
                   <p className="text-[13px] font-semibold text-[#242424] dark:text-[#f0f0f0] truncate">{m.name}</p>
                   {isSelf && (
-                    <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-[#5b5fc7]/10 text-[#5b5fc7] uppercase tracking-wider">You</span>
+                    <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-[#5b5fc7]/10 text-[#5b5fc7] uppercase tracking-wider">{t('common.you')}</span>
                   )}
                   <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${badge.color}`}>
                     {badge.label}
@@ -1169,7 +1174,7 @@ function OwnerStep({
         {managers.length === 0 && (
           <div className="text-center py-8">
             <Search size={24} className="text-[#ccc] dark:text-[#555] mx-auto mb-2" />
-            <p className="text-[12px] text-[#999]">No managers found matching your search</p>
+            <p className="text-[12px] text-[#999]">{t('createSpace.noManagersFound')}</p>
           </div>
         )}
       </div>
@@ -1181,9 +1186,9 @@ function OwnerStep({
           animate={{ opacity: 1, y: 0 }}
           className="mt-4 px-4 py-3 rounded-xl bg-[#faf9f8] dark:bg-[#1e1f22] border border-[#e8e8e8] dark:border-[#3d3d3d]"
         >
-          <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider mb-2">Approval Route</p>
+          <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider mb-2">{t('createSpace.approvalRoute')}</p>
           <div className="flex items-center gap-2 text-[11px]">
-            <span className="px-2 py-1 rounded bg-[#237b4b]/10 text-[#237b4b] font-semibold">You submit</span>
+            <span className="px-2 py-1 rounded bg-[#237b4b]/10 text-[#237b4b] font-semibold">{t('createSpace.youSubmit')}</span>
             <ArrowRight size={12} className="text-[#ccc]" />
             {!isCurrentUserOwner && (
               <>
@@ -1194,9 +1199,9 @@ function OwnerStep({
                 <ArrowRight size={12} className="text-[#ccc]" />
               </>
             )}
-            <span className="px-2 py-1 rounded bg-[#5b5fc7]/10 text-[#5b5fc7] font-semibold">Admin approves</span>
+            <span className="px-2 py-1 rounded bg-[#5b5fc7]/10 text-[#5b5fc7] font-semibold">{t('createSpace.adminApproves')}</span>
             <ArrowRight size={12} className="text-[#ccc]" />
-            <span className="px-2 py-1 rounded bg-[#e8e8e8] dark:bg-[#3d3d3d] text-[#616161] dark:text-[#999] font-semibold">Space created</span>
+            <span className="px-2 py-1 rounded bg-[#e8e8e8] dark:bg-[#3d3d3d] text-[#616161] dark:text-[#999] font-semibold">{t('createSpace.spaceCreated')}</span>
           </div>
         </motion.div>
       )}
@@ -1219,9 +1224,10 @@ function ReviewStep({
   owner: ManagerUser;
   isCurrentUserOwner: boolean;
 }) {
+  const { t } = useI18n();
   return (
     <div>
-      <h3 className="text-[14px] font-bold text-[#242424] dark:text-[#f0f0f0] mb-1">Review Your Request</h3>
+      <h3 className="text-[14px] font-bold text-[#242424] dark:text-[#f0f0f0] mb-1">{t('createSpace.reviewRequest')}</h3>
       <p className="text-[12px] text-[#616161] dark:text-[#8a8a8a] mb-5">
         Please review the details below before submitting your space request.
       </p>
@@ -1246,7 +1252,7 @@ function ReviewStep({
           <div className="grid grid-cols-2 gap-3">
             {/* Scenario */}
             <div className="p-3 rounded-lg bg-[#faf9f8] dark:bg-[#1e1f22]">
-              <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider mb-2">Scenario</p>
+              <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider mb-2">{t('createSpace.scenario')}</p>
               <div className="flex items-center gap-2">
                 <div className={`w-6 h-6 rounded bg-gradient-to-br ${scenario.gradient} flex items-center justify-center`}>
                   <scenario.icon size={12} className="text-white" />
@@ -1257,13 +1263,13 @@ function ReviewStep({
 
             {/* Owner */}
             <div className="p-3 rounded-lg bg-[#faf9f8] dark:bg-[#1e1f22]">
-              <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider mb-2">Owner</p>
+              <p className="text-[9px] font-bold text-[#999] uppercase tracking-wider mb-2">{t('createSpace.owner')}</p>
               <div className="flex items-center gap-2">
                 <img src={owner.avatar} alt={owner.name} className="w-6 h-6 rounded-full" />
                 <div>
                   <span className="text-[12px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{owner.name}</span>
                   {isCurrentUserOwner && (
-                    <span className="text-[8px] font-bold ml-1 px-1 py-0.5 rounded bg-[#5b5fc7]/10 text-[#5b5fc7]">YOU</span>
+                    <span className="text-[8px] font-bold ml-1 px-1 py-0.5 rounded bg-[#5b5fc7]/10 text-[#5b5fc7]">{t('common.you')}</span>
                   )}
                 </div>
               </div>
@@ -1300,7 +1306,7 @@ function ReviewStep({
             {scenario.dashboards.length > 0 ? scenario.dashboards.map(d => (
               <div key={d} className="text-[11px] text-[#616161] dark:text-[#8a8a8a] truncate">{d}</div>
             )) : (
-              <p className="text-[10px] text-[#ccc] dark:text-[#555] italic">None (configure later)</p>
+              <p className="text-[10px] text-[#ccc] dark:text-[#555] italic">{t('createSpace.noneConfigureLater')}</p>
             )}
           </div>
         </div>
@@ -1315,7 +1321,7 @@ function ReviewStep({
             {scenario.apps.length > 0 ? scenario.apps.map(a => (
               <div key={a} className="text-[11px] text-[#616161] dark:text-[#8a8a8a] truncate">{a}</div>
             )) : (
-              <p className="text-[10px] text-[#ccc] dark:text-[#555] italic">None (add later)</p>
+              <p className="text-[10px] text-[#ccc] dark:text-[#555] italic">{t('createSpace.noneAddLater')}</p>
             )}
           </div>
         </div>
@@ -1325,14 +1331,14 @@ function ReviewStep({
       <div className="p-3 rounded-xl bg-[#faf9f8] dark:bg-[#1e1f22] border border-[#e8e8e8] dark:border-[#3d3d3d] mb-5">
         <div className="flex items-center gap-1.5 mb-1.5">
           <Shield size={12} className="text-[#5b5fc7]" />
-          <p className="text-[10px] font-bold text-[#999] uppercase tracking-wider">Permissions</p>
+          <p className="text-[10px] font-bold text-[#999] uppercase tracking-wider">{t('spaceApps.permissions')}</p>
         </div>
         <p className="text-[11px] text-[#616161] dark:text-[#8a8a8a]">{scenario.permissions}</p>
       </div>
 
       {/* Approval workflow */}
       <div className="p-4 rounded-xl bg-gradient-to-r from-[#5b5fc7]/5 to-[#7b4db8]/5 border border-[#5b5fc7]/15">
-        <p className="text-[10px] font-bold text-[#5b5fc7] dark:text-[#a6a9dc] uppercase tracking-wider mb-3">Approval Workflow</p>
+        <p className="text-[10px] font-bold text-[#5b5fc7] dark:text-[#a6a9dc] uppercase tracking-wider mb-3">{t('createSpace.approvalWorkflow')}</p>
         <div className="flex items-center gap-3">
           {/* You */}
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-[#252525] border border-[#e1dfdd] dark:border-[#3d3d3d]">
@@ -1340,8 +1346,8 @@ function ReviewStep({
               <Send size={10} className="text-[#237b4b]" />
             </div>
             <div>
-              <p className="text-[10px] font-semibold text-[#242424] dark:text-[#f0f0f0]">You</p>
-              <p className="text-[8px] text-[#999]">Submit</p>
+              <p className="text-[10px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('common.you')}</p>
+              <p className="text-[8px] text-[#999]">{t('inbox.submit')}</p>
             </div>
           </div>
 
@@ -1353,7 +1359,7 @@ function ReviewStep({
                 <img src={owner.avatar} alt={owner.name} className="w-6 h-6 rounded-full" />
                 <div>
                   <p className="text-[10px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{owner.name.split(' ')[0]}</p>
-                  <p className="text-[8px] text-[#d4820c] font-semibold">Owner approval</p>
+                  <p className="text-[8px] text-[#d4820c] font-semibold">{t('createSpace.ownerApproval')}</p>
                 </div>
               </div>
               <ArrowRight size={14} className="text-[#5b5fc7]/40 shrink-0" />
@@ -1365,8 +1371,8 @@ function ReviewStep({
               <Shield size={10} className="text-[#5b5fc7]" />
             </div>
             <div>
-              <p className="text-[10px] font-semibold text-[#242424] dark:text-[#f0f0f0]">Admin</p>
-              <p className="text-[8px] text-[#999]">Final approval</p>
+              <p className="text-[10px] font-semibold text-[#242424] dark:text-[#f0f0f0]">{t('createSpace.admin')}</p>
+              <p className="text-[8px] text-[#999]">{t('createSpace.finalApproval')}</p>
             </div>
           </div>
 
@@ -1377,8 +1383,8 @@ function ReviewStep({
               <Sparkles size={10} className="text-[#237b4b]" />
             </div>
             <div>
-              <p className="text-[10px] font-semibold text-[#237b4b]">Created</p>
-              <p className="text-[8px] text-[#999]">Space is live</p>
+              <p className="text-[10px] font-semibold text-[#237b4b]">{t('createSpace.created')}</p>
+              <p className="text-[8px] text-[#999]">{t('createSpace.spaceIsLive')}</p>
             </div>
           </div>
         </div>

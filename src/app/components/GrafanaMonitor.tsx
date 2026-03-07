@@ -13,6 +13,7 @@ import {
   ResponsiveContainer, BarChart, Bar,
 } from 'recharts';
 import { cn } from "@/lib/utils";
+import { useI18n } from '../context/I18nContext';
 
 // ─── Mock time-series data ───
 
@@ -146,6 +147,7 @@ function StatPanel({ title, value, unit, change, changeType, color }: {
 // ─── Main Component ───
 
 export function GrafanaMonitor() {
+  const { t } = useI18n();
   const [timeRange, setTimeRange] = useState('Last 24h');
   const [autoRefresh, setAutoRefresh] = useState(true);
 
@@ -160,8 +162,8 @@ export function GrafanaMonitor() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-[#d8d9da]">Infrastructure Overview</span>
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#73BF69]/15 text-[#73BF69] font-bold border border-[#73BF69]/20">LIVE</span>
+                <span className="text-sm font-semibold text-[#d8d9da]">{t('grafana.title')}</span>
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#73BF69]/15 text-[#73BF69] font-bold border border-[#73BF69]/20">{t('grafana.live')}</span>
               </div>
               <div className="flex items-center gap-3 mt-0.5 text-[10px] text-[#6e7681]">
                 <span className="flex items-center gap-1"><Server size={9} /> 6 nodes</span>
@@ -178,11 +180,11 @@ export function GrafanaMonitor() {
               onChange={e => setTimeRange(e.target.value)}
               className="px-2.5 py-1.5 rounded-md bg-[#2a2d32] text-[11px] text-[#d8d9da] border border-[#3a3d42] outline-none font-medium"
             >
-              <option>Last 1h</option>
-              <option>Last 6h</option>
-              <option>Last 24h</option>
-              <option>Last 7d</option>
-              <option>Last 30d</option>
+              <option>{t('grafana.range.1h')}</option>
+              <option>{t('grafana.range.6h')}</option>
+              <option>{t('grafana.range.24h')}</option>
+              <option>{t('grafana.range.7d')}</option>
+              <option>{t('grafana.range.30d')}</option>
             </select>
             <button
               onClick={() => setAutoRefresh(!autoRefresh)}
@@ -194,7 +196,7 @@ export function GrafanaMonitor() {
               )}
             >
               <RefreshCw size={11} className={autoRefresh ? 'animate-spin' : ''} style={{ animationDuration: '3s' }} />
-              {autoRefresh ? '10s' : 'Off'}
+              {autoRefresh ? t('grafana.autoRefresh.10s') : t('grafana.autoRefresh.off')}
             </button>
           </div>
         </div>
@@ -202,18 +204,18 @@ export function GrafanaMonitor() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-6 gap-2">
-        <StatPanel title="CPU Usage" value="44" unit="%" change="+3%" changeType="up" color="#5794F2" />
-        <StatPanel title="Memory" value="68" unit="%" change="+2%" changeType="up" color="#B877D9" />
-        <StatPanel title="Requests" value="2.4K" unit="/s" change="+12%" changeType="neutral" color="#73BF69" />
-        <StatPanel title="Error Rate" value="0.8" unit="%" change="-0.3%" changeType="down" color="#FF5630" />
-        <StatPanel title="P95 Latency" value="48" unit="ms" change="-5ms" changeType="down" color="#FF9830" />
-        <StatPanel title="Uptime" value="99.97" unit="%" change="30d" changeType="neutral" color="#73BF69" />
+        <StatPanel title={t('grafana.stat.cpu')} value="44" unit="%" change="+3%" changeType="up" color="#5794F2" />
+        <StatPanel title={t('grafana.stat.memory')} value="68" unit="%" change="+2%" changeType="up" color="#B877D9" />
+        <StatPanel title={t('grafana.stat.requests')} value="2.4K" unit="/s" change="+12%" changeType="neutral" color="#73BF69" />
+        <StatPanel title={t('grafana.stat.errorRate')} value="0.8" unit="%" change="-0.3%" changeType="down" color="#FF5630" />
+        <StatPanel title={t('grafana.stat.p95Latency')} value="48" unit="ms" change="-5ms" changeType="down" color="#FF9830" />
+        <StatPanel title={t('grafana.stat.uptime')} value="99.97" unit="%" change="30d" changeType="neutral" color="#73BF69" />
       </div>
 
       {/* Main Charts Grid — Grafana dark theme */}
       <div className="grid grid-cols-3 gap-2" style={{ minHeight: 200 }}>
         {/* CPU */}
-        <Panel title="CPU Usage (%)">
+        <Panel title={t('grafana.panel.cpu')}>
           <ResponsiveContainer width="100%" height={130}>
             <AreaChart data={cpuData}>
               <defs>
@@ -235,7 +237,7 @@ export function GrafanaMonitor() {
         </Panel>
 
         {/* Memory */}
-        <Panel title="Memory Usage (%)">
+        <Panel title={t('grafana.panel.memory')}>
           <ResponsiveContainer width="100%" height={130}>
             <AreaChart data={memData}>
               <defs>
@@ -257,7 +259,7 @@ export function GrafanaMonitor() {
         </Panel>
 
         {/* Network */}
-        <Panel title="Network I/O (MB/s)">
+        <Panel title={t('grafana.panel.network')}>
           <ResponsiveContainer width="100%" height={130}>
             <LineChart data={netInData.map((d, i) => ({ t: d.t, in: d.v, out: netOutData[i].v }))}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2a2d32" vertical={false} />
@@ -276,7 +278,7 @@ export function GrafanaMonitor() {
       {/* Second row of charts */}
       <div className="grid grid-cols-3 gap-2" style={{ minHeight: 200 }}>
         {/* HTTP Status */}
-        <Panel title="HTTP Status Codes" span={2}>
+        <Panel title={t('grafana.panel.httpStatus')} span={2}>
           <ResponsiveContainer width="100%" height={130}>
             <BarChart data={httpStatusData} barSize={8}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2a2d32" vertical={false} />
@@ -294,7 +296,7 @@ export function GrafanaMonitor() {
         </Panel>
 
         {/* Latency */}
-        <Panel title="P95 Latency (ms)">
+        <Panel title={t('grafana.panel.latency')}>
           <ResponsiveContainer width="100%" height={130}>
             <AreaChart data={latencyData}>
               <defs>
@@ -321,18 +323,18 @@ export function GrafanaMonitor() {
         {/* Node Table */}
         <div className="bg-[#181B1F] rounded-lg border border-[#2a2d32] overflow-hidden">
           <div className="px-3 py-2 border-b border-[#2a2d32] bg-[#1a1d21] flex items-center justify-between">
-            <span className="text-[11px] font-medium text-[#d8d9da]">Cluster Nodes</span>
+            <span className="text-[11px] font-medium text-[#d8d9da]">{t('grafana.clusterNodes')}</span>
             <span className="text-[9px] text-[#6e7681]">{nodeData.length} nodes</span>
           </div>
           <div className="divide-y divide-[#2a2d32]">
             {/* Header */}
             <div className="grid grid-cols-7 gap-1 px-3 py-1.5 text-[8px] font-bold text-[#6e7681] uppercase tracking-wider">
-              <span className="col-span-2">Node</span>
-              <span>CPU</span>
-              <span>MEM</span>
-              <span>Disk</span>
-              <span>Pods</span>
-              <span>Region</span>
+              <span className="col-span-2">{t('grafana.table.node')}</span>
+              <span>{t('grafana.table.cpu')}</span>
+              <span>{t('grafana.table.mem')}</span>
+              <span>{t('grafana.table.disk')}</span>
+              <span>{t('grafana.table.pods')}</span>
+              <span>{t('grafana.table.region')}</span>
             </div>
             {nodeData.map(node => (
               <div key={node.name} className="grid grid-cols-7 gap-1 px-3 py-2 items-center hover:bg-[#1e2127] transition-colors">
@@ -366,9 +368,9 @@ export function GrafanaMonitor() {
             <div className="px-3 py-2 border-b border-[#2a2d32] bg-[#1a1d21] flex items-center justify-between">
               <span className="text-[11px] font-medium text-[#d8d9da] flex items-center gap-1.5">
                 <Bell size={11} className="text-[#FF9830]" />
-                Alerts
+                {t('grafana.alerts')}
               </span>
-              <span className="text-[9px] text-[#F2495C] font-bold">{alerts.filter(a => a.status === 'firing').length} firing</span>
+              <span className="text-[9px] text-[#F2495C] font-bold">{t('grafana.firingCount', { count: alerts.filter(a => a.status === 'firing').length })}</span>
             </div>
             <div className="divide-y divide-[#2a2d32]">
               {alerts.map(alert => (
@@ -390,7 +392,7 @@ export function GrafanaMonitor() {
           {/* Service health */}
           <div className="bg-[#181B1F] rounded-lg border border-[#2a2d32] overflow-hidden">
             <div className="px-3 py-2 border-b border-[#2a2d32] bg-[#1a1d21]">
-              <span className="text-[11px] font-medium text-[#d8d9da]">Service Health</span>
+              <span className="text-[11px] font-medium text-[#d8d9da]">{t('grafana.serviceHealth')}</span>
             </div>
             <div className="divide-y divide-[#2a2d32]">
               {services.map(svc => (

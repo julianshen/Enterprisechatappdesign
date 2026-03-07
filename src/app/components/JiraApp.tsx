@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from "@/lib/utils";
+import { useI18n } from '../context/I18nContext';
 
 // ─── Types ───
 
@@ -225,6 +226,7 @@ function BoardColumn({ title, status, color, issues: columnIssues }: {
 // ─── Main Component ───
 
 export function JiraApp() {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<TabId>('board');
   const [selectedIssue, setSelectedIssue] = useState<string | null>(null);
 
@@ -324,7 +326,7 @@ export function JiraApp() {
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1 px-3 py-1.5 bg-white dark:bg-[#252525] rounded-lg border border-[#e1dfdd] dark:border-[#3d3d3d]">
                   <Search size={12} className="text-[#6B778C]" />
-                  <input placeholder="Search this board" className="bg-transparent text-xs text-[#172B4D] dark:text-[#e0e0e0] placeholder-[#A5ADBA] outline-none w-36" />
+                  <input placeholder={t('search.board')} className="bg-transparent text-xs text-[#172B4D] dark:text-[#e0e0e0] placeholder-[#A5ADBA] outline-none w-36" />
                 </div>
                 <button className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[11px] text-[#5E6C84] dark:text-[#8a8a8a] hover:bg-[#f0f0f0] dark:hover:bg-[#333] transition-colors">
                   <Filter size={11} /> Epic

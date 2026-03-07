@@ -10,6 +10,7 @@ import {
 } from '../data/mockData';
 import { canRoleAccess, type AccessLevel } from '../data/accessPermissions';
 import { formatDistanceToNow } from 'date-fns';
+import { useI18n } from '../context/I18nContext';
 
 // ─── Duration Labels ──────────────────────────────────────────────────────────
 
@@ -157,6 +158,7 @@ export function RequestAccessModal({
   onSubmit: (reason: string, duration: AccessDuration) => void;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
   const [reason, setReason] = useState('');
   const [duration, setDuration] = useState<AccessDuration>('7d');
 
@@ -228,7 +230,7 @@ export function RequestAccessModal({
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Explain why you need temporary access..."
+              placeholder={t('access.reasonPlaceholder')}
               rows={3}
               className="w-full bg-[#f0f0f0] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg px-3 py-2.5 text-[13px] text-[#242424] dark:text-[#e0e0e0] placeholder-[#8a8a8a] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/40 resize-none"
               autoFocus

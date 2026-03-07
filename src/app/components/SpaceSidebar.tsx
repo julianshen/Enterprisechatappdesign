@@ -1,15 +1,16 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useParams, useLocation, useNavigate } from 'react-router';
 import {
-  Plus, Activity, Building2, Code2, Palette, Megaphone, MessageSquare, Bell,
+  Plus, Activity, Building2, Code2, Palette, Megaphone, Bell,
   Puzzle, Sparkles, Settings, User, LogOut, Moon, Sun, ChevronRight,
   LifeBuoy, Siren, Gauge,
   type LucideIcon
 } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
-import { spaces, directMessages, groupChats, currentUser, notifications, type Space } from '../data/mockData';
+import { spaces, currentUser, notifications, type Space } from '../data/mockData';
 import { useAIAssistant } from '../context/AIAssistantContext';
 import { useTheme } from '../context/ThemeContext';
+import { useI18n } from '../context/I18nContext';
 import { useDrag, useDrop } from 'react-dnd';
 import { CreateSpaceModal } from './CreateSpaceModal';
 
@@ -144,20 +145,16 @@ export function SpaceSidebar() {
   const navigate = useNavigate();
   const { activePanel, toggleCopilot, toggleHelpDesk } = useAIAssistant();
   const { theme, toggleTheme } = useTheme();
+  const { t } = useI18n();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showCreateSpace, setShowCreateSpace] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const isChatActive = location.pathname.startsWith('/chat');
   const isInboxActive = location.pathname === '/inbox';
   const isRecentActive = location.pathname === '/' || location.pathname === '/recent';
   const isAppsActive = location.pathname === '/apps';
   const isProfileActive = location.pathname === '/profile';
   const isWarRoomActive = location.pathname.startsWith('/warroom');
-
-  // Total unread for chat (DMs + group chats)
-  const chatUnread = directMessages.reduce((sum, dm) => sum + (dm.unreadCount || 0), 0)
-    + groupChats.reduce((sum, g) => sum + (g.unreadCount || 0), 0);
 
   // Unread notifications
   const notifUnread = notifications.filter(n => !n.read).length;
@@ -215,10 +212,10 @@ export function SpaceSidebar() {
             ? 'bg-[#e8e8f8] dark:bg-[#5b5fc7]/20 text-[#5b5fc7] dark:text-[#a6a9dc]'
             : 'text-[#424242] dark:text-[#e0e0e0] hover:bg-[#e8e8e8] dark:hover:bg-[#292929]'
         }`}
-        title="Activity"
+        title={t('sidebar.activity')}
       >
         <Activity size={20} strokeWidth={1.5} />
-        <span className="text-[10px] font-medium">My</span>
+        <span className="text-[10px] font-medium">{t('sidebar.my')}</span>
         {isRecentActive && (
           <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full bg-[#5b5fc7]" />
         )}
@@ -232,7 +229,7 @@ export function SpaceSidebar() {
             ? 'bg-[#e8e8f8] dark:bg-[#5b5fc7]/20 text-[#5b5fc7] dark:text-[#a6a9dc]'
             : 'text-[#424242] dark:text-[#e0e0e0] hover:bg-[#e8e8e8] dark:hover:bg-[#292929]'
         }`}
-        title="Inbox"
+        title={t('sidebar.inbox')}
       >
         <div className="relative">
           <Bell size={20} strokeWidth={1.5} />
@@ -242,32 +239,8 @@ export function SpaceSidebar() {
             </span>
           )}
         </div>
-        <span className="text-[10px] font-medium">Inbox</span>
+        <span className="text-[10px] font-medium">{t('sidebar.inbox')}</span>
         {isInboxActive && (
-          <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full bg-[#5b5fc7]" />
-        )}
-      </Link>
-
-      {/* Chat / DMs Button */}
-      <Link
-        to="/chat/dm/user-2"
-        className={`w-[56px] h-[48px] flex flex-col items-center justify-center gap-0.5 rounded-lg transition-all relative group ${
-          isChatActive
-            ? 'bg-[#e8e8f8] dark:bg-[#5b5fc7]/20 text-[#5b5fc7] dark:text-[#a6a9dc]'
-            : 'text-[#424242] dark:text-[#e0e0e0] hover:bg-[#e8e8e8] dark:hover:bg-[#292929]'
-        }`}
-        title="Chat"
-      >
-        <div className="relative">
-          <MessageSquare size={20} strokeWidth={1.5} />
-          {chatUnread > 0 && (
-            <span className="absolute -top-1.5 -right-2.5 bg-[#c4314b] text-white text-[9px] font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1 shadow-sm">
-              {chatUnread}
-            </span>
-          )}
-        </div>
-        <span className="text-[10px] font-medium">Chat</span>
-        {isChatActive && (
           <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full bg-[#5b5fc7]" />
         )}
       </Link>
@@ -280,10 +253,10 @@ export function SpaceSidebar() {
             ? 'bg-[#e8e8f8] dark:bg-[#5b5fc7]/20 text-[#5b5fc7] dark:text-[#a6a9dc]'
             : 'text-[#424242] dark:text-[#e0e0e0] hover:bg-[#e8e8e8] dark:hover:bg-[#292929]'
         }`}
-        title="Apps"
+        title={t('sidebar.apps')}
       >
         <Puzzle size={20} strokeWidth={1.5} />
-        <span className="text-[10px] font-medium">Apps</span>
+        <span className="text-[10px] font-medium">{t('sidebar.apps')}</span>
         {isAppsActive && (
           <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full bg-[#5b5fc7]" />
         )}
@@ -297,13 +270,13 @@ export function SpaceSidebar() {
             ? 'bg-[#c4314b]/15 dark:bg-[#c4314b]/20 text-[#c4314b] dark:text-[#f87171]'
             : 'text-[#424242] dark:text-[#e0e0e0] hover:bg-[#e8e8e8] dark:hover:bg-[#292929]'
         }`}
-        title="War Room"
+        title={t('sidebar.warRoom')}
       >
         <div className="relative">
           <Siren size={20} strokeWidth={1.5} />
           <div className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-[#c4314b] animate-pulse" />
         </div>
-        <span className="text-[9px] font-medium">War Room</span>
+        <span className="text-[9px] font-medium">{t('sidebar.warRoom')}</span>
         {isWarRoomActive && (
           <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full bg-[#c4314b]" />
         )}
@@ -326,12 +299,12 @@ export function SpaceSidebar() {
       <button
         onClick={() => setShowCreateSpace(true)}
         className="w-[56px] h-[48px] flex flex-col items-center justify-center gap-0.5 text-[#424242] dark:text-[#e0e0e0] hover:bg-[#e8e8e8] dark:hover:bg-[#292929] rounded-lg transition-all group relative"
-        title="Add Team"
+        title={t('sidebar.addTeam')}
       >
         <div className="w-5 h-5 border-[1.5px] border-current rounded flex items-center justify-center">
           <Plus size={14} strokeWidth={1.5} />
         </div>
-        <span className="text-[9px] font-medium">Add space</span>
+        <span className="text-[9px] font-medium">{t('sidebar.addSpace')}</span>
       </button>
 
       {/* Spacer to push bottom items down */}
@@ -345,7 +318,7 @@ export function SpaceSidebar() {
             ? 'bg-gradient-to-br from-[#5b5fc7]/20 to-[#7b4db8]/20 text-[#5b5fc7] dark:text-[#a6a9dc]'
             : 'text-[#424242] dark:text-[#e0e0e0] hover:bg-[#e8e8e8] dark:hover:bg-[#292929]'
         }`}
-        title="Copilot"
+        title={t('sidebar.copilot')}
       >
         <div className={`relative ${activePanel === 'copilot' ? '' : 'group-hover:scale-110 transition-transform'}`}>
           <Sparkles size={20} strokeWidth={1.5} />
@@ -353,7 +326,7 @@ export function SpaceSidebar() {
             <div className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-gradient-to-r from-[#5b5fc7] to-[#7b4db8] shadow-sm" />
           )}
         </div>
-        <span className="text-[9px] font-medium">Copilot</span>
+        <span className="text-[9px] font-medium">{t('sidebar.copilot')}</span>
         {activePanel === 'copilot' && (
           <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full bg-gradient-to-b from-[#5b5fc7] to-[#7b4db8]" />
         )}
@@ -367,12 +340,12 @@ export function SpaceSidebar() {
             ? 'bg-gradient-to-br from-[#5b5fc7]/20 to-[#7b4db8]/20 text-[#5b5fc7] dark:text-[#a6a9dc]'
             : 'text-[#424242] dark:text-[#e0e0e0] hover:bg-[#e8e8e8] dark:hover:bg-[#292929]'
         }`}
-        title="Help Desk"
+        title={t('sidebar.helpDesk')}
       >
         <div className={`relative ${activePanel === 'helpdesk' ? '' : 'group-hover:scale-110 transition-transform'}`}>
           <LifeBuoy size={20} strokeWidth={1.5} />
         </div>
-        <span className="text-[9px] font-medium">Help</span>
+        <span className="text-[9px] font-medium">{t('sidebar.help')}</span>
         {activePanel === 'helpdesk' && (
           <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full bg-gradient-to-b from-[#5b5fc7] to-[#7b4db8]" />
         )}

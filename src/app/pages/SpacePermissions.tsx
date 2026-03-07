@@ -15,6 +15,7 @@ import {
 import { spaces, users, currentUser } from '../data/mockData';
 import { updateAccessPermission } from '../data/accessPermissions';
 import { Switch } from '../../components/ui/switch';
+import { useI18n } from '../context/I18nContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -346,6 +347,7 @@ function MemberRow({
   onSelect?: (member: SpaceMember) => void;
   indented?: boolean;
 }) {
+  const { t } = useI18n();
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const [showActions, setShowActions] = useState(false);
   const canChangeRole = member.role !== 'owner' && !isCurrentUser;
@@ -362,7 +364,7 @@ function MemberRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-[13px] font-semibold text-[#242424] dark:text-[#f2f3f5] truncate">{member.name}</span>
-          {isCurrentUser && <span className="text-[9px] bg-[#5b5fc7]/10 dark:bg-[#5b5fc7]/20 text-[#5b5fc7] dark:text-[#a6a9dc] px-1.5 py-0.5 rounded font-semibold">YOU</span>}
+          {isCurrentUser && <span className="text-[9px] bg-[#5b5fc7]/10 dark:bg-[#5b5fc7]/20 text-[#5b5fc7] dark:text-[#a6a9dc] px-1.5 py-0.5 rounded font-semibold">{t('common.you')}</span>}
         </div>
         <p className="text-[11px] text-[#616161] dark:text-[#8a8a8a] truncate">{member.title || member.email}</p>
       </div>
@@ -391,7 +393,7 @@ function MemberRow({
                   >
                     <Icon size={14} />
                     <span className="flex-1 font-medium">{cfg.label}</span>
-                    {!cfg.isBuiltIn && <span className="text-[8px] text-[#8a8a8a] bg-[#e8e8e8] dark:bg-[#3d3d3d] px-1.5 py-0.5 rounded">CUSTOM</span>}
+                    {!cfg.isBuiltIn && <span className="text-[8px] text-[#8a8a8a] bg-[#e8e8e8] dark:bg-[#3d3d3d] px-1.5 py-0.5 rounded">{t('spacePermissions.custom')}</span>}
                     {member.role === r && <Check size={14} />}
                   </button>
                 );
@@ -445,6 +447,7 @@ function DepartmentRow({
   allRoleKeys: string[];
   onSelectMember: (member: SpaceMember) => void;
 }) {
+  const { t } = useI18n();
   const [showActions, setShowActions] = useState(false);
   const onlineCount = deptMembers.filter(m => m.status === 'online').length;
 
@@ -552,7 +555,7 @@ function MemberDetailPanel({ member, onClose, departments, allRoleConfig }: {
         </div>
         {dept && (
           <div className="pt-2 border-t border-[#e1dfdd] dark:border-[#3d3d3d]">
-            <p className="text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider mb-1.5">Department</p>
+            <p className="text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider mb-1.5">{t('spacePermissions.department')}</p>
             <div className="flex items-center gap-2 text-[12px] text-[#242424] dark:text-[#e0e0e0]">
               <span className="text-[16px]">{dept.icon}</span> {dept.name}
             </div>
@@ -576,6 +579,7 @@ function PermissionMatrix({
   allRoleConfig: Record<string, RoleConfigEntry>;
   allRoleKeys: string[];
 }) {
+  const { t } = useI18n();
   const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set(categories.map(c => c.id)));
 
   const toggleCat = (id: string) => {
@@ -589,7 +593,7 @@ function PermissionMatrix({
   return (
     <div className="space-y-1">
       <div className="flex items-center px-4 py-2">
-        <div className="flex-1 text-[11px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider">Permission</div>
+        <div className="flex-1 text-[11px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider">{t('spacePermissions.permission')}</div>
         {allRoleKeys.map(r => (
           <div key={r} className="w-[72px] text-center shrink-0">
             <RoleBadge roleId={r} config={allRoleConfig} size="sm" />
@@ -661,6 +665,7 @@ interface RoleFormData {
 const emptyRoleForm: RoleFormData = { id: '', label: '', description: '', colorIdx: 0, iconIdx: 0, baseRole: 'member' };
 
 export function SpacePermissions() {
+  const { t } = useI18n();
   const { spaceId } = useParams();
   const space = spaces.find(s => s.id === spaceId);
   const [activeTab, setActiveTab] = useState<PermTab>('members');
@@ -1150,14 +1155,14 @@ export function SpacePermissions() {
             <Settings size={18} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
           </div>
           <div>
-            <h1 className="text-[15px] font-bold text-[#242424] dark:text-[#f2f3f5]">{space.name} — Space Management</h1>
-            <p className="text-[11px] text-[#616161] dark:text-[#8a8a8a]">Manage members, departments, roles, and access controls</p>
+            <h1 className="text-[15px] font-bold text-[#242424] dark:text-[#f2f3f5]">{t('spacePermissions.title', { space: space.name })}</h1>
+            <p className="text-[11px] text-[#616161] dark:text-[#8a8a8a]">{t('spacePermissions.subtitle')}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={handleExportReport}
             className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#616161] dark:text-[#b9bbbe] bg-[#f0f0f0] dark:bg-[#252525] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg hover:bg-[#e8e8e8] dark:hover:bg-[#2a2a2a] hover:border-[#5b5fc7]/30 transition-colors"
-            title="Export permissions report as CSV"
+            title={t('spacePermissions.exportReportTitle')}
           >
             <Download size={13} /> Export Report
           </button>
@@ -1165,7 +1170,7 @@ export function SpacePermissions() {
             {pendingChanges > 0 && (
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="flex items-center gap-2">
                 <span className="text-[11px] text-[#d4820c] dark:text-[#f5a623] font-medium">{pendingChanges} unsaved change{pendingChanges > 1 ? 's' : ''}</span>
-                <button onClick={handleSaveChanges} className="px-3 py-1.5 bg-[#5b5fc7] hover:bg-[#4a4eb5] text-white text-[12px] font-semibold rounded-lg transition-colors shadow-sm">Save Changes</button>
+                <button onClick={handleSaveChanges} className="px-3 py-1.5 bg-[#5b5fc7] hover:bg-[#4a4eb5] text-white text-[12px] font-semibold rounded-lg transition-colors shadow-sm">{t('spacePermissions.saveChanges')}</button>
               </motion.div>
             )}
           </AnimatePresence>
@@ -1205,7 +1210,7 @@ export function SpacePermissions() {
                 <div className="flex items-center gap-3 flex-wrap mb-3">
                   <div className="relative flex-1 min-w-[200px] max-w-[360px]">
                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8a8a8a]" />
-                    <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search members or departments..."
+                    <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={t('spacePermissions.searchMembersOrDepartments')}
                       className="w-full bg-[#f0f0f0] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg pl-9 pr-3 py-2 text-[12px] text-[#242424] dark:text-[#e0e0e0] placeholder-[#8a8a8a] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/40" />
                   </div>
                   {/* View mode toggle */}
@@ -1233,7 +1238,7 @@ export function SpacePermissions() {
                     <button onClick={() => setShowRoleFilter(!showRoleFilter)}
                       className="flex items-center gap-2 px-3 py-2 bg-[#f0f0f0] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg text-[12px] text-[#424242] dark:text-[#e0e0e0] hover:border-[#5b5fc7]/40 transition-colors">
                       <Filter size={13} />
-                      {roleFilter === 'all' ? 'All roles' : (allRoleConfig[roleFilter]?.label || roleFilter)}
+                      {roleFilter === 'all' ? t('spacePermissions.allRoles') : (allRoleConfig[roleFilter]?.label || roleFilter)}
                       <ChevronDown size={12} />
                     </button>
                     <AnimatePresence>
@@ -1242,7 +1247,7 @@ export function SpacePermissions() {
                           className="absolute left-0 top-full mt-1 w-[180px] bg-white dark:bg-[#2b2d31] rounded-lg border border-[#e1dfdd] dark:border-[#3d3d3d] shadow-xl z-50 py-1 max-h-[260px] overflow-y-auto">
                           <button onClick={() => { setRoleFilter('all'); setShowRoleFilter(false); }}
                             className={`w-full flex items-center gap-2 px-3 py-2 text-[12px] transition-colors ${roleFilter === 'all' ? 'bg-[#5b5fc7]/8 text-[#5b5fc7]' : 'text-[#424242] dark:text-[#e0e0e0] hover:bg-[#f5f5f5] dark:hover:bg-[#35373c]'}`}>
-                            <Users size={13} /> All ({roleCounts.all})
+                            <Users size={13} /> {t('spacePermissions.all', { count: roleCounts.all })}
                             {roleFilter === 'all' && <Check size={13} className="ml-auto" />}
                           </button>
                           {allRoleKeys.map(r => {
@@ -1263,7 +1268,7 @@ export function SpacePermissions() {
                   </div>
                   <button onClick={() => { setShowInviteModal(true); setInviteMode('person'); }}
                     className="flex items-center gap-2 px-4 py-2 bg-[#5b5fc7] hover:bg-[#4a4eb5] text-white text-[12px] font-semibold rounded-lg transition-colors shadow-sm ml-auto">
-                    <UserPlus size={14} /> Add Member
+                    <UserPlus size={14} /> {t('spacePermissions.inviteMember')}
                   </button>
                 </div>
 
@@ -1276,7 +1281,7 @@ export function SpacePermissions() {
                     </div>
                   ))}
                   <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] ml-2">
-                    {members.length} total · {departments.length} department{departments.length !== 1 ? 's' : ''}
+                    {t('spacePermissions.summaryCounts', { members: members.length, departments: departments.length })}
                   </span>
                 </div>
 
@@ -1288,7 +1293,7 @@ export function SpacePermissions() {
                       <div className="flex items-center gap-2 px-2 py-1.5">
                         <Building2 size={13} className="text-[#8a8a8a]" />
                         <span className="text-[11px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider">
-                          Departments ({filteredDepartments.length})
+                          {t('spacePermissions.departmentsCount', { count: filteredDepartments.length })}
                         </span>
                       </div>
                       <div className="bg-[#faf9f8] dark:bg-[#2b2d31] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] overflow-hidden">
@@ -1308,15 +1313,15 @@ export function SpacePermissions() {
                       <div className="flex items-center gap-2 px-2 py-1.5">
                         <User size={13} className="text-[#8a8a8a]" />
                         <span className="text-[11px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider">
-                          Individual Members ({filteredIndividualMembers.length})
+                          {t('spacePermissions.individualMembersCount', { count: filteredIndividualMembers.length })}
                         </span>
                       </div>
                       <div className="bg-[#faf9f8] dark:bg-[#2b2d31] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] overflow-hidden">
                         <div className="flex items-center gap-3 px-4 py-2 border-b border-[#e1dfdd] dark:border-[#3d3d3d] bg-[#f0f0f0] dark:bg-[#252525]">
                           <div className="w-9 shrink-0" />
-                          <div className="flex-1 text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider">Member</div>
-                          <div className="w-[80px] text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider text-center">Role</div>
-                          <div className="w-[70px] text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider text-right hidden lg:block">Joined</div>
+                          <div className="flex-1 text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider">{t('spacePermissions.member')}</div>
+                          <div className="w-[80px] text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider text-center">{t('spacePermissions.role')}</div>
+                          <div className="w-[70px] text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider text-right hidden lg:block">{t('spacePermissions.joined')}</div>
                           <div className="w-[24px] shrink-0" />
                         </div>
                         <AnimatePresence>
@@ -1329,7 +1334,7 @@ export function SpacePermissions() {
                         {filteredIndividualMembers.length === 0 && (
                           <div className="py-10 text-center">
                             <Users size={28} className="mx-auto text-[#d1d1d1] dark:text-[#4a4a4a] mb-2" />
-                            <p className="text-[12px] text-[#8a8a8a] dark:text-[#6d6f78]">No individual members found</p>
+                            <p className="text-[12px] text-[#8a8a8a] dark:text-[#6d6f78]">{t('spacePermissions.noIndividualMembersFound')}</p>
                           </div>
                         )}
                       </div>
@@ -1340,8 +1345,8 @@ export function SpacePermissions() {
                   {filteredIndividualMembers.length === 0 && filteredDepartments.length === 0 && (
                     <div className="py-16 text-center">
                       <Users size={40} className="mx-auto text-[#d1d1d1] dark:text-[#4a4a4a] mb-3" />
-                      <p className="text-[14px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-1">No members found</p>
-                      <p className="text-[12px] text-[#b9bbbe] dark:text-[#4a4a4a]">Try adjusting your search or filter criteria</p>
+                      <p className="text-[14px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-1">{t('spacePermissions.noMembers')}</p>
+                      <p className="text-[12px] text-[#b9bbbe] dark:text-[#4a4a4a]">{t('spacePermissions.adjustSearchFilter')}</p>
                     </div>
                   )}
                 </div>
@@ -1364,15 +1369,15 @@ export function SpacePermissions() {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="text-[14px] font-bold text-[#242424] dark:text-[#f2f3f5]">
-                    {allRoleKeys.length} Roles
+                    {t('spacePermissions.rolesCount', { count: allRoleKeys.length })}
                     <span className="text-[11px] font-normal text-[#8a8a8a] ml-2">
-                      {BUILT_IN_ROLES.length} built-in, {Object.keys(customRoles).length} custom
+                      {t('spacePermissions.rolesBreakdown', { builtIn: BUILT_IN_ROLES.length, custom: Object.keys(customRoles).length })}
                     </span>
                   </h2>
                 </div>
                 <button onClick={openCreateRole}
                   className="flex items-center gap-2 px-4 py-2 bg-[#5b5fc7] hover:bg-[#4a4eb5] text-white text-[12px] font-semibold rounded-lg transition-colors shadow-sm">
-                  <Plus size={14} /> Create Custom Role
+                  <Plus size={14} /> {t('spacePermissions.createCustomRole')}
                 </button>
               </div>
 
@@ -1389,10 +1394,10 @@ export function SpacePermissions() {
                       {/* Edit/Delete for custom roles */}
                       {!cfg.isBuiltIn && (
                         <div className="absolute top-3 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => openEditRole(r)} className="p-1.5 rounded-md hover:bg-[#e8e8e8] dark:hover:bg-[#3d3d3d] text-[#616161] dark:text-[#b9bbbe] transition-colors" title="Edit role">
+                          <button onClick={() => openEditRole(r)} className="p-1.5 rounded-md hover:bg-[#e8e8e8] dark:hover:bg-[#3d3d3d] text-[#616161] dark:text-[#b9bbbe] transition-colors" title={t('spacePermissions.editRole')}>
                             <Edit3 size={13} />
                           </button>
-                          <button onClick={() => setShowDeleteConfirm(r)} className="p-1.5 rounded-md hover:bg-[#c4314b]/10 dark:hover:bg-[#c4314b]/15 text-[#c4314b] dark:text-[#f47067] transition-colors" title="Delete role">
+                          <button onClick={() => setShowDeleteConfirm(r)} className="p-1.5 rounded-md hover:bg-[#c4314b]/10 dark:hover:bg-[#c4314b]/15 text-[#c4314b] dark:text-[#f47067] transition-colors" title={t('spacePermissions.deleteRole')}>
                             <Trash2 size={13} />
                           </button>
                         </div>
@@ -1406,7 +1411,7 @@ export function SpacePermissions() {
                           <div className="flex items-center gap-2 mb-1">
                             <h3 className="text-[14px] font-bold text-[#242424] dark:text-[#f2f3f5]">{cfg.label}</h3>
                             {!cfg.isBuiltIn && (
-                              <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-[#5b5fc7]/10 dark:bg-[#5b5fc7]/20 text-[#5b5fc7] dark:text-[#a6a9dc]">CUSTOM</span>
+                              <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-[#5b5fc7]/10 dark:bg-[#5b5fc7]/20 text-[#5b5fc7] dark:text-[#a6a9dc]">{t('spacePermissions.custom')}</span>
                             )}
                             <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78] bg-[#e8e8e8] dark:bg-[#3d3d3d] px-2 py-0.5 rounded-full">
                               {count} member{count !== 1 ? 's' : ''}
@@ -1425,7 +1430,7 @@ export function SpacePermissions() {
                       </div>
 
                       <div className="mt-4 pt-3 border-t border-[#e1dfdd] dark:border-[#3d3d3d]">
-                        <p className="text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider mb-2">Key Capabilities</p>
+                        <p className="text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider mb-2">{t('spacePermissions.keyCapabilities')}</p>
                         <div className="flex flex-wrap gap-1.5">
                           {permCategories.flatMap(cat => cat.permissions).filter(p => p.roles[r]).slice(0, 6).map(p => (
                             <span key={p.id} className="inline-flex items-center gap-1 text-[10px] text-[#424242] dark:text-[#b9bbbe] bg-[#e8e8e8] dark:bg-[#3d3d3d] px-2 py-0.5 rounded">
@@ -1434,7 +1439,7 @@ export function SpacePermissions() {
                           ))}
                           {permCategories.flatMap(cat => cat.permissions).filter(p => p.roles[r]).length > 6 && (
                             <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] px-1">
-                              +{permCategories.flatMap(cat => cat.permissions).filter(p => p.roles[r]).length - 6} more
+                              +{permCategories.flatMap(cat => cat.permissions).filter(p => p.roles[r]).length - 6} {t('common.more')}
                             </span>
                           )}
                         </div>
@@ -1459,14 +1464,14 @@ export function SpacePermissions() {
               <div className="flex items-center gap-3 px-4 py-3 bg-[#5b5fc7]/5 dark:bg-[#5b5fc7]/10 border border-[#5b5fc7]/20 rounded-lg mb-4">
                 <Info size={16} className="text-[#5b5fc7] dark:text-[#a6a9dc] mt-0.5 shrink-0" />
                 <div className="flex-1">
-                  <p className="text-[12px] text-[#242424] dark:text-[#e0e0e0] font-medium">Permission Matrix</p>
+                  <p className="text-[12px] text-[#242424] dark:text-[#e0e0e0] font-medium">{t('spacePermissions.permissionMatrix')}</p>
                   <p className="text-[11px] text-[#616161] dark:text-[#8a8a8a]">
-                    Toggle switches to customize what each role can do. Owner permissions are locked. Access to restricted and confidential content is controlled here.
+                    {t('spacePermissions.permissionMatrixDesc')}
                   </p>
                 </div>
                 <button onClick={() => openCopyModal('role')}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#5b5fc7] dark:text-[#a6a9dc] bg-white dark:bg-[#2b2d31] border border-[#5b5fc7]/30 dark:border-[#5b5fc7]/40 rounded-lg hover:bg-[#5b5fc7]/5 dark:hover:bg-[#5b5fc7]/10 transition-colors shrink-0">
-                  <Copy size={13} /> Copy Settings
+                  <Copy size={13} /> {t('spacePermissions.copySettings')}
                 </button>
               </div>
               <div className="bg-[#faf9f8] dark:bg-[#2b2d31] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] overflow-x-auto">
@@ -1481,16 +1486,22 @@ export function SpacePermissions() {
               <div className="flex items-start gap-3 px-4 py-3 bg-[#d4820c]/5 dark:bg-[#d4820c]/10 border border-[#d4820c]/20 rounded-lg mb-4">
                 <AlertTriangle size={16} className="text-[#d4820c] dark:text-[#f5a623] mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-[12px] text-[#242424] dark:text-[#e0e0e0] font-medium">Channel-Level Overrides</p>
+                  <p className="text-[12px] text-[#242424] dark:text-[#e0e0e0] font-medium">{t('spacePermissions.channelOverrides')}</p>
                   <p className="text-[11px] text-[#616161] dark:text-[#8a8a8a]">
-                    Override space-level permissions for individual channels. Each permission cycles: <span className="font-semibold text-[#8a8a8a]">Inherit</span>, <span className="font-semibold text-[#237b4b]">Allow</span>, or <span className="font-semibold text-[#c4314b]">Deny</span>. Owner overrides are locked.
+                    {t('spacePermissions.channelOverridesDesc.before')}
+                    <span className="font-semibold text-[#8a8a8a]">{t('spacePermissions.channelOverridesDesc.inherit')}</span>
+                    {t('spacePermissions.channelOverridesDesc.middle1')}
+                    <span className="font-semibold text-[#237b4b]">{t('spacePermissions.channelOverridesDesc.allow')}</span>
+                    {t('spacePermissions.channelOverridesDesc.middle2')}
+                    <span className="font-semibold text-[#c4314b]">{t('spacePermissions.channelOverridesDesc.deny')}</span>
+                    {t('spacePermissions.channelOverridesDesc.after')}
                   </p>
                 </div>
               </div>
               <div className="flex gap-4">
                 <div className="w-[220px] shrink-0 bg-[#faf9f8] dark:bg-[#2b2d31] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] overflow-hidden">
                   <div className="px-3 py-2.5 border-b border-[#e1dfdd] dark:border-[#3d3d3d] bg-[#f0f0f0] dark:bg-[#252525]">
-                    <p className="text-[11px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider">Channels</p>
+                    <p className="text-[11px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider">{t('channel.channels')}</p>
                   </div>
                   <div className="py-1">
                     {channelOverrides.map(ch => {
@@ -1538,7 +1549,7 @@ export function SpacePermissions() {
                         </div>
                         <div className="overflow-x-auto">
                           <div className="flex items-center px-4 py-2 border-b border-[#e1dfdd]/50 dark:border-[#3d3d3d]/50 min-w-fit">
-                            <div className="flex-1 min-w-[120px] text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider">Permission</div>
+                            <div className="flex-1 min-w-[120px] text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider">{t('spacePermissions.permission')}</div>
                             {allRoleKeys.map(r => (
                               <div key={r} className="w-[68px] text-center shrink-0">
                                 <RoleBadge roleId={r} config={allRoleConfig} size="sm" />
@@ -1556,7 +1567,7 @@ export function SpacePermissions() {
                                 return (
                                   <div key={r} className="w-[68px] flex justify-center shrink-0">
                                     {isOwner ? (
-                                      <div className="w-[22px] h-[22px] rounded-md bg-[#5b5fc7]/15 dark:bg-[#5b5fc7]/25 flex items-center justify-center" title="Owner — always allowed">
+                                      <div className="w-[22px] h-[22px] rounded-md bg-[#5b5fc7]/15 dark:bg-[#5b5fc7]/25 flex items-center justify-center" title={t('spacePermissions.ownerAlwaysAllowed')}>
                                         <Check size={12} className="text-[#5b5fc7] dark:text-[#a6a9dc]" />
                                       </div>
                                     ) : (
@@ -1579,7 +1590,7 @@ export function SpacePermissions() {
                           ))}
                         </div>
                         <div className="flex items-center gap-4 px-4 py-2.5 border-t border-[#e1dfdd] dark:border-[#3d3d3d] bg-[#f5f5f5] dark:bg-[#252525]">
-                          <span className="text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider mr-1">Legend:</span>
+                          <span className="text-[10px] font-semibold text-[#8a8a8a] dark:text-[#6d6f78] uppercase tracking-wider mr-1">{t('spacePermissions.legend')}</span>
                           <span className="flex items-center gap-1 text-[10px] text-[#8a8a8a]">
                             <span className="w-4 h-4 rounded bg-[#f0f0f0] dark:bg-[#333] border border-[#d1d1d1] dark:border-[#4a4a4a] flex items-center justify-center text-[7px] font-bold">—</span> Inherit
                           </span>
@@ -1589,15 +1600,15 @@ export function SpacePermissions() {
                           <span className="flex items-center gap-1 text-[10px] text-[#c4314b] dark:text-[#f47067]">
                             <span className="w-4 h-4 rounded bg-[#c4314b]/10 border border-[#c4314b]/30 flex items-center justify-center"><X size={9} /></span> Deny
                           </span>
-                          <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] ml-auto italic">Click to cycle</span>
+                          <span className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] ml-auto italic">{t('spacePermissions.clickToCycle')}</span>
                         </div>
                       </>
                     );
                   })() : (
                     <div className="flex flex-col items-center justify-center py-20">
                       <Layers size={36} className="text-[#d1d1d1] dark:text-[#4a4a4a] mb-3" />
-                      <p className="text-[13px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-1">Select a channel</p>
-                      <p className="text-[11px] text-[#b9bbbe] dark:text-[#4a4a4a]">Choose a channel to configure permission overrides</p>
+                      <p className="text-[13px] font-medium text-[#8a8a8a] dark:text-[#6d6f78] mb-1">{t('spacePermissions.selectChannel')}</p>
+                      <p className="text-[11px] text-[#b9bbbe] dark:text-[#4a4a4a]">{t('spacePermissions.selectChannelDesc')}</p>
                     </div>
                   )}
                 </div>
@@ -1612,7 +1623,7 @@ export function SpacePermissions() {
               <div className="flex items-center gap-3 flex-wrap">
                 <div className="relative flex-1 min-w-[200px] max-w-[360px]">
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8a8a8a]" />
-                  <input type="text" value={auditSearchQuery} onChange={(e) => setAuditSearchQuery(e.target.value)} placeholder="Search audit log..."
+                  <input type="text" value={auditSearchQuery} onChange={(e) => setAuditSearchQuery(e.target.value)} placeholder={t('spacePermissions.searchAuditLog')}
                     className="w-full bg-[#f0f0f0] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg pl-9 pr-3 py-2 text-[12px] text-[#242424] dark:text-[#e0e0e0] placeholder-[#8a8a8a] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/40" />
                 </div>
                 <div className="flex items-center bg-[#f0f0f0] dark:bg-[#1e1f22] rounded-lg border border-[#e1dfdd] dark:border-[#3d3d3d] p-0.5">
@@ -1665,8 +1676,8 @@ export function SpacePermissions() {
               <div className="bg-[#faf9f8] dark:bg-[#2b2d31] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] overflow-hidden">
                 <div className="px-4 py-3 border-b border-[#e1dfdd] dark:border-[#3d3d3d] bg-[#f0f0f0] dark:bg-[#252525] flex items-center justify-between">
                   <div>
-                    <h3 className="text-[13px] font-semibold text-[#242424] dark:text-[#f2f3f5]">Activity History</h3>
-                    <p className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">Track management changes, file access, and document activity</p>
+                    <h3 className="text-[13px] font-semibold text-[#242424] dark:text-[#f2f3f5]">{t('spacePermissions.activityHistory')}</h3>
+                    <p className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">{t('spacePermissions.activityHistoryDesc')}</p>
                   </div>
                   <span className="text-[11px] text-[#8a8a8a] dark:text-[#6d6f78]">{filteredAuditLog.length} entries</span>
                 </div>
@@ -1716,8 +1727,8 @@ export function SpacePermissions() {
                   {filteredAuditLog.length === 0 && (
                     <div className="py-16 text-center">
                       <Eye size={32} className="mx-auto text-[#d1d1d1] dark:text-[#4a4a4a] mb-2" />
-                      <p className="text-[13px] font-medium text-[#8a8a8a] dark:text-[#6d6f78]">No matching audit entries</p>
-                      <p className="text-[11px] text-[#b9bbbe] dark:text-[#4a4a4a] mt-1">Try adjusting your search or filter</p>
+                      <p className="text-[13px] font-medium text-[#8a8a8a] dark:text-[#6d6f78]">{t('spacePermissions.noMatchingAuditEntries')}</p>
+                      <p className="text-[11px] text-[#b9bbbe] dark:text-[#4a4a4a] mt-1">{t('spacePermissions.adjustSearchOrFilter')}</p>
                     </div>
                   )}
                 </div>
@@ -1736,7 +1747,7 @@ export function SpacePermissions() {
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
               onClick={(e) => e.stopPropagation()} className="w-[480px] bg-white dark:bg-[#2b2d31] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] shadow-2xl overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4 border-b border-[#e1dfdd] dark:border-[#3d3d3d] bg-gradient-to-r from-[#5b5fc7] to-[#7b4db8]">
-                <div className="flex items-center gap-2 text-white"><UserPlus size={18} /><span className="text-[14px] font-bold">Add {inviteMode === 'person' ? 'Member' : 'Department'}</span></div>
+                  <div className="flex items-center gap-2 text-white"><UserPlus size={18} /><span className="text-[14px] font-bold">{inviteMode === 'person' ? t('spacePermissions.addMember') : t('spacePermissions.addDepartment')}</span></div>
                 <button onClick={() => setShowInviteModal(false)} className="text-white/70 hover:text-white transition-colors"><X size={18} /></button>
               </div>
               <div className="p-5 space-y-4">
@@ -1745,23 +1756,23 @@ export function SpacePermissions() {
                   <button onClick={() => setInviteMode('person')}
                     className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-[12px] font-medium rounded-md transition-all ${
                       inviteMode === 'person' ? 'bg-white dark:bg-[#35373c] text-[#5b5fc7] dark:text-[#a6a9dc] shadow-sm' : 'text-[#616161] dark:text-[#8a8a8a]'
-                    }`}><User size={14} /> Person</button>
+                    }`}><User size={14} /> {t('spacePermissions.person')}</button>
                   <button onClick={() => setInviteMode('department')}
                     className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-[12px] font-medium rounded-md transition-all ${
                       inviteMode === 'department' ? 'bg-white dark:bg-[#35373c] text-[#5b5fc7] dark:text-[#a6a9dc] shadow-sm' : 'text-[#616161] dark:text-[#8a8a8a]'
-                    }`}><Building2 size={14} /> Department</button>
+                    }`}><Building2 size={14} /> {t('spacePermissions.department')}</button>
                 </div>
 
                 {inviteMode === 'person' ? (
                   <>
                     <div>
-                      <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-1.5">Email Address</label>
-                      <input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="colleague@company.com"
+                      <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-1.5">{t('spacePermissions.emailAddress')}</label>
+                      <input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder={t('spacePermissions.colleagueEmail')}
                         className="w-full bg-[#f0f0f0] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg px-3 py-2.5 text-[13px] text-[#242424] dark:text-[#e0e0e0] placeholder-[#8a8a8a] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/40"
                         onKeyDown={(e) => e.key === 'Enter' && handleInvite()} autoFocus />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-1.5">Assign Role</label>
+                      <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-1.5">{t('spacePermissions.assignRole')}</label>
                       <div className="grid grid-cols-3 gap-2 max-h-[180px] overflow-y-auto">
                         {allRoleKeys.filter(r => r !== 'owner').map(r => {
                           const cfg = allRoleConfig[r];
@@ -1775,7 +1786,7 @@ export function SpacePermissions() {
                               }`}>
                               <RIcon size={18} className={isSelected ? 'text-[#5b5fc7] dark:text-[#a6a9dc]' : 'text-[#8a8a8a]'} />
                               <span className={`text-[11px] font-semibold ${isSelected ? 'text-[#5b5fc7] dark:text-[#a6a9dc]' : 'text-[#616161] dark:text-[#8a8a8a]'}`}>{cfg.label}</span>
-                              {!cfg.isBuiltIn && <span className="text-[7px] text-[#8a8a8a] uppercase">Custom</span>}
+                              {!cfg.isBuiltIn && <span className="text-[7px] text-[#8a8a8a] uppercase">{t('spacePermissions.customLower')}</span>}
                             </button>
                           );
                         })}
@@ -1786,18 +1797,18 @@ export function SpacePermissions() {
                 ) : (
                   <>
                     <div>
-                      <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-1.5">Department Name</label>
-                      <input type="text" value={inviteDeptName} onChange={(e) => setInviteDeptName(e.target.value)} placeholder="e.g. DevOps, Data Science..."
+                      <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-1.5">{t('spacePermissions.departmentName')}</label>
+                      <input type="text" value={inviteDeptName} onChange={(e) => setInviteDeptName(e.target.value)} placeholder={t('spacePermissions.departmentNameExample')}
                         className="w-full bg-[#f0f0f0] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg px-3 py-2.5 text-[13px] text-[#242424] dark:text-[#e0e0e0] placeholder-[#8a8a8a] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/40"
                         autoFocus />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-1.5">Description</label>
-                      <input type="text" value={inviteDeptDesc} onChange={(e) => setInviteDeptDesc(e.target.value)} placeholder="What does this department do?"
+                      <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-1.5">{t('dashboardEditor.field.description')}</label>
+                      <input type="text" value={inviteDeptDesc} onChange={(e) => setInviteDeptDesc(e.target.value)} placeholder={t('spacePermissions.departmentDescriptionPrompt')}
                         className="w-full bg-[#f0f0f0] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg px-3 py-2.5 text-[13px] text-[#242424] dark:text-[#e0e0e0] placeholder-[#8a8a8a] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/40" />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-2">Icon</label>
+                      <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-2">{t('dashboardEditor.chooseIcon')}</label>
                       <div className="flex gap-2 flex-wrap">
                         {deptIcons.map(icon => (
                           <button key={icon} onClick={() => setInviteDeptIcon(icon)}
@@ -1808,7 +1819,7 @@ export function SpacePermissions() {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-1.5">Default Role</label>
+                      <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-1.5">{t('spacePermissions.defaultRole')}</label>
                       <div className="flex gap-2 flex-wrap">
                         {allRoleKeys.filter(r => r !== 'owner').map(r => {
                           const cfg = allRoleConfig[r];
@@ -1828,11 +1839,11 @@ export function SpacePermissions() {
                 )}
 
                 <div className="flex justify-end gap-2 pt-2">
-                  <button onClick={() => setShowInviteModal(false)} className="px-4 py-2 text-[12px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#3d3d3d] rounded-lg transition-colors">Cancel</button>
+                  <button onClick={() => setShowInviteModal(false)} className="px-4 py-2 text-[12px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#3d3d3d] rounded-lg transition-colors">{t('common.cancel')}</button>
                   <button onClick={handleInvite}
                     disabled={inviteMode === 'person' ? !inviteEmail.trim() : !inviteDeptName.trim()}
                     className="px-4 py-2 bg-[#5b5fc7] hover:bg-[#4a4eb5] disabled:opacity-50 disabled:cursor-not-allowed text-white text-[12px] font-semibold rounded-lg transition-colors shadow-sm">
-                    {inviteMode === 'person' ? 'Add Member' : 'Add Department'}
+                    {inviteMode === 'person' ? t('spacePermissions.addMember') : t('spacePermissions.addDepartment')}
                   </button>
                 </div>
               </div>
@@ -1851,7 +1862,7 @@ export function SpacePermissions() {
               <div className="flex items-center justify-between px-5 py-4 border-b border-[#e1dfdd] dark:border-[#3d3d3d] bg-gradient-to-r from-[#5b5fc7] to-[#7b4db8] shrink-0">
                 <div className="flex items-center gap-2 text-white">
                   <Crown size={18} />
-                  <span className="text-[14px] font-bold">{roleForm.id ? 'Edit Custom Role' : 'Create Custom Role'}</span>
+                  <span className="text-[14px] font-bold">{roleForm.id ? t('spacePermissions.editCustomRole') : t('spacePermissions.createCustomRole')}</span>
                 </div>
                 <button onClick={() => setShowRoleModal(false)} className="text-white/70 hover:text-white transition-colors"><X size={18} /></button>
               </div>
@@ -1866,30 +1877,30 @@ export function SpacePermissions() {
                     {(() => { const Ic = ICON_PALETTE[roleForm.iconIdx]?.icon || Shield; return <Ic size={20} style={{ color: COLOR_PALETTE[roleForm.colorIdx]?.hex }} />; })()}
                   </div>
                   <div>
-                    <p className="text-[13px] font-bold text-[#242424] dark:text-[#f2f3f5]">{roleForm.label || 'Role Name'}</p>
-                    <p className="text-[10px] text-[#8a8a8a]">{roleForm.description || 'Role description...'}</p>
+                    <p className="text-[13px] font-bold text-[#242424] dark:text-[#f2f3f5]">{roleForm.label || t('spacePermissions.roleName')}</p>
+                    <p className="text-[10px] text-[#8a8a8a]">{roleForm.description || t('spacePermissions.roleDescriptionPlaceholder')}</p>
                   </div>
                 </div>
 
                 {/* Name */}
                 <div>
-                  <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-1.5">Role Name</label>
+                  <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-1.5">{t('spacePermissions.roleName')}</label>
                   <input type="text" value={roleForm.label} onChange={(e) => setRoleForm(f => ({ ...f, label: e.target.value }))}
-                    placeholder="e.g. Tech Lead, Triage Agent..."
+                    placeholder={t('spacePermissions.roleNameExample')}
                     className="w-full bg-[#f0f0f0] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg px-3 py-2.5 text-[13px] text-[#242424] dark:text-[#e0e0e0] placeholder-[#8a8a8a] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/40" />
                 </div>
 
                 {/* Description */}
                 <div>
-                  <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-1.5">Description</label>
+                  <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-1.5">{t('dashboardEditor.field.description')}</label>
                   <textarea value={roleForm.description} onChange={(e) => setRoleForm(f => ({ ...f, description: e.target.value }))}
-                    placeholder="What can this role do?" rows={2}
+                    placeholder={t('spacePermissions.roleDescriptionPrompt')} rows={2}
                     className="w-full bg-[#f0f0f0] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg px-3 py-2.5 text-[13px] text-[#242424] dark:text-[#e0e0e0] placeholder-[#8a8a8a] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/40 resize-none" />
                 </div>
 
                 {/* Color picker */}
                 <div>
-                  <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-2">Color</label>
+                  <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-2">{t('spacePermissions.color')}</label>
                   <div className="flex gap-2 flex-wrap">
                     {COLOR_PALETTE.map((c, i) => (
                       <button key={c.hex} onClick={() => setRoleForm(f => ({ ...f, colorIdx: i }))}
@@ -1906,7 +1917,7 @@ export function SpacePermissions() {
 
                 {/* Icon picker */}
                 <div>
-                  <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-2">Icon</label>
+                  <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-2">{t('dashboardEditor.chooseIcon')}</label>
                   <div className="flex gap-2 flex-wrap">
                     {ICON_PALETTE.map((ic, i) => {
                       const Ic = ic.icon;
@@ -1928,8 +1939,8 @@ export function SpacePermissions() {
                 {/* Base template (only for new roles) */}
                 {!roleForm.id && (
                   <div>
-                    <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-1.5">Permission Template</label>
-                    <p className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] mb-2">New role will inherit permissions from this base role.</p>
+                    <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-1.5">{t('spacePermissions.permissionTemplate')}</label>
+                    <p className="text-[10px] text-[#8a8a8a] dark:text-[#6d6f78] mb-2">{t('spacePermissions.permissionTemplateDesc')}</p>
                     <div className="flex gap-2">
                       {(['admin', 'member', 'guest'] as BuiltInRole[]).map(r => {
                         const cfg = builtInRoleConfig[r];
@@ -1951,10 +1962,10 @@ export function SpacePermissions() {
 
               {/* Actions */}
               <div className="flex justify-end gap-2 px-5 py-4 border-t border-[#e1dfdd] dark:border-[#3d3d3d] shrink-0">
-                <button onClick={() => setShowRoleModal(false)} className="px-4 py-2 text-[12px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#3d3d3d] rounded-lg transition-colors">Cancel</button>
+                <button onClick={() => setShowRoleModal(false)} className="px-4 py-2 text-[12px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#3d3d3d] rounded-lg transition-colors">{t('common.cancel')}</button>
                 <button onClick={handleSaveRole} disabled={!roleForm.label.trim()}
                   className="px-4 py-2 bg-[#5b5fc7] hover:bg-[#4a4eb5] disabled:opacity-50 disabled:cursor-not-allowed text-white text-[12px] font-semibold rounded-lg transition-colors shadow-sm">
-                  {roleForm.id ? 'Save Changes' : 'Create Role'}
+                  {roleForm.id ? t('spacePermissions.saveChanges') : t('spacePermissions.createRole')}
                 </button>
               </div>
             </motion.div>
@@ -1975,23 +1986,22 @@ export function SpacePermissions() {
                     <AlertTriangle size={20} className="text-[#c4314b] dark:text-[#f47067]" />
                   </div>
                   <div>
-                    <h3 className="text-[14px] font-bold text-[#242424] dark:text-[#f2f3f5]">Delete Role</h3>
+                    <h3 className="text-[14px] font-bold text-[#242424] dark:text-[#f2f3f5]">{t('spacePermissions.deleteRoleTitle')}</h3>
                     <p className="text-[11px] text-[#8a8a8a]">
-                      Delete "{customRoles[showDeleteConfirm]?.label || showDeleteConfirm}"?
+                      {t('spacePermissions.deleteRoleQuestion', { role: customRoles[showDeleteConfirm]?.label || showDeleteConfirm })}
                     </p>
                   </div>
                 </div>
                 <p className="text-[12px] text-[#616161] dark:text-[#8a8a8a]">
                   {(roleCounts[showDeleteConfirm] || 0) > 0
-                    ? `${roleCounts[showDeleteConfirm]} member${(roleCounts[showDeleteConfirm] || 0) > 1 ? 's' : ''} with this role will be reassigned to Member.`
-                    : 'No members currently have this role.'
-                  }
-                  {' '}This action cannot be undone.
+                    ? t('spacePermissions.deleteRoleWithMembers', { count: roleCounts[showDeleteConfirm] || 0 })
+                    : t('spacePermissions.deleteRoleNoMembers')
+                  }{' '}{t('spacePermissions.actionCannotBeUndone')}
                 </p>
                 <div className="flex justify-end gap-2 pt-2">
-                  <button onClick={() => setShowDeleteConfirm(null)} className="px-4 py-2 text-[12px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#3d3d3d] rounded-lg transition-colors">Cancel</button>
+                  <button onClick={() => setShowDeleteConfirm(null)} className="px-4 py-2 text-[12px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#3d3d3d] rounded-lg transition-colors">{t('common.cancel')}</button>
                   <button onClick={() => handleDeleteRole(showDeleteConfirm)}
-                    className="px-4 py-2 bg-[#c4314b] hover:bg-[#a82a40] text-white text-[12px] font-semibold rounded-lg transition-colors shadow-sm">Delete Role</button>
+                    className="px-4 py-2 bg-[#c4314b] hover:bg-[#a82a40] text-white text-[12px] font-semibold rounded-lg transition-colors shadow-sm">{t('common.delete')}</button>
                 </div>
               </div>
             </motion.div>
@@ -2025,7 +2035,7 @@ export function SpacePermissions() {
                 <div className="flex items-center justify-between px-5 py-4 border-b border-[#e1dfdd] dark:border-[#3d3d3d] bg-gradient-to-r from-[#5b5fc7] to-[#7b4db8]">
                   <div className="flex items-center gap-2 text-white">
                     <Copy size={18} />
-                    <span className="text-[14px] font-bold">Copy {isRole ? 'Role' : 'Channel'} Settings</span>
+                    <span className="text-[14px] font-bold">{isRole ? t('spacePermissions.copyRoleSettings') : t('spacePermissions.copyChannelSettings')}</span>
                   </div>
                   <button onClick={() => setShowCopyModal(false)} className="text-white/70 hover:text-white transition-colors"><X size={18} /></button>
                 </div>
@@ -2033,8 +2043,8 @@ export function SpacePermissions() {
                 <div className="p-5 space-y-5">
                   <p className="text-[12px] text-[#616161] dark:text-[#8a8a8a]">
                     {isRole
-                      ? 'Copy all space-level permissions and channel overrides from one role to another. This will overwrite the target role\'s current settings.'
-                      : 'Copy all permission overrides from one channel to another. This will overwrite the target channel\'s current overrides.'
+                      ? t('spacePermissions.copyRoleSettingsDesc')
+                      : t('spacePermissions.copyChannelSettingsDesc')
                     }
                   </p>
 
@@ -2043,7 +2053,7 @@ export function SpacePermissions() {
                     {/* Source */}
                     <div className="flex-1">
                       <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-1.5">
-                        Copy from
+                        {t('spacePermissions.copyFrom')}
                       </label>
                       <div className="relative">
                         <select
@@ -2051,7 +2061,7 @@ export function SpacePermissions() {
                           onChange={(e) => { setCopySource(e.target.value); if (e.target.value === copyTarget) setCopyTarget(''); }}
                           className="w-full bg-[#f0f0f0] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg px-3 py-2.5 text-[13px] text-[#242424] dark:text-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/40 appearance-none pr-8"
                         >
-                          <option value="">Select {isRole ? 'role' : 'channel'}…</option>
+                          <option value="">{t('spacePermissions.selectTargetType', { type: isRole ? t('spacePermissions.roleLower') : t('spacePermissions.channelLower') })}</option>
                           {isRole
                             ? (sourceOptions as string[]).map(r => (
                               <option key={r} value={r}>{allRoleConfig[r]?.label || r}{!allRoleConfig[r]?.isBuiltIn ? ' (Custom)' : ''}</option>
@@ -2075,7 +2085,7 @@ export function SpacePermissions() {
                     {/* Target */}
                     <div className="flex-1">
                       <label className="block text-[11px] font-semibold text-[#616161] dark:text-[#8a8a8a] uppercase tracking-wider mb-1.5">
-                        Copy to
+                        {t('spacePermissions.copyTo')}
                       </label>
                       <div className="relative">
                         <select
@@ -2084,7 +2094,7 @@ export function SpacePermissions() {
                           disabled={!copySource}
                           className="w-full bg-[#f0f0f0] dark:bg-[#1e1f22] border border-[#e1dfdd] dark:border-[#3d3d3d] rounded-lg px-3 py-2.5 text-[13px] text-[#242424] dark:text-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#5b5fc7]/40 appearance-none pr-8 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <option value="">Select {isRole ? 'role' : 'channel'}…</option>
+                          <option value="">{t('spacePermissions.selectTargetType', { type: isRole ? t('spacePermissions.roleLower') : t('spacePermissions.channelLower') })}</option>
                           {isRole
                             ? (targetOptions as string[]).map(r => (
                               <option key={r} value={r}>{allRoleConfig[r]?.label || r}{!allRoleConfig[r]?.isBuiltIn ? ' (Custom)' : ''}</option>
@@ -2106,18 +2116,18 @@ export function SpacePermissions() {
                       <AlertTriangle size={14} className="text-[#d4820c] dark:text-[#f5a623] mt-0.5 shrink-0" />
                       <p className="text-[11px] text-[#616161] dark:text-[#8a8a8a]">
                         {isRole
-                          ? <>All permissions for <span className="font-semibold text-[#242424] dark:text-[#e0e0e0]">{targetLabel}</span> will be overwritten with settings from <span className="font-semibold text-[#242424] dark:text-[#e0e0e0]">{sourceLabel}</span>.</>
-                          : <>All overrides on <span className="font-semibold text-[#242424] dark:text-[#e0e0e0]">#{targetLabel}</span> will be replaced with overrides from <span className="font-semibold text-[#242424] dark:text-[#e0e0e0]">#{sourceLabel}</span>.</>
+                          ? <>{t('spacePermissions.copyRole.before')}<span className="font-semibold text-[#242424] dark:text-[#e0e0e0]">{targetLabel}</span>{t('spacePermissions.copyRole.middle')}<span className="font-semibold text-[#242424] dark:text-[#e0e0e0]">{sourceLabel}</span>{t('spacePermissions.copyRole.after')}</>
+                          : <>{t('spacePermissions.copyChannel.before')}<span className="font-semibold text-[#242424] dark:text-[#e0e0e0]">#{targetLabel}</span>{t('spacePermissions.copyChannel.middle')}<span className="font-semibold text-[#242424] dark:text-[#e0e0e0]">#{sourceLabel}</span>{t('spacePermissions.copyChannel.after')}</>
                         }
                       </p>
                     </motion.div>
                   )}
 
                   <div className="flex justify-end gap-2 pt-1">
-                    <button onClick={() => setShowCopyModal(false)} className="px-4 py-2 text-[12px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#3d3d3d] rounded-lg transition-colors">Cancel</button>
+                    <button onClick={() => setShowCopyModal(false)} className="px-4 py-2 text-[12px] font-medium text-[#616161] dark:text-[#b9bbbe] hover:bg-[#f0f0f0] dark:hover:bg-[#3d3d3d] rounded-lg transition-colors">{t('common.cancel')}</button>
                     <button onClick={handleCopySettings} disabled={!canConfirm}
                       className="flex items-center gap-1.5 px-4 py-2 bg-[#5b5fc7] hover:bg-[#4a4eb5] disabled:opacity-50 disabled:cursor-not-allowed text-white text-[12px] font-semibold rounded-lg transition-colors shadow-sm">
-                      <Copy size={13} /> Copy Settings
+                      <Copy size={13} /> {t('spacePermissions.copySettings')}
                     </button>
                   </div>
                 </div>
@@ -2134,8 +2144,8 @@ export function SpacePermissions() {
             className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 bg-white dark:bg-[#2b2d31] rounded-xl border border-[#e1dfdd] dark:border-[#3d3d3d] shadow-2xl">
             <div className="w-7 h-7 rounded-full bg-[#237b4b]/15 dark:bg-[#237b4b]/25 flex items-center justify-center"><Check size={14} className="text-[#237b4b] dark:text-[#6fcf97]" /></div>
             <div>
-              <p className="text-[12px] font-semibold text-[#242424] dark:text-[#f2f3f5]">Report exported</p>
-              <p className="text-[10px] text-[#616161] dark:text-[#8a8a8a]">CSV file downloaded successfully</p>
+              <p className="text-[12px] font-semibold text-[#242424] dark:text-[#f2f3f5]">{t('spacePermissions.reportExported')}</p>
+              <p className="text-[10px] text-[#616161] dark:text-[#8a8a8a]">{t('spacePermissions.csvDownloaded')}</p>
             </div>
             <button onClick={() => setShowExportToast(false)} className="text-[#8a8a8a] hover:text-[#424242] dark:hover:text-[#e0e0e0] ml-2"><X size={14} /></button>
           </motion.div>

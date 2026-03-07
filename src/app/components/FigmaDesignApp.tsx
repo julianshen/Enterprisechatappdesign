@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from "@/lib/utils";
+import { useI18n } from '../context/I18nContext';
 
 // ─── Types ───
 
@@ -202,6 +203,7 @@ const figmaTools = [
 // ─── Main Component ───
 
 export function FigmaDesignApp() {
+  const { t } = useI18n();
   const [activeTool, setActiveTool] = useState('move');
   const [selectedLayer, setSelectedLayer] = useState('g2');
   const [selectedPage, setSelectedPage] = useState('Login');
@@ -269,7 +271,7 @@ export function FigmaDesignApp() {
                     <div className="p-2 border-b border-[#f0f0f0] dark:border-[#333]">
                       <div className="flex items-center gap-2 px-2 py-1.5 bg-[#f5f5f5] dark:bg-[#1e1f22] rounded-lg">
                         <Search size={13} className="text-[#8a8a8a]" />
-                        <input placeholder="Search files..." className="bg-transparent text-xs text-[#242424] dark:text-[#e0e0e0] placeholder-[#b9bbbe] outline-none flex-1" />
+                        <input placeholder={t('search.files')} className="bg-transparent text-xs text-[#242424] dark:text-[#e0e0e0] placeholder-[#b9bbbe] outline-none flex-1" />
                       </div>
                     </div>
                     <div className="py-1 max-h-60 overflow-y-auto scrollbar-on-hover">

@@ -262,12 +262,12 @@ export function ProfileSettings() {
                   <AccountRow icon={<KeyRound size={16} />} label={t('account.password')} value={t('account.passwordValue')} action={t('account.passwordAction')} />
                   <AccountRow icon={<Shield size={16} />} label={t('account.twoFactor')} value={privacySettings.twoFactorEnabled ? t('account.twoFactorEnabled') : t('account.twoFactorDisabled')} action={privacySettings.twoFactorEnabled ? t('account.twoFactorManage') : t('account.twoFactorEnable')} />
                   <AccountRow icon={<Smartphone size={16} />} label={t('account.devices')} value={t('account.devicesValue')} action={t('account.manage')} />
-                  <div className="flex items-center gap-3 py-3 border-b border-[#f0f0f0] dark:border-[#333]">
-                    <div className="w-10 h-10 rounded-lg bg-[#5b5fc7]/10 dark:bg-[#5b5fc7]/20 flex items-center justify-center">
-                      <Globe size={16} className="text-[#5b5fc7]" />
+                  <div className="px-5 py-4 flex items-center gap-4 border-b border-[#f0f0f0] dark:border-[#333]">
+                    <div className="w-8 h-8 rounded-lg bg-[#f5f5f5] dark:bg-[#333] flex items-center justify-center text-[#616161] dark:text-[#b9bbbe] shrink-0">
+                      <Globe size={16} />
                     </div>
-                    <div className="flex-1">
-                      <p className="text-[13px] font-medium text-[#242424] dark:text-[#f0f0f0]">{t('account.language')}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-medium text-[#242424] dark:text-[#e0e0e0]">{t('account.language')}</p>
                       <p className="text-[12px] text-[#8a8a8a] dark:text-[#6d6f78]">{LANGUAGES.find(l => l.code === lang)?.label}</p>
                     </div>
                     <Select value={lang} onValueChange={(v) => setLang(v as typeof lang)}>

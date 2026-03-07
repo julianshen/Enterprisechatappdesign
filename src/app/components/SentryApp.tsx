@@ -9,6 +9,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { cn } from "@/lib/utils";
+import { useI18n } from '../context/I18nContext';
 
 // ─── Types ───
 
@@ -135,6 +136,7 @@ type TabId = 'issues' | 'performance' | 'releases';
 // ─── Main Component ───
 
 export function SentryApp() {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<TabId>('issues');
   const [issueFilter, setIssueFilter] = useState<'unresolved' | 'all' | 'resolved' | 'ignored'>('unresolved');
   const [expandedIssue, setExpandedIssue] = useState<string | null>('SENTRY-1842');
@@ -276,7 +278,7 @@ export function SentryApp() {
                 ))}
                 <div className="ml-auto flex items-center gap-1 px-3 py-1.5 bg-white dark:bg-[#252525] rounded-lg border border-[#e1dfdd] dark:border-[#3d3d3d]">
                   <Search size={12} className="text-[#80708F]" />
-                  <input placeholder="Search issues..." className="bg-transparent text-xs text-[#1D1127] dark:text-[#e0e0e0] placeholder-[#B9A6C9] outline-none w-36" />
+                  <input placeholder={t('search.issues')} className="bg-transparent text-xs text-[#1D1127] dark:text-[#e0e0e0] placeholder-[#B9A6C9] outline-none w-36" />
                 </div>
               </div>
 
@@ -308,11 +310,11 @@ export function SentryApp() {
                           <MiniSparkline data={issue.trend} color={issue.level === 'fatal' ? '#FA4453' : issue.level === 'warning' ? '#F5B000' : '#FA4453'} />
                           <div className="text-right">
                             <p className="text-[11px] font-bold text-[#1D1127] dark:text-[#e0e0e0]">{issue.events.toLocaleString()}</p>
-                            <p className="text-[9px] text-[#80708F]">events</p>
+                            <p className="text-[9px] text-[#80708F]">{t('common.events')}</p>
                           </div>
                           <div className="text-right">
                             <p className="text-[11px] font-bold text-[#1D1127] dark:text-[#e0e0e0]">{issue.users}</p>
-                            <p className="text-[9px] text-[#80708F]">users</p>
+                            <p className="text-[9px] text-[#80708F]">{t('common.users')}</p>
                           </div>
                           {issue.assignee ? (
                             <div className="w-5 h-5 rounded-full bg-[#6C5FC7] flex items-center justify-center text-white text-[7px] font-bold">

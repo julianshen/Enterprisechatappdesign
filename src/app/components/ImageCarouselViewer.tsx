@@ -4,6 +4,7 @@ import { X, ChevronLeft, ChevronRight, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from "@/lib/utils";
 import type { MessageAttachment } from '../data/mockData';
+import { useI18n } from '../context/I18nContext';
 
 interface ImageCarouselViewerProps {
   images: MessageAttachment[];
@@ -18,6 +19,7 @@ export function ImageCarouselViewer({
   onClose,
   onChangeIndex,
 }: ImageCarouselViewerProps) {
+  const { t } = useI18n();
   const current = images[currentIndex];
   const hasPrev = currentIndex > 0;
   const hasNext = currentIndex < images.length - 1;
@@ -75,7 +77,7 @@ export function ImageCarouselViewer({
               variant="ghost"
               size="icon"
               className="text-white/60 hover:text-white hover:bg-white/10"
-              title="Download"
+              title={t('common.download')}
             >
               <a href={current.url} download>
                 <Download size={18} />
