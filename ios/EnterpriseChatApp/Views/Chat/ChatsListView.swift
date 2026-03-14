@@ -78,6 +78,7 @@ struct ChatsListView: View {
                                         }
                                     }
                                     .padding(.horizontal)
+                                    .padding(.top, 8)
                                 }
                             }
                             .padding(.vertical, 8)
@@ -177,38 +178,41 @@ struct PinnedChannelCard: View {
     let space: Space
 
     var body: some View {
-        VStack(spacing: 8) {
-            ZStack(alignment: .bottomTrailing) {
-                SpaceIconView(icon: space.icon, color: space.color, size: 44)
+        ZStack(alignment: .topTrailing) {
+            VStack(spacing: 8) {
+                ZStack(alignment: .bottomTrailing) {
+                    SpaceIconView(icon: space.icon, color: space.color, size: 44)
 
-                Image(systemName: "pin.fill")
-                    .font(.system(size: 8))
-                    .foregroundStyle(.white)
-                    .frame(width: 16, height: 16)
-                    .background(Color(hex: "6C63FF"), in: Circle())
-                    .overlay { Circle().strokeBorder(.ultraThinMaterial, lineWidth: 1.5) }
-                    .offset(x: 4, y: 4)
-            }
+                    Image(systemName: "pin.fill")
+                        .font(.system(size: 8))
+                        .foregroundStyle(.white)
+                        .frame(width: 16, height: 16)
+                        .background(Color(hex: "6C63FF"), in: Circle())
+                        .overlay { Circle().strokeBorder(.ultraThinMaterial, lineWidth: 1.5) }
+                        .offset(x: 4, y: 4)
+                }
 
-            VStack(spacing: 2) {
-                Text("#\(channel.name)")
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .lineLimit(1)
-                Text(space.name)
-                    .font(.system(size: 10))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
+                VStack(spacing: 2) {
+                    Text("#\(channel.name)")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .lineLimit(1)
+                    Text(space.name)
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
             }
+            .frame(width: 88)
+            .padding(.vertical, 10)
+            .padding(.horizontal, 4)
+            .glassCard(cornerRadius: 16)
 
             if channel.unreadCount > 0 {
                 UnreadBadge(count: channel.unreadCount)
+                    .offset(x: 6, y: -6)
             }
         }
-        .frame(width: 88)
-        .padding(.vertical, 10)
-        .padding(.horizontal, 4)
-        .glassCard(cornerRadius: 16)
     }
 }
 
