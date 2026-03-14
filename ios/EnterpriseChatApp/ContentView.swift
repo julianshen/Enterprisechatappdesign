@@ -24,12 +24,6 @@ struct ContentView: View {
                 }
                 .tag(AppTab.spaces)
 
-            FilesView()
-                .tabItem {
-                    Label("Files", systemImage: "doc.fill")
-                }
-                .tag(AppTab.files)
-
             ProfileView()
                 .tabItem {
                     Label("Profile", systemImage: "person.fill")
@@ -41,7 +35,7 @@ struct ContentView: View {
 }
 
 enum AppTab: Hashable {
-    case home, chat, spaces, files, profile
+    case home, chat, spaces, profile
 }
 
 class AppState: ObservableObject {

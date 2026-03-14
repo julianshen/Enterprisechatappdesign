@@ -394,6 +394,44 @@ struct MockData {
         ),
     ]
 
+    // MARK: - Meetings
+
+    static let meetings: [Meeting] = {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        func time(_ hour: Int, _ min: Int, daysOffset: Int = 0) -> Date {
+            cal.date(bySettingHour: hour, minute: min, second: 0, of: cal.date(byAdding: .day, value: daysOffset, to: today)!)!
+        }
+        return [
+            Meeting(id: "m1", title: "Daily Standup", startTime: time(9, 0), endTime: time(9, 15), location: "Teams Call", isOnline: true, organizer: "u1", attendees: ["current", "u1", "u2", "u3"], color: .purple, recurring: true, status: .completed),
+            Meeting(id: "m2", title: "Sprint Planning", startTime: time(10, 30), endTime: time(11, 30), location: "Teams Call", isOnline: true, organizer: "u2", attendees: ["current", "u1", "u2", "u3", "u4"], color: .blue, status: .inProgress),
+            Meeting(id: "m3", title: "Design Review", startTime: time(14, 0), endTime: time(15, 0), location: "Conference Room A", organizer: "u3", attendees: ["current", "u1", "u3"], color: .green, status: .upcoming),
+            Meeting(id: "m4", title: "1:1 with Manager", startTime: time(16, 0), endTime: time(16, 30), location: "Teams Call", isOnline: true, organizer: "u1", attendees: ["current", "u1"], color: .orange, status: .upcoming),
+            Meeting(id: "m5", title: "Team Retrospective", startTime: time(10, 0, daysOffset: 1), endTime: time(11, 0, daysOffset: 1), location: "Teams Call", isOnline: true, organizer: "u2", attendees: ["current", "u1", "u2", "u3", "u4"], color: .purple, recurring: true, status: .upcoming),
+            Meeting(id: "m6", title: "Product Demo", startTime: time(15, 0, daysOffset: 2), endTime: time(16, 0, daysOffset: 2), location: "Main Auditorium", organizer: "u4", attendees: ["current", "u1", "u2", "u3", "u4"], color: .red, status: .upcoming),
+            Meeting(id: "m7", title: "Architecture Review", startTime: time(11, 0, daysOffset: 3), endTime: time(12, 30, daysOffset: 3), location: "Teams Call", isOnline: true, organizer: "u2", attendees: ["current", "u2", "u4"], color: .blue, status: .upcoming),
+            Meeting(id: "m8", title: "All Hands Meeting", startTime: time(9, 0, daysOffset: 4), endTime: time(10, 0, daysOffset: 4), location: "Main Auditorium", organizer: "u1", attendees: ["current", "u1", "u2", "u3", "u4"], color: .purple, recurring: true, status: .upcoming),
+        ]
+    }()
+
+    // MARK: - Unread Channels
+
+    static let unreadChannels: [UnreadChannel] = [
+        UnreadChannel(id: "uc1", channelName: "general", spaceName: "Company HQ", count: 3, lastMessage: Date().addingTimeInterval(-1800)),
+        UnreadChannel(id: "uc2", channelName: "general", spaceName: "Engineering", count: 5, lastMessage: Date().addingTimeInterval(-2700)),
+        UnreadChannel(id: "uc3", channelName: "backend", spaceName: "Engineering", count: 2, lastMessage: Date().addingTimeInterval(-5400)),
+        UnreadChannel(id: "uc4", channelName: "general", spaceName: "SRE", count: 4, lastMessage: Date().addingTimeInterval(-7200)),
+        UnreadChannel(id: "uc5", channelName: "alerts", spaceName: "SRE", count: 2, lastMessage: Date().addingTimeInterval(-10800)),
+    ]
+
+    // MARK: - Active Threads
+
+    static let activeThreads: [ActiveThread] = [
+        ActiveThread(id: "t1", channelName: "general", spaceName: "Company HQ", content: "Hey everyone! Welcome to the new chat platform...", replies: 3, lastReply: Date().addingTimeInterval(-3600)),
+        ActiveThread(id: "t2", channelName: "general", spaceName: "Engineering", content: "I'm seeing some performance issues with the new build...", replies: 8, lastReply: Date().addingTimeInterval(-5400)),
+        ActiveThread(id: "t3", channelName: "backend", spaceName: "Engineering", content: "The new API rate limiting is causing timeouts in staging", replies: 5, lastReply: Date().addingTimeInterval(-7200)),
+    ]
+
     // MARK: - Activities
 
     static let activities: [Activity] = [
@@ -407,52 +445,278 @@ struct MockData {
         Activity(id: "a8", type: .message, title: "New message from Casey Zhang", subtitle: "\"Can we discuss the API architecture?\"", timestamp: Date().addingTimeInterval(-28800), icon: "bubble.left.fill", color: Color(hex: "5B5FC7"), isRead: true),
     ]
 
+    // MARK: - Notifications
+
+    static let notifications: [AppNotification] = [
+        AppNotification(
+            id: "notif-1", type: .approval,
+            title: "Budget Approval Request",
+            message: "Alice Williams requested budget approval for Q2 marketing campaign ($12,500).",
+            detail: "The Marketing team is requesting $12,500 for the Q2 digital advertising campaign. This covers paid social media ads across LinkedIn, Twitter, and Google Ads.\n\nBreakdown:\n• LinkedIn Ads: $5,000\n• Google Ads: $4,500\n• Twitter/X Ads: $2,000\n• Creative Assets: $1,000\n\nPlease review and approve or provide feedback below.",
+            timestamp: Date().addingTimeInterval(-1800),
+            read: false,
+            from: "Alice Williams",
+            formFields: [
+                NotificationFormField(label: "Decision", type: .select, options: ["Approve", "Reject", "Request Changes"], required: true),
+                NotificationFormField(label: "Comments", type: .textarea, required: false),
+            ]
+        ),
+        AppNotification(
+            id: "notif-2", type: .approval,
+            title: "PTO Request — Bob Johnson",
+            message: "Bob Johnson submitted a PTO request for Feb 24–28 (5 days).",
+            detail: "Bob Johnson has submitted a paid time off request:\n\n• Dates: February 24–28, 2026\n• Duration: 5 business days\n• Remaining PTO balance: 12 days\n• Coverage: Charlie Brown has agreed to cover urgent backend issues.\n• Reason: Personal / Family\n\nAs Bob's direct manager, please approve or deny this request.",
+            timestamp: Date().addingTimeInterval(-5400),
+            read: false,
+            from: "Bob Johnson",
+            formFields: [
+                NotificationFormField(label: "Decision", type: .select, options: ["Approve", "Deny"], required: true),
+                NotificationFormField(label: "Reason (if denied)", type: .textarea, required: false),
+            ]
+        ),
+        AppNotification(
+            id: "notif-3", type: .admin,
+            title: "New Company Policy Published",
+            message: "The updated remote work policy has been published. Please review it before March 1st.",
+            detail: "Dear Team,\n\nWe are pleased to announce the updated Remote Work Policy, effective March 1, 2026. Key changes include:\n\n1. Flexible Hours: Core hours are now 10 AM – 3 PM in your local timezone.\n\n2. In-Office Days: Minimum 2 days per week (down from 3).\n\n3. Home Office Stipend: Increased from $500 to $750/year.\n\n4. International Remote Work: Up to 4 weeks per year (up from 2 weeks).\n\nPlease read the full policy document and acknowledge receipt by March 1st.\n\nBest regards,\nHR Team",
+            timestamp: Date().addingTimeInterval(-18000),
+            read: false,
+            from: "HR Department"
+        ),
+        AppNotification(
+            id: "notif-4", type: .security,
+            title: "Password Expiring Soon",
+            message: "Your password will expire in 7 days. Please update it to maintain access.",
+            detail: "Your current password is scheduled to expire on February 22, 2026 per company security policy.\n\nPassword requirements:\n• Minimum 12 characters\n• At least one uppercase letter\n• At least one number\n• At least one special character\n• Cannot reuse your last 5 passwords\n\nTo update your password, go to Settings > Security > Change Password.",
+            timestamp: Date().addingTimeInterval(-36000),
+            read: false,
+            from: "IT Security"
+        ),
+        AppNotification(
+            id: "notif-5", type: .invite,
+            title: "Space Invitation — Product",
+            message: "Jane Smith invited you to join the \"Product\" space.",
+            detail: "You've been invited to join the Product space by Jane Smith (Product Manager).\n\nChannels included:\n• #general — Team announcements\n• #roadmap — Product roadmap updates\n• #research — User research and feedback\n• #sprints — Sprint planning and tracking\n\nYou can accept or decline this invitation.",
+            timestamp: Date().addingTimeInterval(-43200),
+            read: false,
+            from: "Jane Smith",
+            formFields: [
+                NotificationFormField(label: "Response", type: .select, options: ["Accept Invitation", "Decline Invitation"], required: true),
+                NotificationFormField(label: "Message to Jane (optional)", type: .text, required: false),
+            ]
+        ),
+        AppNotification(
+            id: "notif-6", type: .update,
+            title: "App Update — v2.4.0",
+            message: "Version 2.4.0 is now available with improved performance and new emoji reactions.",
+            detail: "What's New in v2.4.0:\n\n✦ Performance Improvements\n  — Chat messages now load 40% faster\n  — Reduced memory usage for large channels\n\n✦ New Features\n  — Expanded emoji reaction picker\n  — Message scheduling: compose now, send later\n  — Pinned messages in dedicated sidebar panel\n\n✦ Bug Fixes\n  — Fixed notification badge not clearing on read\n  — Fixed dark mode contrast issues\n  — Resolved file upload timeout for large files",
+            timestamp: Date().addingTimeInterval(-86400),
+            read: true,
+            from: "Platform Team"
+        ),
+        AppNotification(
+            id: "notif-7", type: .system,
+            title: "Scheduled Maintenance",
+            message: "The platform will undergo maintenance on Feb 16, 2:00–4:00 AM UTC.",
+            detail: "Scheduled Maintenance Notice\n\nDate: Sunday, February 16, 2026\nTime: 2:00 AM – 4:00 AM UTC\nExpected Downtime: Up to 30 minutes\n\nWhat's being done:\n• Database optimization\n• Security patch deployment\n• SSL certificate renewal\n• Infrastructure scaling\n\nStatus page: status.company.com",
+            timestamp: Date().addingTimeInterval(-100800),
+            read: true,
+            from: "DevOps Team"
+        ),
+        AppNotification(
+            id: "notif-8", type: .approval,
+            title: "Access Request — Staging",
+            message: "Charlie Brown requested access to the staging deployment environment.",
+            detail: "Access Request Details:\n\n• Requester: Charlie Brown (Senior Engineer)\n• Resource: Staging Deployment Environment\n• Access Level: Read + Deploy\n• Justification: Need staging access to test payment gateway integration.\n• Duration: Permanent\n\nSecurity Note: This grants SSH access and CI/CD pipeline deployment permissions.",
+            timestamp: Date().addingTimeInterval(-172800),
+            read: true,
+            from: "Charlie Brown",
+            formFields: [
+                NotificationFormField(label: "Decision", type: .select, options: ["Grant Access", "Deny Access", "Grant Temporary (30 days)"], required: true),
+                NotificationFormField(label: "Security Notes", type: .textarea, required: false),
+            ]
+        ),
+    ]
+
+    // MARK: - Space Requests
+
+    static let spaceRequests: [SpaceRequest] = [
+        SpaceRequest(
+            id: "req-1",
+            spaceName: "Customer Success Hub",
+            spaceDescription: "Centralized workspace for customer success team collaboration, onboarding playbooks, and account health tracking.",
+            scenarioName: "Customer Success",
+            scenarioColor: "FF6B9D",
+            channelCount: 4, dashboardCount: 2, appCount: 1,
+            channels: ["#general", "#onboarding", "#escalations", "#renewals"],
+            dashboards: ["Account Health", "Renewal Pipeline"],
+            apps: ["Salesforce Connect"],
+            permissions: "Team members can post and manage content. Guests have read-only access.",
+            ownerName: "Alex Rivera",
+            ownerAvatar: "AR",
+            ownerTitle: "VP Customer Success",
+            requesterName: "Sarah Chen",
+            status: .pendingOwner,
+            createdAt: Date().addingTimeInterval(-7200),
+            updatedAt: Date().addingTimeInterval(-7200)
+        ),
+        SpaceRequest(
+            id: "req-2",
+            spaceName: "Data Engineering Lab",
+            spaceDescription: "Workspace for the data engineering team to collaborate on pipeline development and data quality initiatives.",
+            scenarioName: "Engineering Team",
+            scenarioColor: "6C63FF",
+            channelCount: 5, dashboardCount: 3, appCount: 2,
+            channels: ["#general", "#pipelines", "#data-quality", "#alerts", "#experiments"],
+            dashboards: ["Pipeline Status", "Data Quality Scores", "Cost Tracking"],
+            apps: ["Snowflake", "dbt Cloud"],
+            permissions: "All members have full access. External collaborators need approval.",
+            ownerName: "Sarah Chen",
+            ownerAvatar: "SC",
+            ownerTitle: "Senior Software Engineer",
+            requesterName: "Sarah Chen",
+            status: .pendingAdmin,
+            createdAt: Date().addingTimeInterval(-86400),
+            updatedAt: Date().addingTimeInterval(-43200),
+            ownerApprovedAt: Date().addingTimeInterval(-43200)
+        ),
+        SpaceRequest(
+            id: "req-3",
+            spaceName: "Marketing Campaign Q2",
+            spaceDescription: "Cross-functional space for Q2 marketing campaign planning and execution.",
+            scenarioName: "Marketing",
+            scenarioColor: "34C759",
+            channelCount: 3, dashboardCount: 1, appCount: 0,
+            channels: ["#general", "#content", "#analytics"],
+            dashboards: ["Campaign Performance"],
+            apps: [],
+            permissions: "Marketing team has full access. Stakeholders have comment-only access.",
+            ownerName: "Morgan Kim",
+            ownerAvatar: "MK",
+            ownerTitle: "Marketing Director",
+            requesterName: "Sarah Chen",
+            status: .approved,
+            createdAt: Date().addingTimeInterval(-259200),
+            updatedAt: Date().addingTimeInterval(-172800),
+            ownerApprovedAt: Date().addingTimeInterval(-216000),
+            adminApprovedAt: Date().addingTimeInterval(-172800)
+        ),
+        SpaceRequest(
+            id: "req-4",
+            spaceName: "Experimental AI Sandbox",
+            spaceDescription: "Sandbox environment for testing AI/ML integrations with production-like data.",
+            scenarioName: "Research & Development",
+            scenarioColor: "FF9F0A",
+            channelCount: 2, dashboardCount: 0, appCount: 3,
+            channels: ["#general", "#experiments"],
+            dashboards: [],
+            apps: ["OpenAI API", "Hugging Face", "Weights & Biases"],
+            permissions: "Restricted to approved researchers only.",
+            ownerName: "Riley Park",
+            ownerAvatar: "RP",
+            ownerTitle: "ML Team Lead",
+            requesterName: "Sarah Chen",
+            status: .rejected,
+            createdAt: Date().addingTimeInterval(-432000),
+            updatedAt: Date().addingTimeInterval(-345600),
+            rejectedAt: Date().addingTimeInterval(-345600),
+            rejectedBy: "System Admin",
+            rejectionReason: "AI sandbox environments require additional security review and VP-level approval per policy SEC-2024-15. Please resubmit with VP Engineering sign-off."
+        ),
+    ]
+
     // MARK: - Message Generators
 
     static func generateDMMessages(with user: User) -> [Message] {
-        let conversations: [(String, String, TimeInterval)] = [
-            (user.id, "Hey! How's the project going?", -7200),
-            ("current", "Going well! Just finished the new feature implementation.", -7000),
-            (user.id, "That's great. Can you walk me through the changes?", -6800),
-            ("current", "Sure! I'll set up a quick call. The main changes are in the auth module.", -6600),
-            (user.id, "Perfect. I also wanted to discuss the timeline for next sprint.", -6400),
-            ("current", "Let's cover that too. I have some thoughts on the prioritization.", -6200),
-            (user.id, "Sounds good! Looking forward to it 👍", -6000),
-            ("current", "See you then! 🙌", -5800),
+        [
+            Message(id: "dm-\(user.id)-1", userId: user.id, content: "Hey! How's the project going?", timestamp: Date().addingTimeInterval(-7200)),
+            Message(id: "dm-\(user.id)-2", userId: "current", content: "Going well! Just finished the new feature implementation.", timestamp: Date().addingTimeInterval(-7000)),
+            Message(id: "dm-\(user.id)-3", userId: user.id, content: "That's great. Can you walk me through the changes?", timestamp: Date().addingTimeInterval(-6800)),
+            Message(id: "dm-\(user.id)-4", userId: "current", content: "Sure! Here's the architecture doc and the homepage redesign mockup.", timestamp: Date().addingTimeInterval(-6600), attachments: [
+                MessageAttachment(type: .document, name: "Q1 2026 Company Goals", docEmoji: "🎯", docAuthor: "Alex Rivera", docLastModified: Date().addingTimeInterval(-86400)),
+                MessageAttachment(type: .image, name: "homepage-redesign-v2.png", size: "1.6 MB", mimeType: "image/png"),
+            ]),
+            Message(id: "dm-\(user.id)-5", userId: user.id, content: "Looks great! Here's the design walkthrough recording.", timestamp: Date().addingTimeInterval(-6400), attachments: [
+                MessageAttachment(type: .video, name: "design-walkthrough.mp4", size: "42.1 MB", mimeType: "video/mp4", videoDuration: "5:17"),
+            ]),
+            Message(id: "dm-\(user.id)-6", userId: "current", content: "Perfect. I also wanted to discuss the timeline for next sprint.", timestamp: Date().addingTimeInterval(-6200)),
+            Message(id: "dm-\(user.id)-7", userId: user.id, content: "Sounds good! Looking forward to it 👍", timestamp: Date().addingTimeInterval(-6000), reactions: [Reaction(emoji: "👍", users: ["current"], count: 1)]),
+            Message(id: "dm-\(user.id)-8", userId: "current", content: "See you then! 🙌", timestamp: Date().addingTimeInterval(-5800)),
         ]
-
-        return conversations.map { userId, content, offset in
-            Message(
-                id: UUID().uuidString,
-                userId: userId,
-                content: content,
-                timestamp: Date().addingTimeInterval(offset),
-                reactions: offset == -6000 ? [Reaction(emoji: "👍", users: ["current"], count: 1)] : []
-            )
-        }
     }
 
     static func generateGroupMessages() -> [Message] {
         [
-            Message(id: UUID().uuidString, userId: "u1", content: "Team, we need to finalize the component migration plan by Friday.", timestamp: Date().addingTimeInterval(-3600)),
-            Message(id: UUID().uuidString, userId: "u6", content: "I've started migrating the Button and Input components. Should be done by tomorrow.", timestamp: Date().addingTimeInterval(-3400)),
-            Message(id: UUID().uuidString, userId: "u2", content: "The new design tokens are ready. I'll share the Figma link.", timestamp: Date().addingTimeInterval(-3200)),
-            Message(id: UUID().uuidString, userId: "current", content: "Great progress! I'll handle the Card and Modal components.", timestamp: Date().addingTimeInterval(-3000)),
-            Message(id: UUID().uuidString, userId: "u1", content: "Perfect. Let's sync on the remaining components in tomorrow's standup.", timestamp: Date().addingTimeInterval(-2800)),
-            Message(id: UUID().uuidString, userId: "u6", content: "Should we also update the documentation as we go?", timestamp: Date().addingTimeInterval(-2600)),
-            Message(id: UUID().uuidString, userId: "current", content: "Yes, let's update the Storybook stories alongside the migration.", timestamp: Date().addingTimeInterval(-2400)),
+            Message(id: "gm-1", userId: "u1", content: "Team, we need to finalize the component migration plan by Friday.", timestamp: Date().addingTimeInterval(-3600)),
+            Message(id: "gm-2", userId: "u6", content: "I've started migrating the Button and Input components. Should be done by tomorrow.", timestamp: Date().addingTimeInterval(-3400), threadReplies: [
+                Message(id: "gm-2-t1", userId: "u2", content: "Nice! Are you following the new design tokens?", timestamp: Date().addingTimeInterval(-3300)),
+                Message(id: "gm-2-t2", userId: "u6", content: "Yes, all mapped to the new system. Here's the token spec.", timestamp: Date().addingTimeInterval(-3200), attachments: [
+                    MessageAttachment(type: .file, name: "design-tokens-v2.json", size: "12 KB", mimeType: "application/json"),
+                ]),
+                Message(id: "gm-2-t3", userId: "u2", content: "Perfect, looks aligned with Figma. 👍", timestamp: Date().addingTimeInterval(-3100)),
+            ]),
+            Message(id: "gm-3", userId: "u2", content: "The new design tokens are ready. I'll share the Figma link.", timestamp: Date().addingTimeInterval(-3200), attachments: [
+                MessageAttachment(type: .image, name: "design-tokens-preview.png", size: "890 KB", mimeType: "image/png"),
+                MessageAttachment(type: .document, name: "Design System Tokens", docEmoji: "🎨", docAuthor: "Jordan Lee", docLastModified: Date().addingTimeInterval(-259200)),
+            ]),
+            Message(id: "gm-4", userId: "current", content: "Great progress! I'll handle the Card and Modal components.", timestamp: Date().addingTimeInterval(-3000)),
+            Message(id: "gm-5", userId: "u1", content: "Perfect. Let's sync on the remaining components in tomorrow's standup.", timestamp: Date().addingTimeInterval(-2800), reactions: [Reaction(emoji: "✅", users: ["current", "u6", "u2"], count: 3)]),
+            Message(id: "gm-6", userId: "u6", content: "Should we also update the documentation as we go?", timestamp: Date().addingTimeInterval(-2600)),
+            Message(id: "gm-7", userId: "current", content: "Yes, let's update the Storybook stories alongside the migration.", timestamp: Date().addingTimeInterval(-2400)),
         ]
     }
 
     static func generateChannelMessages() -> [Message] {
         [
-            Message(id: UUID().uuidString, userId: "u3", content: "Deployment to staging completed successfully. All health checks passing.", timestamp: Date().addingTimeInterval(-1800), reactions: [Reaction(emoji: "🎉", users: ["u1", "u4"], count: 2)]),
-            Message(id: UUID().uuidString, userId: "u1", content: "Nice work! Let's monitor for an hour before promoting to production.", timestamp: Date().addingTimeInterval(-1600)),
-            Message(id: UUID().uuidString, userId: "u5", content: "API latency looks normal. No anomalies in the error logs.", timestamp: Date().addingTimeInterval(-1400)),
-            Message(id: UUID().uuidString, userId: "current", content: "I've verified the new endpoints are responding correctly. LGTM! 👍", timestamp: Date().addingTimeInterval(-1200)),
-            Message(id: UUID().uuidString, userId: "u3", content: "Promoting to production now. ETA: 10 minutes.", timestamp: Date().addingTimeInterval(-1000), isPinned: true),
-            Message(id: UUID().uuidString, userId: "u4", content: "All regression tests passed. Good to go!", timestamp: Date().addingTimeInterval(-800)),
-            Message(id: UUID().uuidString, userId: "u3", content: "Production deployment complete ✅ v2.4.1 is live!", timestamp: Date().addingTimeInterval(-600), reactions: [Reaction(emoji: "🚀", users: ["u1", "u4", "u5", "current"], count: 4), Reaction(emoji: "👏", users: ["u2", "u6"], count: 2)]),
+            // Performance issue with video attachment
+            Message(id: "ch-1", userId: "u3", content: "Seeing some latency spikes on the search endpoint after last deploy. Here's a screen recording of the issue.", timestamp: Date().addingTimeInterval(-3600), attachments: [
+                MessageAttachment(type: .video, name: "api-latency-screenrec.mp4", size: "18.4 MB", mimeType: "video/mp4", videoDuration: "2:34"),
+            ], threadReplies: [
+                Message(id: "ch-1-t1", userId: "u5", content: "I can take a look at the logs. Which endpoint exactly?", timestamp: Date().addingTimeInterval(-3500)),
+                Message(id: "ch-1-t2", userId: "u3", content: "The `/api/v2/users/search` endpoint. P95 latency spiked to 1.2s after the last deploy.", timestamp: Date().addingTimeInterval(-3400)),
+                Message(id: "ch-1-t3", userId: "u5", content: "Looks like the new query planner is choosing a seq scan... Missing index on `display_name`.", timestamp: Date().addingTimeInterval(-3300), reactions: [Reaction(emoji: "🔍", users: ["u3"], count: 1)]),
+                Message(id: "ch-1-t4", userId: "u1", content: "Can we add the index in a non-blocking migration?", timestamp: Date().addingTimeInterval(-3200)),
+                Message(id: "ch-1-t5", userId: "u5", content: "Yes — `CREATE INDEX CONCURRENTLY` will handle it.", timestamp: Date().addingTimeInterval(-3100)),
+                Message(id: "ch-1-t6", userId: "u3", content: "PR is up: #482. Marking this resolved for now.", timestamp: Date().addingTimeInterval(-3000), reactions: [Reaction(emoji: "✅", users: ["u1", "u5"], count: 2)]),
+            ]),
+
+            // Design mockups with multiple images
+            Message(id: "ch-2", userId: "u2", content: "Here are the updated dashboard mockups from today's design review.", timestamp: Date().addingTimeInterval(-2800), reactions: [Reaction(emoji: "🔥", users: ["u1", "u3"], count: 2), Reaction(emoji: "👀", users: ["u4"], count: 1)], attachments: [
+                MessageAttachment(type: .image, name: "dashboard-mockup-v3.png", size: "2.4 MB", mimeType: "image/png"),
+                MessageAttachment(type: .image, name: "whiteboard-session.jpg", size: "1.8 MB", mimeType: "image/jpeg"),
+                MessageAttachment(type: .image, name: "mobile-wireframes.png", size: "3.1 MB", mimeType: "image/png"),
+            ]),
+
+            // File attachments — RFC, build artifacts, benchmarks
+            Message(id: "ch-3", userId: "u1", content: "Uploading the latest build artifacts and the RFC for the new auth flow.", timestamp: Date().addingTimeInterval(-2400), attachments: [
+                MessageAttachment(type: .file, name: "auth-flow-rfc-v2.pdf", size: "842 KB", mimeType: "application/pdf"),
+                MessageAttachment(type: .file, name: "build-report-2026-02-14.zip", size: "14.3 MB", mimeType: "application/zip"),
+                MessageAttachment(type: .file, name: "api-benchmarks.xlsx", size: "256 KB", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+            ]),
+
+            Message(id: "ch-4", userId: "current", content: "I've verified the new endpoints are responding correctly. LGTM! 👍", timestamp: Date().addingTimeInterval(-2000)),
+
+            // Task + document link
+            Message(id: "ch-5", userId: "u5", content: "FYI — linked the relevant task and the architecture doc here. The OAuth migration is blocked by the infra ticket.", timestamp: Date().addingTimeInterval(-1600), reactions: [Reaction(emoji: "👍", users: ["u1"], count: 1)], attachments: [
+                MessageAttachment(type: .task, name: "Implement OAuth 2.0 flow", taskId: "ENG-341", taskStatus: "In Progress", taskPriority: "High", taskAssignee: "Casey Zhang"),
+                MessageAttachment(type: .document, name: "API Architecture Guide", docEmoji: "🏗️", docAuthor: "Casey Zhang", docLastModified: Date().addingTimeInterval(-172800)),
+            ], threadReplies: [
+                Message(id: "ch-5-t1", userId: "u3", content: "I can help unblock the infra side. The Terraform module just needs the new IAM role added.", timestamp: Date().addingTimeInterval(-1500)),
+                Message(id: "ch-5-t2", userId: "u1", content: "That would be great — the OAuth flow is mostly done but we need the callback URL whitelisted on the load balancer too.", timestamp: Date().addingTimeInterval(-1400)),
+                Message(id: "ch-5-t3", userId: "u5", content: "Done! IAM role created and callback URL added to ALB. You should be unblocked now.", timestamp: Date().addingTimeInterval(-1300), reactions: [Reaction(emoji: "🎉", users: ["u1", "u3"], count: 2)]),
+            ]),
+
+            // Perf graph + bug task
+            Message(id: "ch-6", userId: "u3", content: "Quick screenshot of the perf regression. Also attaching the HAR trace and the related bug ticket.", timestamp: Date().addingTimeInterval(-1200), reactions: [Reaction(emoji: "🐛", users: ["u1", "u5"], count: 2)], attachments: [
+                MessageAttachment(type: .image, name: "latency-graph-feb14.png", size: "420 KB", mimeType: "image/png"),
+                MessageAttachment(type: .file, name: "checkout-flow-trace.har", size: "1.2 MB", mimeType: "application/json"),
+                MessageAttachment(type: .task, name: "P95 latency regression on /checkout", taskId: "ENG-356", taskStatus: "To Do", taskPriority: "Critical", taskAssignee: "Morgan Kim"),
+            ]),
+
+            // Deployment success
+            Message(id: "ch-7", userId: "u3", content: "Promoting to production now. ETA: 10 minutes.", timestamp: Date().addingTimeInterval(-1000), isPinned: true),
+            Message(id: "ch-8", userId: "u4", content: "All regression tests passed. Good to go!", timestamp: Date().addingTimeInterval(-800)),
+            Message(id: "ch-9", userId: "u3", content: "Production deployment complete ✅ v2.4.1 is live!", timestamp: Date().addingTimeInterval(-600), reactions: [Reaction(emoji: "🚀", users: ["u1", "u4", "u5", "current"], count: 4), Reaction(emoji: "👏", users: ["u2", "u6"], count: 2)]),
         ]
     }
 }

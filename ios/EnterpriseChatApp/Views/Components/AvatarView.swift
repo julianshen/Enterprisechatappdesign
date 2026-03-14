@@ -21,6 +21,18 @@ struct AvatarView: View {
                         .font(.system(size: size * 0.38, weight: .semibold, design: .rounded))
                         .foregroundStyle(.white)
                 }
+                .overlay {
+                    Circle()
+                        .strokeBorder(
+                            LinearGradient(
+                                colors: [.white.opacity(0.5), .white.opacity(0.1)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1
+                        )
+                }
+                .shadow(color: backgroundColor.opacity(0.35), radius: size * 0.15, y: 2)
 
             if showStatus, let status = status {
                 Circle()
@@ -28,8 +40,9 @@ struct AvatarView: View {
                     .frame(width: size * 0.3, height: size * 0.3)
                     .overlay {
                         Circle()
-                            .stroke(.background, lineWidth: 2)
+                            .strokeBorder(.background, lineWidth: 2)
                     }
+                    .shadow(color: status.color.opacity(0.5), radius: 3, y: 0)
                     .offset(x: 1, y: 1)
             }
         }
@@ -37,9 +50,9 @@ struct AvatarView: View {
 
     private func colorFromInitials(_ text: String) -> Color {
         let colors: [Color] = [
-            Color(hex: "5B5FC7"), Color(hex: "2196F3"), Color(hex: "E91E63"),
-            Color(hex: "FF9800"), Color(hex: "009688"), Color(hex: "9C27B0"),
-            Color(hex: "607D8B"), Color(hex: "795548"),
+            Color(hex: "6C63FF"), Color(hex: "00D2FF"), Color(hex: "FF6B9D"),
+            Color(hex: "FF9F0A"), Color(hex: "00BFA6"), Color(hex: "A855F7"),
+            Color(hex: "64748B"), Color(hex: "F43F5E"),
         ]
         let hash = text.unicodeScalars.reduce(0) { $0 + Int($1.value) }
         return colors[hash % colors.count]
@@ -71,7 +84,7 @@ struct SpaceIconView: View {
     let size: CGFloat
 
     var body: some View {
-        RoundedRectangle(cornerRadius: size * 0.25)
+        RoundedRectangle(cornerRadius: size * 0.28)
             .fill(Color(hex: color).gradient)
             .frame(width: size, height: size)
             .overlay {
@@ -79,5 +92,17 @@ struct SpaceIconView: View {
                     .font(.system(size: size * 0.42, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
             }
+            .overlay {
+                RoundedRectangle(cornerRadius: size * 0.28)
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [.white.opacity(0.5), .white.opacity(0.1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 0.8
+                    )
+            }
+            .shadow(color: Color(hex: color).opacity(0.35), radius: size * 0.2, y: 3)
     }
 }

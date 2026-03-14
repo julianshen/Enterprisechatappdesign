@@ -13,38 +13,32 @@ struct SpaceDetailView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Space header
-            spaceHeader
+        ZStack {
+            MeshBackgroundView()
 
-            // Section picker
-            Picker("Section", selection: $selectedSection) {
-                ForEach(SpaceSection.allCases, id: \.self) { section in
-                    Text(section.rawValue).tag(section)
+            VStack(spacing: 0) {
+                spaceHeader
+
+                Picker("Section", selection: $selectedSection) {
+                    ForEach(SpaceSection.allCases, id: \.self) { section in
+                        Text(section.rawValue).tag(section)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+
+                switch selectedSection {
+                case .channels: channelsList
+                case .documents: SpaceDocumentsView()
+                case .files: SpaceFilesView()
+                case .dashboards: SpaceDashboardsView(dashboards: space.dashboards)
                 }
             }
-            .pickerStyle(.segmented)
-            .padding(.horizontal)
-            .padding(.vertical, 8)
-
-            // Content
-            switch selectedSection {
-            case .channels:
-                channelsList
-            case .documents:
-                SpaceDocumentsView()
-            case .files:
-                SpaceFilesView()
-            case .dashboards:
-                SpaceDashboardsView(dashboards: space.dashboards)
-            }
         }
-        .background(theme.surfaceBackground)
         .navigationTitle(space.name)
         .navigationBarTitleDisplayMode(.inline)
     }
-
-    // MARK: - Space Header
 
     private var spaceHeader: some View {
         VStack(spacing: 12) {
@@ -57,13 +51,10 @@ struct SpaceDetailView: View {
                     .multilineTextAlignment(.center)
             }
 
-            // Member avatars
             HStack(spacing: -6) {
                 ForEach(Array(space.members.prefix(5))) { member in
                     AvatarView(initials: member.avatar, size: 28, showStatus: false)
-                        .overlay {
-                            Circle().stroke(theme.surfaceBackground, lineWidth: 2)
-                        }
+                        .overlay { Circle().stroke(.ultraThinMaterial, lineWidth: 2) }
                 }
                 if space.members.count > 5 {
                     Text("+\(space.members.count - 5)")
@@ -77,10 +68,8 @@ struct SpaceDetailView: View {
         }
         .padding()
         .frame(maxWidth: .infinity)
-        .background(theme.cardBackground)
+        .background(.ultraThinMaterial)
     }
-
-    // MARK: - Channels List
 
     private var channelsList: some View {
         ScrollView {
@@ -97,8 +86,6 @@ struct SpaceDetailView: View {
     }
 }
 
-// MARK: - Channel Row
-
 struct ChannelRow: View {
     let channel: Channel
     @EnvironmentObject var theme: ThemeManager
@@ -109,32 +96,26 @@ struct ChannelRow: View {
                 .font(.subheadline)
                 .foregroundStyle(channel.type == .privateChannel ? .orange : .secondary)
                 .frame(width: 32, height: 32)
-                .background(theme.subtleBackground, in: RoundedRectangle(cornerRadius: 8))
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 8)
+                        .strokeBorder(theme.glassBorder.opacity(0.3), lineWidth: 0.5)
+                }
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(channel.name)
                     .font(.subheadline)
                     .fontWeight(.medium)
-                    .foregroundStyle(.primary)
-
                 if let desc = channel.description {
-                    Text(desc)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
+                    Text(desc).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                 }
             }
 
             Spacer()
 
-            if channel.unreadCount > 0 {
-                UnreadBadge(count: channel.unreadCount)
-            }
-
+            if channel.unreadCount > 0 { UnreadBadge(count: channel.unreadCount) }
             if channel.isPinned {
-                Image(systemName: "pin.fill")
-                    .font(.caption2)
-                    .foregroundStyle(.orange)
+                Image(systemName: "pin.fill").font(.caption2).foregroundStyle(.orange)
             }
         }
         .padding(.horizontal)
@@ -142,8 +123,6 @@ struct ChannelRow: View {
         .contentShape(Rectangle())
     }
 }
-
-// MARK: - Space Documents View
 
 struct SpaceDocumentsView: View {
     var body: some View {
@@ -161,8 +140,6 @@ struct SpaceDocumentsView: View {
     }
 }
 
-// MARK: - Space Files View
-
 struct SpaceFilesView: View {
     var body: some View {
         ScrollView {
@@ -176,18 +153,12 @@ struct SpaceFilesView: View {
     }
 }
 
-// MARK: - Space Dashboards View
-
 struct SpaceDashboardsView: View {
     let dashboards: [SpaceDashboard]
 
     var body: some View {
         if dashboards.isEmpty {
-            EmptyStateView(
-                icon: "chart.bar.xaxis",
-                title: "No dashboards",
-                subtitle: "This space doesn't have any dashboards yet"
-            )
+            EmptyStateView(icon: "chart.bar.xaxis", title: "No dashboards", subtitle: "This space doesn't have any dashboards yet")
         } else {
             ScrollView {
                 LazyVStack(spacing: 12) {
@@ -204,38 +175,30 @@ struct SpaceDashboardsView: View {
     }
 }
 
-// MARK: - Dashboard Card
-
 struct DashboardCard: View {
     let dashboard: SpaceDashboard
-    @EnvironmentObject var theme: ThemeManager
 
     var body: some View {
         HStack(spacing: 14) {
             Image(systemName: dashboard.icon)
                 .font(.title3)
-                .foregroundStyle(Color(hex: "5B5FC7"))
+                .foregroundStyle(Color(hex: "6C63FF"))
                 .frame(width: 40, height: 40)
-                .background(Color(hex: "5B5FC7").opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 10)
+                        .strokeBorder(Color(hex: "6C63FF").opacity(0.2), lineWidth: 0.5)
+                }
+                .shadow(color: Color(hex: "6C63FF").opacity(0.2), radius: 4)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(dashboard.name)
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.primary)
-
-                Text("\(dashboard.widgets.count) widgets")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(dashboard.name).font(.subheadline).fontWeight(.semibold)
+                Text("\(dashboard.widgets.count) widgets").font(.caption).foregroundStyle(.secondary)
             }
-
             Spacer()
-
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
+            Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
         }
         .padding(14)
-        .background(theme.cardBackground, in: RoundedRectangle(cornerRadius: 14))
+        .glassCard(cornerRadius: 16)
     }
 }

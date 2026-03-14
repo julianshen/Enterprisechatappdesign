@@ -31,84 +31,69 @@ struct DocumentsView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 16) {
-                    // Search
-                    SearchBarView(text: $searchText, placeholder: "Search documents")
-                        .padding(.horizontal)
+            ZStack {
+                MeshBackgroundView()
 
-                    // Filters
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            ForEach(DocFilter.allCases, id: \.self) { filter in
-                                FilterChip(
-                                    label: filter.rawValue,
-                                    isSelected: selectedFilter == filter
-                                ) {
-                                    withAnimation { selectedFilter = filter }
-                                }
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
+                ScrollView {
+                    VStack(spacing: 16) {
+                        SearchBarView(text: $searchText, placeholder: "Search documents")
+                            .padding(.horizontal)
 
-                    // Recent Documents (horizontal scroll)
-                    if selectedFilter == .all && searchText.isEmpty {
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text("Recent")
-                                .sectionHeaderStyle()
-                                .padding(.horizontal)
-
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 12) {
-                                    ForEach(MockData.documents.prefix(3)) { doc in
-                                        NavigationLink(destination: DocumentDetailView(document: doc)) {
-                                            RecentDocCard(document: doc)
-                                        }
-                                        .buttonStyle(.plain)
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                ForEach(DocFilter.allCases, id: \.self) { filter in
+                                    FilterChip(label: filter.rawValue, isSelected: selectedFilter == filter) {
+                                        withAnimation { selectedFilter = filter }
                                     }
                                 }
-                                .padding(.horizontal)
                             }
+                            .padding(.horizontal)
                         }
-                    }
 
-                    // All Documents
-                    VStack(alignment: .leading, spacing: 10) {
                         if selectedFilter == .all && searchText.isEmpty {
-                            Text("All Documents")
-                                .sectionHeaderStyle()
-                                .padding(.horizontal)
-                        }
-
-                        LazyVStack(spacing: 8) {
-                            ForEach(filteredDocs) { doc in
-                                NavigationLink(destination: DocumentDetailView(document: doc)) {
-                                    DocumentRow(document: doc)
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("Recent").sectionHeaderStyle().padding(.horizontal)
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 12) {
+                                        ForEach(MockData.documents.prefix(3)) { doc in
+                                            NavigationLink(destination: DocumentDetailView(document: doc)) {
+                                                RecentDocCard(document: doc)
+                                            }
+                                            .buttonStyle(.plain)
+                                        }
+                                    }
+                                    .padding(.horizontal)
                                 }
-                                .buttonStyle(.plain)
                             }
                         }
-                        .padding(.horizontal)
+
+                        VStack(alignment: .leading, spacing: 10) {
+                            if selectedFilter == .all && searchText.isEmpty {
+                                Text("All Documents").sectionHeaderStyle().padding(.horizontal)
+                            }
+                            LazyVStack(spacing: 8) {
+                                ForEach(filteredDocs) { doc in
+                                    NavigationLink(destination: DocumentDetailView(document: doc)) {
+                                        DocumentRow(document: doc)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
                     }
+                    .padding(.vertical, 8)
                 }
-                .padding(.vertical, 8)
             }
-            .background(theme.surfaceBackground)
             .navigationTitle("Documents")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button { } label: {
-                        Image(systemName: "plus")
-                            .fontWeight(.medium)
-                    }
+                    Button { } label: { Image(systemName: "plus").fontWeight(.medium) }
                 }
             }
         }
     }
 }
-
-// MARK: - Recent Document Card
 
 struct RecentDocCard: View {
     let document: Document
@@ -117,27 +102,18 @@ struct RecentDocCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text(document.icon)
-                    .font(.title2)
-
+                Text(document.icon).font(.title2)
                 Spacer()
-
                 SecurityBadge(level: document.securityLevel)
             }
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(document.title)
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.primary)
-                    .lineLimit(2)
-
+                    .font(.subheadline).fontWeight(.semibold).lineLimit(2)
                 Text("Updated \(document.updatedAt.relativeDateString)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.caption).foregroundStyle(.secondary)
             }
 
-            // Tags
             HStack(spacing: 4) {
                 ForEach(document.tags.prefix(2), id: \.self) { tag in
                     Text(tag)
@@ -151,11 +127,9 @@ struct RecentDocCard: View {
         }
         .frame(width: 180)
         .padding(14)
-        .background(theme.cardBackground, in: RoundedRectangle(cornerRadius: 14))
+        .glassCard(cornerRadius: 16)
     }
 }
-
-// MARK: - Document Row
 
 struct DocumentRow: View {
     let document: Document
@@ -166,41 +140,30 @@ struct DocumentRow: View {
             Text(document.icon)
                 .font(.title2)
                 .frame(width: 40, height: 40)
-                .background(theme.subtleBackground, in: RoundedRectangle(cornerRadius: 10))
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
 
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 6) {
-                    Text(document.title)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundStyle(.primary)
-                        .lineLimit(1)
-
+                    Text(document.title).font(.subheadline).fontWeight(.medium).lineLimit(1)
                     SecurityBadge(level: document.securityLevel)
                 }
-
                 HStack(spacing: 8) {
                     Text("by \(MockData.user(by: document.createdBy).name)")
                     Text("·")
                     Text(document.updatedAt.relativeDateString)
                 }
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(.caption).foregroundStyle(.secondary)
             }
 
             Spacer()
 
             if document.isStarred {
-                Image(systemName: "star.fill")
-                    .font(.caption)
-                    .foregroundStyle(.yellow)
+                Image(systemName: "star.fill").font(.caption).foregroundStyle(.yellow)
+                    .shadow(color: .yellow.opacity(0.4), radius: 3)
             }
-
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
+            Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
         }
         .padding(12)
-        .background(theme.cardBackground, in: RoundedRectangle(cornerRadius: 14))
+        .glassCard(cornerRadius: 16)
     }
 }

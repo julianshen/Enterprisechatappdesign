@@ -76,6 +76,17 @@ struct MessageAttachment: Identifiable {
     var size: String?
     var previewURL: String?
     var mimeType: String?
+    // Document-specific
+    var docEmoji: String?
+    var docAuthor: String?
+    var docLastModified: Date?
+    // Task-specific
+    var taskId: String?
+    var taskStatus: String?
+    var taskPriority: String?
+    var taskAssignee: String?
+    // Video-specific
+    var videoDuration: String?
 }
 
 enum AttachmentType: String {
@@ -321,6 +332,67 @@ struct WidgetLink: Identifiable, Hashable {
     let url: String
 }
 
+// MARK: - Meeting
+
+struct Meeting: Identifiable {
+    let id: String
+    let title: String
+    let startTime: Date
+    let endTime: Date
+    var location: String?
+    var isOnline: Bool
+    let organizer: String
+    let attendees: [String]
+    let color: MeetingColor
+    var recurring: Bool
+    var status: MeetingStatus
+
+    init(id: String, title: String, startTime: Date, endTime: Date, location: String? = nil, isOnline: Bool = false, organizer: String, attendees: [String], color: MeetingColor, recurring: Bool = false, status: MeetingStatus = .upcoming) {
+        self.id = id; self.title = title; self.startTime = startTime; self.endTime = endTime
+        self.location = location; self.isOnline = isOnline; self.organizer = organizer
+        self.attendees = attendees; self.color = color; self.recurring = recurring; self.status = status
+    }
+}
+
+enum MeetingColor: String {
+    case purple, blue, green, orange, red
+
+    var color: Color {
+        switch self {
+        case .purple: return Color(hex: "6C63FF")
+        case .blue: return Color(hex: "0078D4")
+        case .green: return Color(hex: "34C759")
+        case .orange: return Color(hex: "FF9F0A")
+        case .red: return Color(hex: "FF3B30")
+        }
+    }
+}
+
+enum MeetingStatus: String {
+    case upcoming, inProgress = "in-progress", completed
+}
+
+// MARK: - Unread Channel
+
+struct UnreadChannel: Identifiable {
+    let id: String
+    let channelName: String
+    let spaceName: String
+    let count: Int
+    let lastMessage: Date
+}
+
+// MARK: - Active Thread
+
+struct ActiveThread: Identifiable {
+    let id: String
+    let channelName: String
+    let spaceName: String
+    let content: String
+    let replies: Int
+    let lastReply: Date
+}
+
 // MARK: - Activity
 
 struct Activity: Identifiable {
@@ -336,6 +408,120 @@ struct Activity: Identifiable {
 
 enum ActivityType: String {
     case message, mention, reaction, fileUpload, documentEdit, spaceInvite, taskAssigned
+}
+
+// MARK: - Notification
+
+struct AppNotification: Identifiable {
+    let id: String
+    let type: NotificationType
+    let title: String
+    let message: String
+    let detail: String
+    let timestamp: Date
+    var read: Bool
+    var from: String?
+    var formFields: [NotificationFormField]?
+
+    var typeConfig: NotificationTypeConfig {
+        type.config
+    }
+}
+
+enum NotificationType: String, CaseIterable {
+    case system, admin, security, update, invite, approval
+
+    var config: NotificationTypeConfig {
+        switch self {
+        case .system:   return NotificationTypeConfig(icon: "server.rack", color: Color(hex: "8E8E93"), label: "System")
+        case .admin:    return NotificationTypeConfig(icon: "bell.fill", color: Color(hex: "6C63FF"), label: "Admin")
+        case .security: return NotificationTypeConfig(icon: "shield.fill", color: Color(hex: "FF3B30"), label: "Security")
+        case .update:   return NotificationTypeConfig(icon: "arrow.triangle.2.circlepath", color: Color(hex: "34C759"), label: "Update")
+        case .invite:   return NotificationTypeConfig(icon: "person.badge.plus", color: Color(hex: "A855F7"), label: "Invitation")
+        case .approval: return NotificationTypeConfig(icon: "checkmark.seal.fill", color: Color(hex: "FF9F0A"), label: "Approval")
+        }
+    }
+}
+
+struct NotificationTypeConfig {
+    let icon: String
+    let color: Color
+    let label: String
+}
+
+struct NotificationFormField: Identifiable {
+    let id = UUID()
+    let label: String
+    let type: FormFieldType
+    var options: [String]?
+    var required: Bool
+
+    enum FormFieldType: String {
+        case text, textarea, select
+    }
+}
+
+// MARK: - Space Request
+
+struct SpaceRequest: Identifiable {
+    let id: String
+    let spaceName: String
+    let spaceDescription: String
+    let scenarioName: String
+    let scenarioColor: String
+    let channelCount: Int
+    let dashboardCount: Int
+    let appCount: Int
+    let channels: [String]
+    let dashboards: [String]
+    let apps: [String]
+    let permissions: String
+    let ownerName: String
+    let ownerAvatar: String
+    let ownerTitle: String
+    let requesterName: String
+    let status: SpaceRequestStatus
+    let createdAt: Date
+    let updatedAt: Date
+    var ownerApprovedAt: Date?
+    var adminApprovedAt: Date?
+    var rejectedAt: Date?
+    var rejectedBy: String?
+    var rejectionReason: String?
+}
+
+enum SpaceRequestStatus: String, CaseIterable {
+    case pendingOwner = "pending-owner"
+    case pendingAdmin = "pending-admin"
+    case approved
+    case rejected
+
+    var label: String {
+        switch self {
+        case .pendingOwner: return "Awaiting Owner"
+        case .pendingAdmin: return "Awaiting Admin"
+        case .approved: return "Approved"
+        case .rejected: return "Rejected"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .pendingOwner: return "clock.fill"
+        case .pendingAdmin: return "shield.fill"
+        case .approved: return "checkmark.circle.fill"
+        case .rejected: return "xmark.circle.fill"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .pendingOwner: return Color(hex: "FF9F0A")
+        case .pendingAdmin: return Color(hex: "6C63FF")
+        case .approved: return Color(hex: "34C759")
+        case .rejected: return Color(hex: "FF3B30")
+        }
+    }
 }
 
 // MARK: - Color Extension

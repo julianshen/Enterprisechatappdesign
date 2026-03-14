@@ -11,7 +11,11 @@ struct UnreadBadge: View {
                 .foregroundStyle(.white)
                 .padding(.horizontal, count > 9 ? 6 : 4)
                 .padding(.vertical, 2)
-                .background(Color(hex: "FF3B30"), in: Capsule())
+                .background(
+                    Capsule()
+                        .fill(Color(hex: "FF453A").gradient)
+                        .shadow(color: Color(hex: "FF453A").opacity(0.4), radius: 4, y: 1)
+                )
                 .fixedSize()
         }
     }
@@ -27,7 +31,11 @@ struct SecurityBadge: View {
             .foregroundStyle(level.color)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .background(level.color.opacity(0.12), in: Capsule())
+            .background(.ultraThinMaterial, in: Capsule())
+            .overlay {
+                Capsule()
+                    .strokeBorder(level.color.opacity(0.3), lineWidth: 0.5)
+            }
     }
 }
 
@@ -42,7 +50,11 @@ struct StatusTag: View {
             .foregroundStyle(color)
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
-            .background(color.opacity(0.12), in: Capsule())
+            .background(.ultraThinMaterial, in: Capsule())
+            .overlay {
+                Capsule()
+                    .strokeBorder(color.opacity(0.25), lineWidth: 0.5)
+            }
     }
 }
 
@@ -58,6 +70,9 @@ struct TrendIndicator: View {
                 .font(.caption)
                 .fontWeight(.medium)
         }
-        .foregroundStyle(isPositive ? Color(hex: "34C759") : Color(hex: "FF3B30"))
+        .foregroundStyle(isPositive ? Color(hex: "34C759") : Color(hex: "FF453A"))
+        .padding(.horizontal, 6)
+        .padding(.vertical, 3)
+        .background(.ultraThinMaterial, in: Capsule())
     }
 }

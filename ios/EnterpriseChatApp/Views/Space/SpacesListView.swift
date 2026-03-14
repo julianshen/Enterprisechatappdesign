@@ -4,14 +4,8 @@ struct SpacesListView: View {
     @EnvironmentObject var theme: ThemeManager
     @State private var searchText = ""
 
-    private var favoriteSpaces: [Space] {
-        MockData.spaces.filter { $0.isFavorite }
-    }
-
-    private var otherSpaces: [Space] {
-        MockData.spaces.filter { !$0.isFavorite }
-    }
-
+    private var favoriteSpaces: [Space] { MockData.spaces.filter { $0.isFavorite } }
+    private var otherSpaces: [Space] { MockData.spaces.filter { !$0.isFavorite } }
     private var filteredSpaces: [Space] {
         if searchText.isEmpty { return MockData.spaces }
         return MockData.spaces.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
@@ -19,53 +13,52 @@ struct SpacesListView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 20) {
-                    SearchBarView(text: $searchText, placeholder: "Search spaces")
-                        .padding(.horizontal)
+            ZStack {
+                MeshBackgroundView()
 
-                    if searchText.isEmpty {
-                        // Favorites
-                        if !favoriteSpaces.isEmpty {
+                ScrollView {
+                    VStack(spacing: 20) {
+                        SearchBarView(text: $searchText, placeholder: "Search spaces")
+                            .padding(.horizontal)
+
+                        if searchText.isEmpty {
+                            if !favoriteSpaces.isEmpty {
+                                VStack(alignment: .leading, spacing: 10) {
+                                    Text("Favorites")
+                                        .sectionHeaderStyle()
+                                        .padding(.horizontal)
+                                    ForEach(favoriteSpaces) { space in
+                                        NavigationLink(destination: SpaceDetailView(space: space)) {
+                                            SpaceCard(space: space)
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                            }
+
                             VStack(alignment: .leading, spacing: 10) {
-                                Text("Favorites")
+                                Text("All Spaces")
                                     .sectionHeaderStyle()
                                     .padding(.horizontal)
-
-                                ForEach(favoriteSpaces) { space in
+                                ForEach(otherSpaces) { space in
                                     NavigationLink(destination: SpaceDetailView(space: space)) {
                                         SpaceCard(space: space)
                                     }
                                     .buttonStyle(.plain)
                                 }
                             }
-                        }
-
-                        // All Spaces
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text("All Spaces")
-                                .sectionHeaderStyle()
-                                .padding(.horizontal)
-
-                            ForEach(otherSpaces) { space in
+                        } else {
+                            ForEach(filteredSpaces) { space in
                                 NavigationLink(destination: SpaceDetailView(space: space)) {
                                     SpaceCard(space: space)
                                 }
                                 .buttonStyle(.plain)
                             }
                         }
-                    } else {
-                        ForEach(filteredSpaces) { space in
-                            NavigationLink(destination: SpaceDetailView(space: space)) {
-                                SpaceCard(space: space)
-                            }
-                            .buttonStyle(.plain)
-                        }
                     }
+                    .padding(.vertical, 8)
                 }
-                .padding(.vertical, 8)
             }
-            .background(theme.surfaceBackground)
             .navigationTitle("Spaces")
         }
     }
@@ -77,9 +70,7 @@ struct SpaceCard: View {
     let space: Space
     @EnvironmentObject var theme: ThemeManager
 
-    private var totalUnread: Int {
-        space.channels.reduce(0) { $0 + $1.unreadCount }
-    }
+    private var totalUnread: Int { space.channels.reduce(0) { $0 + $1.unreadCount } }
 
     var body: some View {
         HStack(spacing: 14) {
@@ -90,15 +81,13 @@ struct SpaceCard: View {
                     Text(space.name)
                         .font(.subheadline)
                         .fontWeight(.semibold)
-                        .foregroundStyle(.primary)
-
                     if space.isFavorite {
                         Image(systemName: "star.fill")
                             .font(.caption2)
                             .foregroundStyle(.yellow)
+                            .shadow(color: .yellow.opacity(0.4), radius: 3)
                     }
                 }
-
                 HStack(spacing: 12) {
                     Label("\(space.channels.count) channels", systemImage: "number")
                     Label("\(space.members.count) members", systemImage: "person.2")
@@ -109,16 +98,14 @@ struct SpaceCard: View {
 
             Spacer()
 
-            if totalUnread > 0 {
-                UnreadBadge(count: totalUnread)
-            }
+            if totalUnread > 0 { UnreadBadge(count: totalUnread) }
 
             Image(systemName: "chevron.right")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
         }
         .padding(14)
-        .background(theme.cardBackground, in: RoundedRectangle(cornerRadius: 14))
+        .glassCard(cornerRadius: 18)
         .padding(.horizontal)
     }
 }

@@ -3,6 +3,7 @@ import SwiftUI
 struct SearchBarView: View {
     @Binding var text: String
     var placeholder: String = "Search"
+    @EnvironmentObject var theme: ThemeManager
 
     var body: some View {
         HStack(spacing: 8) {
@@ -24,9 +25,13 @@ struct SearchBarView: View {
                 }
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal, 14)
+        .padding(.vertical, 11)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14))
+        .overlay {
+            RoundedRectangle(cornerRadius: 14)
+                .strokeBorder(theme.glassBorder.opacity(0.5), lineWidth: 0.5)
+        }
     }
 }
 
@@ -34,6 +39,7 @@ struct FilterChip: View {
     let label: String
     let isSelected: Bool
     let action: () -> Void
+    @EnvironmentObject var theme: ThemeManager
 
     var body: some View {
         Button(action: action) {
@@ -43,10 +49,20 @@ struct FilterChip: View {
                 .foregroundStyle(isSelected ? .white : .primary)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 7)
-                .background(
-                    isSelected ? Color(hex: "5B5FC7") : Color.secondary.opacity(0.1),
-                    in: Capsule()
-                )
+                .background {
+                    if isSelected {
+                        Capsule()
+                            .fill(Color(hex: "6C63FF").gradient)
+                            .shadow(color: Color(hex: "6C63FF").opacity(0.3), radius: 6, y: 2)
+                    } else {
+                        Capsule()
+                            .fill(.ultraThinMaterial)
+                            .overlay {
+                                Capsule()
+                                    .strokeBorder(theme.glassBorder.opacity(0.4), lineWidth: 0.5)
+                            }
+                    }
+                }
         }
         .buttonStyle(.plain)
     }
