@@ -4,6 +4,7 @@ struct SpaceDetailView: View {
     let space: Space
     @EnvironmentObject var theme: ThemeManager
     @State private var selectedSection: SpaceSection = .channels
+    @State private var channels: [Channel] = []
 
     enum SpaceSection: String, CaseIterable {
         case channels = "Channels"
@@ -38,6 +39,11 @@ struct SpaceDetailView: View {
         }
         .navigationTitle(space.name)
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            if channels.isEmpty {
+                channels = space.channels
+            }
+        }
     }
 
     private var spaceHeader: some View {
@@ -71,18 +77,55 @@ struct SpaceDetailView: View {
         .background(.ultraThinMaterial)
     }
 
+    private func togglePin(for channel: Channel) {
+        guard let idx = channels.firstIndex(where: { $0.id == channel.id }) else { return }
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+            channels[idx].isPinned.toggle()
+        }
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+    }
+
+    private func channelRow(for channel: Channel) -> some View {
+        NavigationLink(destination: ChatDetailView(chatType: .channel(channel, space))) {
+            ChannelRow(channel: channel)
+        }
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            Button { togglePin(for: channel) } label: {
+                Label(channel.isPinned ? "Unpin" : "Pin",
+                      systemImage: channel.isPinned ? "pin.slash.fill" : "pin.fill")
+            }
+            .tint(.orange)
+        }
+    }
+
     private var channelsList: some View {
-        ScrollView {
-            LazyVStack(spacing: 2) {
-                ForEach(space.channels) { channel in
-                    NavigationLink(destination: ChatDetailView(chatType: .channel(channel, space))) {
-                        ChannelRow(channel: channel)
-                    }
-                    .buttonStyle(.plain)
+        let pinned = channels.filter { $0.isPinned }
+        let unpinned = channels.filter { !$0.isPinned }
+
+        return List {
+            if !pinned.isEmpty {
+                Section {
+                    ForEach(pinned) { channel in channelRow(for: channel) }
+                } header: {
+                    Label("Pinned", systemImage: "pin.fill")
+                        .sectionHeaderStyle()
+                        .foregroundStyle(.orange)
+                        .textCase(nil)
                 }
             }
-            .padding(.vertical, 8)
+
+            Section {
+                ForEach(unpinned) { channel in channelRow(for: channel) }
+            } header: {
+                if !pinned.isEmpty {
+                    Text("All Channels")
+                        .sectionHeaderStyle()
+                        .textCase(nil)
+                }
+            }
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
     }
 }
 
